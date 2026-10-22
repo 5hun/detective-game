@@ -20,6 +20,12 @@ async function checkReadings(page) {
     }
     return missing;
   });
+  const invalidBases = await page.locator('ruby').evaluateAll(elements => elements.map(element => {
+    const copy = element.cloneNode(true);
+    copy.querySelectorAll('rt').forEach(rt => rt.remove());
+    return copy.textContent;
+  }).filter(text => !/^[一-龯々]+$/.test(text)));
+  assert.deepEqual(invalidBases, [], 'ruby must cover kanji only');
   assert.deepEqual(missing, [], `game text without readings: ${JSON.stringify(missing)}`);
 }
 (async () => {
@@ -63,6 +69,20 @@ async function checkReadings(page) {
     addReadings(probe);
   });
   await checkReadings(page);
+  const segments = await page.evaluate(() => {
+    const sample = document.createElement('p');
+    sample.textContent = '消えた 3人 持ち去られ 見抜きました 1人 2人';
+    addReadings(sample);
+    const once = sample.innerHTML;
+    addReadings(sample);
+    if (sample.innerHTML !== once) throw new Error('Ruby is not idempotent');
+    return [...sample.childNodes].map(node => node.nodeType === Node.TEXT_NODE ? node.textContent :
+      [node.firstChild.textContent, node.querySelector('rt').textContent]).filter(value => value !== '');
+  });
+  assert.deepEqual(segments, [
+    ['消', 'き'], 'えた', ' ', '3', ['人', 'にん'], ' ', ['持', 'も'], 'ち', ['去', 'さ'], 'られ', ' ',
+    ['見抜', 'みぬ'], 'き', 'ました ', '1', ['人', 'ひとり'], ' ', '2', ['人', 'ふたり']
+  ]);
   await page.locator('#readings-probe').evaluate(element => element.remove());
   assert.ok(await page.locator('ruby rt').count() > 0);
   await page.locator('#ruby-toggle').uncheck();

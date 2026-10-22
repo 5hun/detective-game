@@ -10,7 +10,7 @@
     '渡す':'わたす','持ち去られ':'もちさられ','会場':'かいじょう','祭り':'まつり',
     '作った':'つくった','準備':'じゅんび','来て':'きて','郵便局':'ゆうびんきょく',
     '手紙':'てがみ','仕分け':'しわけ','本':'ほん',
-    '1人':'ひとり','2人':'ふたり','3人':'さんにん','4人':'よにん','5人':'ごにん','7人':'しちにん','0人':'ぜろにん',
+    '1人':'ひとり','2人':'ふたり','3人':'にん','4人':'にん','5人':'にん','7人':'にん','0人':'にん',
     '一度':'いちど','一致':'いっち','上部':'じょうぶ','上':'うえ','両方':'りょうほう','中':'なか',
     '事件':'じけん','設定':'せってい','人数':'にんずう','人':'にん','以上':'いじょう','以下':'いか',
     '今回':'こんかい','仲介人':'ちゅうかいにん','何度':'なんど','供述書':'きょうじゅつしょ',
@@ -42,6 +42,18 @@
     '間違え':'まちがえ','間違っ':'まちがっ','関係者':'かんけいしゃ','限り':'かぎり','難易度':'なんいど',
     '難解':'なんかい','数':'すう','捜査中':'そうさちゅう','受付中':'うけつけちゅう'
   };
+  // Match whole words for context, but annotate only their kanji runs.
+  // Kana is aligned with the reading so okurigana stays outside <ruby>.
+  const annotations = new Map(Object.entries(readings).map(([word, reading]) => {
+    const parts = word.match(/[一-龯々]+|[^一-龯々]+/g);
+    const alignment = new RegExp('^' + parts.map(part =>
+      /^[一-龯々]+$/.test(part) ? '(.+?)' : part.replace(/[0-9]/g, '')
+    ).join('') + '$');
+    const match = reading.match(alignment);
+    if (!match) throw new Error(`Invalid reading: ${word}`);
+    let index = 1;
+    return [word, parts.map(part => ({ text: part, reading: /^[一-龯々]+$/.test(part) ? match[index++] : null }))];
+  }));
   const pattern = new RegExp(Object.keys(readings).sort((a, b) => b.length - a.length).join('|'), 'g');
   window.addReadings = function (root = document.body) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
@@ -60,12 +72,18 @@
       let offset = 0;
       for (const match of matches) {
         fragment.append(text.slice(offset, match.index));
-        const ruby = document.createElement('ruby');
-        const rt = document.createElement('rt');
-        ruby.append(match[0]);
-        rt.textContent = readings[match[0]];
-        ruby.append(rt);
-        fragment.append(ruby);
+        for (const part of annotations.get(match[0])) {
+          if (!part.reading) {
+            fragment.append(part.text);
+            continue;
+          }
+          const ruby = document.createElement('ruby');
+          const rt = document.createElement('rt');
+          ruby.append(part.text);
+          rt.textContent = part.reading;
+          ruby.append(rt);
+          fragment.append(ruby);
+        }
         offset = match.index + match[0].length;
       }
       fragment.append(text.slice(offset));
