@@ -22,3 +22,7 @@ ruby{ruby-align:center}rt{font-size:.55em;font-family:"Hiragino Kaku Gothic ProN
 
 .portrait-box:has([data-portrait-state="good"]){background:#e0edd6;border-color:#90a782}
 .portrait-box:has([data-portrait-state="liar"]){background:#e9ddd3;border-color:#b89b88}
+
+.case-description{max-width:48em;font-size:14px;line-height:2.2;margin:16px 0 8px}
+#case-title{line-height:1.9}
+@media(max-width:760px){.case-description{font-size:13px}}

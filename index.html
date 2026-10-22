@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#183e3b">
   <meta name="description" content="動物たちの証言から嘘つきを見つける、何度でも遊べる論理推理ゲーム。">
-  <title>どうぶつ探偵 — うそつきたちの供述書</title>
+  <title>どうぶつ探偵</title>
   <link rel="stylesheet" href="styles.css">
   <script defer src="engine.js"></script>
   <script defer src="portraits.js"></script>
@@ -30,7 +30,7 @@
     </aside>
     <main>
       <div class="case-topline"><span class="eyebrow">CASE FILE <span id="case-id"></span></span><span class="case-stamp" id="case-stamp">捜査中</span></div>
-      <div class="title-row"><div><h1>うそつきたちの供述書<span>。</span></h1><p class="intro">証言をつなぎ、矛盾を見抜け。真実はひとつ。</p></div><span class="paper-icon" aria-hidden="true">▤</span></div>
+      <div class="title-row"><div><h1 id="case-title"></h1><p id="case-description" class="case-description"></p><p class="intro">証言をつなぎ、矛盾を見抜け。真実はひとつ。</p></div><span class="paper-icon" aria-hidden="true">▤</span></div>
       <section class="case-summary" aria-label="事件の情報">
         <div class="population"><span class="summary-label">この事件の内訳</span><div><strong id="liar-count"></strong><span class="slash">/</span><strong id="good-count"></strong></div></div>
         <div class="progress-summary"><span class="summary-label">判定済み</span><div><strong id="progress-count"></strong><span>人</span></div></div>

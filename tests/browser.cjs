@@ -47,6 +47,11 @@ async function checkReadings(page) {
   await page.evaluate(() => {
     const probe = document.createElement('div');
     probe.id = 'readings-probe';
+    for (const story of DetectiveEngine.caseStories) {
+      const line = document.createElement('p');
+      line.textContent = story.title + story.description;
+      probe.append(line);
+    }
     for (const role of DetectiveEngine.roles) {
       for (const value of role.type === 'count' ? [0, 1, 2, 3] : [false, true]) {
         const line = document.createElement('p');
@@ -94,11 +99,21 @@ async function checkReadings(page) {
   assert.ok((await page.locator('#memo-0').inputValue()).includes('メモ保存テスト'));
   assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 3 / 3');
   assert.equal(await page.locator('#trust').textContent(), '★★★');
+  const storyTitle = await baseText(page.locator('#case-title'));
+  const storyDescription = await baseText(page.locator('#case-description'));
+  const expectedStory = await page.evaluate(() => {
+    const seed = JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.seed;
+    return DetectiveEngine.caseStories[seed % DetectiveEngine.caseStories.length];
+  });
+  assert.equal(storyTitle, expectedStory.title);
+  assert.equal(storyDescription, expectedStory.description);
   const solution = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
   assert.deepEqual(await page.evaluate(() => window.playedTones), []);
   await page.locator('#sound-toggle').uncheck();
   await page.reload();
   assert.equal(await page.locator('#sound-toggle').isChecked(), false);
+  assert.equal(await baseText(page.locator('#case-title')), storyTitle);
+  assert.equal(await baseText(page.locator('#case-description')), storyDescription);
   const neutralPortrait = await page.locator('#person-0 .portrait').innerHTML();
   for (let i = 0; i < solution.length; i++) {
     await page.locator(`#person-${i} [data-judge="${solution[i] ? 'liar' : 'good'}"]`).click();

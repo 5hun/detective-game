@@ -11,6 +11,14 @@
     { id: 'raccoon', name: 'アライグマ', job: '仲介人', rule: '「Aが犯人で、Bが善人」という組み合わせかを証言する。', type: 'ordered' },
     { id: 'frog', name: 'カエル', job: '調査員', rule: '指定した3人の中に犯人が2人以上いるかを証言する。', type: 'majority' }
   ];
+  const caseStories = [
+    { title: '消えたケーキ事件', description: '広場のパーティーに用意したケーキが、始まる前に食べられてしまいました。集まった動物たちの証言から、犯人を見つけましょう。' },
+    { title: '図書館の本事件', description: '図書館の大切な絵本が、だれかに隠されてしまいました。その場にいた動物たちの証言を聞いて、犯人を見つけましょう。' },
+    { title: '花だんの足あと事件', description: '公園の花だんが、だれかにふみあらされてしまいました。近くにいた動物たちの証言から、何があったのか調べましょう。' },
+    { title: '金メダル事件', description: '運動会で渡すはずの金メダルが、だれかに持ち去られてしまいました。会場にいた動物たちの証言を聞いて、犯人を見つけましょう。' },
+    { title: 'お祭りのかざり事件', description: 'お祭りのために作ったかざりが、だれかにこわされてしまいました。準備に来ていた動物たちの証言から、犯人を見つけましょう。' },
+    { title: '郵便局の手紙事件', description: '郵便局で仕分けた手紙が、だれかのいたずらでばらばらに。その場にいた動物たちの証言から、いたずらの犯人を見つけましょう。' }
+  ];
   const levels = { easy: { n: 4, k: 1, label: '入門' }, normal: { n: 5, k: 2, label: '通常' }, hard: { n: 7, k: 3, label: '難解' } };
   function random(seed) { let a = seed >>> 0; return () => { a += 0x6D2B79F5; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   function shuffle(a, rng) { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
@@ -80,7 +88,7 @@
     else if (state.resolved.every(r => r !== null)) state.status = 'won';
     return correct;
   }
-  const api = { roles, levels, generate, solve, evaluate, statementText, assignments, judge };
+  const api = { roles, caseStories, levels, generate, solve, evaluate, statementText, assignments, judge };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DetectiveEngine = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

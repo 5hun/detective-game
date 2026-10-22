@@ -71,6 +71,10 @@
   }
   function render(message) {
     const p = state.puzzle; const count = state.resolved.filter(r => r !== null).length;
+    const story = E.caseStories[p.seed % E.caseStories.length];
+    $('case-title').textContent = story.title;
+    $('case-description').textContent = story.description;
+    document.title = `${story.title} — どうぶつ探偵`;
     $('case-id').textContent = `#${p.seed.toString(16).toUpperCase().padStart(8, '0')} · ${E.levels[p.level].label}`;
     $('liar-count').textContent = `犯人 ${p.k}人`;
     $('good-count').textContent = `善人 ${p.people.length - p.k}人`;
