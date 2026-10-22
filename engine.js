@@ -2,14 +2,14 @@
 (function (root) {
   'use strict';
   const roles = [
-    { id: 'fox', name: 'キツネ', job: '目撃者', rule: 'ほかの1人が犯人か善人かを証言する。', type: 'single' },
-    { id: 'rabbit', name: 'ウサギ', job: '比較屋', rule: 'ほかの2人が同じ立場か、違う立場かを証言する。', type: 'same' },
-    { id: 'owl', name: 'フクロウ', job: '記録係', rule: '指定した3人の中にいる犯人の人数を証言する。', type: 'count' },
-    { id: 'cat', name: 'ネコ', job: '情報屋', rule: '指定した2人に少なくとも1人、犯人がいるかを証言する。', type: 'any' },
-    { id: 'wolf', name: 'オオカミ', job: '見張り', rule: '指定した2人が両方とも犯人かを証言する。', type: 'both' },
-    { id: 'bear', name: 'クマ', job: '帳簿係', rule: '指定した3人の犯人数が奇数か偶数かを証言する。', type: 'parity' },
+    { id: 'fox', name: 'キツネ', job: '目撃者', rule: 'ほかの1匹が犯人か善人かを証言する。', type: 'single' },
+    { id: 'rabbit', name: 'ウサギ', job: '比較屋', rule: 'ほかの2匹が同じ立場か、違う立場かを証言する。', type: 'same' },
+    { id: 'owl', name: 'フクロウ', job: '記録係', rule: '指定した3匹の中にいる犯人の数を証言する。', type: 'count' },
+    { id: 'cat', name: 'ネコ', job: '情報屋', rule: '指定した2匹に少なくとも1匹、犯人がいるかを証言する。', type: 'any' },
+    { id: 'wolf', name: 'オオカミ', job: '見張り', rule: '指定した2匹が両方とも犯人かを証言する。', type: 'both' },
+    { id: 'bear', name: 'クマ', job: '帳簿係', rule: '指定した3匹の犯人の数が奇数か偶数かを証言する。', type: 'parity' },
     { id: 'raccoon', name: 'アライグマ', job: '仲介人', rule: '「Aが犯人で、Bが善人」という組み合わせかを証言する。', type: 'ordered' },
-    { id: 'frog', name: 'カエル', job: '調査員', rule: '指定した3人の中に犯人が2人以上いるかを証言する。', type: 'majority' }
+    { id: 'frog', name: 'カエル', job: '調査員', rule: '指定した3匹の中に犯人が2匹以上いるかを証言する。', type: 'majority' }
   ];
   const caseStories = [
     { title: '消えたケーキ事件', description: '広場のパーティーに用意したケーキが、始まる前に食べられてしまいました。集まった動物たちの証言から、犯人を見つけましょう。' },
@@ -71,12 +71,12 @@
     switch (s.type) {
       case 'single': return `${a}は${s.value ? '犯人' : '善人'}だ。`;
       case 'same': return `${a}と${b}は、${s.value ? '同じ立場' : '違う立場'}だ。`;
-      case 'count': return `${list}の3人のうち、犯人はちょうど${s.value}人だ。`;
-      case 'any': return s.value ? `${a}と${b}のうち、少なくとも1人は犯人だ。` : `${a}と${b}の中に、犯人はいない。`;
+      case 'count': return `${list}の3匹のうち、犯人はちょうど${s.value}匹だ。`;
+      case 'any': return s.value ? `${a}と${b}のうち、少なくとも1匹は犯人だ。` : `${a}と${b}の中に、犯人はいない。`;
       case 'both': return s.value ? `${a}と${b}は、両方とも犯人だ。` : `${a}と${b}が、両方とも犯人ということはない。`;
-      case 'parity': return `${list}の3人のうち、犯人の人数は${s.value ? '奇数（1人か3人）' : '偶数（0人か2人）'}だ。`;
+      case 'parity': return `${list}の3匹のうち、犯人の数は${s.value ? '奇数（1匹か3匹）' : '偶数（0匹か2匹）'}だ。`;
       case 'ordered': return s.value ? `${a}は犯人で、${b}は善人だ。` : `「${a}が犯人で、${b}が善人」という組み合わせではない。`;
-      case 'majority': return `${list}の3人のうち、犯人は${s.value ? '2人以上' : '1人以下'}だ。`;
+      case 'majority': return `${list}の3匹のうち、犯人は${s.value ? '2匹以上' : '1匹以下'}だ。`;
     }
   }
   const initialTrust = 5;

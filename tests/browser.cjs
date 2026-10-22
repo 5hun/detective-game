@@ -75,9 +75,11 @@ async function checkReadings(page) {
     addReadings(probe);
   });
   await checkReadings(page);
+  const gameText = await baseText(page.locator('body'));
+  assert.ok(!/(?:[0-9]人|人数|全員|PERSONS|CASE FILE)/.test(gameText), 'animal counts use 匹 and case number is removed');
   const segments = await page.evaluate(() => {
     const sample = document.createElement('p');
-    sample.textContent = '消えた 3人 持ち去られ 見抜きました 1人 2人';
+    sample.textContent = '消えた 3匹 持ち去られ 見抜きました 1匹 2匹';
     addReadings(sample);
     const once = sample.innerHTML;
     addReadings(sample);
@@ -86,8 +88,8 @@ async function checkReadings(page) {
       [node.firstChild.textContent, node.querySelector('rt').textContent]).filter(value => value !== '');
   });
   assert.deepEqual(segments, [
-    ['消', 'き'], 'えた', ' ', '3', ['人', 'にん'], ' ', ['持', 'も'], 'ち', ['去', 'さ'], 'られ', ' ',
-    ['見抜', 'みぬ'], 'き', 'ました ', '1', ['人', 'ひとり'], ' ', '2', ['人', 'ふたり']
+    ['消', 'き'], 'えた', ' ', '3', ['匹', 'びき'], ' ', ['持', 'も'], 'ち', ['去', 'さ'], 'られ', ' ',
+    ['見抜', 'みぬ'], 'き', 'ました ', '1', ['匹', 'ぴき'], ' ', '2', ['匹', 'ひき']
   ]);
   await page.locator('#readings-probe').evaluate(element => element.remove());
   assert.ok(await page.locator('ruby rt').count() > 0);

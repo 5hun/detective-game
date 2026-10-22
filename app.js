@@ -84,10 +84,10 @@
     $('case-title').textContent = story.title;
     $('case-description').textContent = story.description;
     document.title = `${story.title} — どうぶつ探偵`;
-    $('liar-count').textContent = `犯人 ${p.k}人`;
-    $('good-count').textContent = `善人 ${p.people.length - p.k}人`;
+    $('liar-count').textContent = `犯人 ${p.k}匹`;
+    $('good-count').textContent = `善人 ${p.people.length - p.k}匹`;
     $('progress-count').textContent = `${count} / ${p.people.length}`;
-    $('people-count').textContent = `${p.people.length} PERSONS`;
+    $('people-count').textContent = `${p.people.length}匹`;
     $('trust-value').textContent = state.trust;
     $('trust').setAttribute('aria-label', `残り信用 ${state.trust}`);
     $('suspects').innerHTML = p.people.map(renderCard).join('');
@@ -97,7 +97,7 @@
     if (!result.hidden) {
       const won = state.status === 'won';
       result.className = `result ${won ? '' : 'lost'}`;
-      result.innerHTML = `<span class="eyebrow">${won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${won ? 'すべての嘘が、ほどけた。' : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。${mistakes === 0 ? '一度も間違えず、全員の正体を見抜きました。' : `誤判定 ${mistakes}回で、全員の正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>各カードの「真相と証言の照合」で振り返れます。犯人${p.k}人の組み合わせ${E.assignments(p.people.length, p.k).length}通りのうち、全員の証言と矛盾しないのはこの1通りです。</p><button class="primary-button" id="next-case">次の事件へ →</button>`;
+      result.innerHTML = `<span class="eyebrow">${won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${won ? 'すべての嘘が、ほどけた。' : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>各カードの「真相と証言の照合」で振り返れます。犯人${p.k}匹の組み合わせ${E.assignments(p.people.length, p.k).length}通りのうち、みんなの証言と矛盾しないのはこの1通りです。</p><button class="primary-button" id="next-case">次の事件へ →</button>`;
       $('next-case').addEventListener('click', startCase);
     }
     save();
@@ -124,7 +124,7 @@
       judgmentSound.stop();
       state = fresh($('difficulty').value);
       $('feedback').className = 'feedback';
-      render('新しい事件が届きました。全員の証言が、捜査の手がかりです。');
+      render('新しい事件が届きました。みんなの証言が、捜査の手がかりです。');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) { $('feedback').textContent = err.message; addReadings($('feedback')); }
   }
