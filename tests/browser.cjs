@@ -56,6 +56,9 @@ async function checkReadings(page) {
   assert.equal(await page.locator('.detective-scene, .detective-name, .mobile-detective').count(), 0);
   await page.locator('#animals-button').click();
   assert.equal(await page.locator('.animal-entry').count(), 8);
+  assert.ok(await page.locator('.portrait').evaluateAll(portraits =>
+    portraits.every(svg => svg.getAttribute('viewBox') === '0 0 16 12' &&
+      [...svg.querySelectorAll('rect')].every(rect => Number(rect.getAttribute('y')) < 12))));
   await page.locator('[data-close="animals-dialog"]').click();
   await page.screenshot({ path: '/tmp/beast-detective-desktop.png', fullPage: true });
   assert.equal(await page.locator('.statement').count(), 0);

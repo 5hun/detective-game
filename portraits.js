@@ -18,10 +18,9 @@
   };
   root.portrait = function (id, extra = '') {
     const [fur, inner, muzzle] = colors[id];
-    const palette = { a: fur, b: inner, c: '#182c30', d: muzzle, e: '#354044', f: '#293b3e', s: '#4e6664', t: '#d8c8a3', y: '#bc9b5b' };
-    let rows = [...faces[id], '....ssssssss....','...sssttttsss...','..sssstyytssss..','.ssssstyy tsssss.'.replace(' ',''),'.ssssssttssssss.','.ssssssssssssss.'];
-    if (id === 'gorilla') rows = ['.....yyyyyy.....','....yyyyyyyy....','....ffffffff....','..yyyyyyyyyyyy..', ...rows.slice(3)];
+    const palette = { a: fur, b: inner, c: '#182c30', d: muzzle, e: '#354044', f: '#293b3e' };
+    const rows = faces[id];
     const rects = rows.flatMap((row, y) => [...row].flatMap((ch, x) => palette[ch] ? [`<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[ch]}"/>`] : [])).join('');
-    return `<svg class="portrait ${extra}" viewBox="0 0 16 18" aria-hidden="true" shape-rendering="crispEdges">${rects}</svg>`;
+    return `<svg class="portrait ${extra}" viewBox="0 0 16 12" aria-hidden="true" shape-rendering="crispEdges">${rects}</svg>`;
   };
 })(globalThis);
