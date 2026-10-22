@@ -43,30 +43,51 @@ test('same seed reproduces the case, different seeds vary it', () => {
     assert.ok(cases.size > 90);
   }
 });
-function state() { const puzzle = E.generate(333, 'normal'); return { puzzle, resolved: puzzle.people.map(() => null), lives: 3, status: 'playing' }; }
-test('correct judgments resolve one person immediately and win with lives remaining', () => {
+function state(level = 'normal') { const puzzle = E.generate(333, level); return { puzzle, resolved: puzzle.people.map(() => null), trust: E.initialTrust, status: 'playing' }; }
+test('correct judgments add trust exactly once and finish with ten trust', () => {
   const s = state();
-  s.puzzle.answer.forEach((answer, i) => assert.equal(E.judge(s, i, answer), true));
-  assert.equal(s.status, 'won'); assert.equal(s.lives, 3);
-  assert.equal(E.judge(s, 0, true), null);
+  assert.equal(s.trust, 5);
+  s.puzzle.answer.forEach((answer, i) => {
+    assert.equal(E.judge(s, i, answer), true);
+    assert.equal(s.trust, 6 + i);
+    assert.equal(E.judge(s, i, answer), null);
+    assert.equal(s.trust, 6 + i);
+  });
+  assert.equal(s.status, 'won');
+  assert.equal(s.trust, 10);
 });
-test('wrong judgment reveals identity once; third mistake ends game', () => {
-  const s = state();
-  assert.equal(E.judge(s, 0, !s.puzzle.answer[0]), false);
-  assert.equal(s.lives, 2); assert.equal(s.status, 'playing');
-  assert.equal(E.judge(s, 0, s.puzzle.answer[0]), null); assert.equal(s.lives, 2);
-  E.judge(s, 1, !s.puzzle.answer[1]); E.judge(s, 2, !s.puzzle.answer[2]);
-  assert.equal(s.lives, 0); assert.equal(s.status, 'lost');
-  assert.equal(E.judge(s, 3, s.puzzle.answer[3]), null);
+test('five incorrect judgments exhaust trust and prohibit further judgments', () => {
+  const s = state('hard');
+  for (let i = 0; i < 5; i++) {
+    assert.equal(E.judge(s, i, !s.puzzle.answer[i]), false);
+    assert.equal(s.trust, 4 - i);
+    assert.equal(s.status, i === 4 ? 'lost' : 'playing');
+  }
+  assert.equal(E.judge(s, 5, s.puzzle.answer[5]), null);
+  assert.equal(s.trust, 0);
 });
-test('last incorrect judgment wins only when a life remains', () => {
-  const s = state();
-  for (let i = 0; i < 4; i++) E.judge(s, i, s.puzzle.answer[i]);
-  E.judge(s, 4, !s.puzzle.answer[4]);
-  assert.equal(s.status, 'won'); assert.equal(s.lives, 2);
+test('correct answers recover trust and final mistakes respect the zero boundary', () => {
+  const s = state('hard');
+  for (let i = 0; i < 4; i++) E.judge(s, i, !s.puzzle.answer[i]);
+  assert.equal(s.trust, 1);
+  E.judge(s, 4, s.puzzle.answer[4]);
+  assert.equal(s.trust, 2);
+  E.judge(s, 5, !s.puzzle.answer[5]);
+  assert.equal(s.status, 'playing');
+  E.judge(s, 6, !s.puzzle.answer[6]);
+  assert.equal(s.status, 'lost');
+  assert.equal(s.trust, 0);
   const t = state();
-  for (let i = 0; i < 5; i++) E.judge(t, i, i % 2 === 0 ? !t.puzzle.answer[i] : t.puzzle.answer[i]);
-  assert.equal(t.status, 'lost'); assert.equal(t.lives, 0);
+  for (let i = 0; i < 4; i++) E.judge(t, i, t.puzzle.answer[i]);
+  E.judge(t, 4, !t.puzzle.answer[4]);
+  assert.equal(t.status, 'won');
+  assert.equal(t.trust, 8);
+});
+test('easy cases complete even with four mistakes because one trust remains', () => {
+  const s = state('easy');
+  s.puzzle.answer.forEach((answer, i) => E.judge(s, i, !answer));
+  assert.equal(s.trust, 1);
+  assert.equal(s.status, 'won');
 });
 test('all statement polarities and count boundaries are evaluated correctly', () => {
   assert.equal(E.evaluate({ type:'count', targets:[0,1,2], value:0 }, [false,false,false]), true);

@@ -3,7 +3,6 @@
   const E = window.DetectiveEngine;
   const $ = id => document.getElementById(id);
   const key = 'beast-detective-v1';
-  // Keep the saved lives field compatible with existing games; the UI calls it 信用.
   const markers = [ { name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' } ];
   const preferencesKey = 'animal-detective-preferences-v1';
   const preferences = { ruby: true, sound: true };
@@ -42,22 +41,25 @@
   function fresh(level) {
     const seed = window.crypto ? crypto.getRandomValues(new Uint32Array(1))[0] : Date.now() >>> 0;
     const puzzle = E.generate(seed, level);
-    return { version: 1, puzzle, lives: 3, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0), revealed: puzzle.people.map(() => false) };
+    return { version: 2, puzzle, trust: E.initialTrust, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0), revealed: puzzle.people.map(() => false) };
   }
   function restore() {
     try {
       const saved = JSON.parse(localStorage.getItem(key));
-      if (!saved || saved.version !== 1 || !E.levels[saved.puzzle?.level] || !Number.isInteger(saved.puzzle.seed)) return null;
+      if (!saved || ![1, 2].includes(saved.version) || !E.levels[saved.puzzle?.level] || !Number.isInteger(saved.puzzle.seed)) return null;
       const puzzle = E.generate(saved.puzzle.seed, saved.puzzle.level); const n = puzzle.people.length;
       if (![saved.resolved, saved.notes, saved.markers].every(a => Array.isArray(a) && a.length === n)) return null;
       if (!saved.notes.every(v => typeof v === 'string' && v.length <= 1000) || !saved.markers.every(v => Number.isInteger(v) && v >= 0 && v <= 3)) return null;
       if (!saved.resolved.every((r, i) => r === null || (typeof r.guess === 'boolean' && r.correct === (r.guess === puzzle.answer[i])))) return null;
       const mistakes = saved.resolved.filter(r => r && !r.correct).length;
-      if (mistakes > 3 || saved.lives !== 3 - mistakes) return null;
-      const status = saved.lives === 0 ? 'lost' : saved.resolved.every(r => r !== null) ? 'won' : 'playing';
+      const trust = E.initialTrust + saved.resolved.filter(r => r?.correct).length - mistakes;
+      if (saved.version === 1 && (mistakes > 3 || saved.lives !== 3 - mistakes)) return null;
+      if (trust < 0 || (saved.version === 2 && saved.trust !== trust)) return null;
+      const status = trust === 0 ? 'lost' : saved.resolved.every(r => r !== null) ? 'won' : 'playing';
       const revealed = saved.revealed === undefined ? puzzle.people.map(() => false) : saved.revealed;
       if (!Array.isArray(revealed) || revealed.length !== n || !revealed.every(v => typeof v === 'boolean')) return null;
-      return { ...saved, puzzle, status, revealed };
+      const { lives, ...migrated } = saved;
+      return { ...migrated, version: 2, puzzle, trust, status, revealed };
     } catch { return null; }
   }
   function save() {
@@ -77,6 +79,7 @@
   }
   function render(message) {
     const p = state.puzzle; const count = state.resolved.filter(r => r !== null).length;
+    const mistakes = state.resolved.filter(r => r && !r.correct).length;
     const story = E.caseStories[p.seed % E.caseStories.length];
     $('case-title').textContent = story.title;
     $('case-description').textContent = story.description;
@@ -85,8 +88,8 @@
     $('good-count').textContent = `善人 ${p.people.length - p.k}人`;
     $('progress-count').textContent = `${count} / ${p.people.length}`;
     $('people-count').textContent = `${p.people.length} PERSONS`;
-    $('trust').innerHTML = Array.from({ length: 3 }, (_, i) => `<span ${i >= state.lives ? 'class="spent"' : ''} aria-hidden="true">${i >= state.lives ? '☆' : '★'}</span>`).join('');
-    $('trust').setAttribute('aria-label', `残り信用 ${state.lives} / 3`);
+    $('trust-value').textContent = state.trust;
+    $('trust').setAttribute('aria-label', `残り信用 ${state.trust}`);
     $('suspects').innerHTML = p.people.map(renderCard).join('');
     state.notes.forEach((v, i) => { $(`memo-${i}`).value = v; });
     $('feedback').textContent = message || '「証言を聞く」をタップして、証言を読み比べましょう。';
@@ -94,7 +97,7 @@
     if (!result.hidden) {
       const won = state.status === 'won';
       result.className = `result ${won ? '' : 'lost'}`;
-      result.innerHTML = `<span class="eyebrow">${won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${won ? 'すべての嘘が、ほどけた。' : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。${3 - state.lives === 0 ? '一度も間違えず、全員の正体を見抜きました。' : `誤判定 ${3 - state.lives}回で、全員の正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>各カードの「真相と証言の照合」で振り返れます。犯人${p.k}人の組み合わせ${E.assignments(p.people.length, p.k).length}通りのうち、全員の証言と矛盾しないのはこの1通りです。</p><button class="primary-button" id="next-case">次の事件へ →</button>`;
+      result.innerHTML = `<span class="eyebrow">${won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${won ? 'すべての嘘が、ほどけた。' : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。${mistakes === 0 ? '一度も間違えず、全員の正体を見抜きました。' : `誤判定 ${mistakes}回で、全員の正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>各カードの「真相と証言の照合」で振り返れます。犯人${p.k}人の組み合わせ${E.assignments(p.people.length, p.k).length}通りのうち、全員の証言と矛盾しないのはこの1通りです。</p><button class="primary-button" id="next-case">次の事件へ →</button>`;
       $('next-case').addEventListener('click', startCase);
     }
     save();
@@ -150,7 +153,7 @@
       if (correct === null) return;
       if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
-      render(`${correct ? '✓ 正解です。' : '× 誤判定。信用 −1。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
+      render(`${correct ? '✓ 正解です。信用 ＋1。' : '× 誤判定。信用 −1。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
       if (state.status !== 'playing') {
         showResultDialog();
         return;

@@ -79,16 +79,17 @@
       case 'majority': return `${list}の3人のうち、犯人は${s.value ? '2人以上' : '1人以下'}だ。`;
     }
   }
+  const initialTrust = 5;
   function judge(state, index, guess) {
     if (state.status !== 'playing' || state.resolved[index] !== null) return null;
     const correct = state.puzzle.answer[index] === guess;
     state.resolved[index] = { correct, guess };
-    if (!correct) state.lives--;
-    if (state.lives === 0) state.status = 'lost';
+    state.trust += correct ? 1 : -1;
+    if (state.trust === 0) state.status = 'lost';
     else if (state.resolved.every(r => r !== null)) state.status = 'won';
     return correct;
   }
-  const api = { roles, caseStories, levels, generate, solve, evaluate, statementText, assignments, judge };
+  const api = { initialTrust, roles, caseStories, levels, generate, solve, evaluate, statementText, assignments, judge };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DetectiveEngine = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

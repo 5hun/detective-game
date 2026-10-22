@@ -123,8 +123,9 @@ async function checkReadings(page) {
   await page.locator('#new-case').click();
   await page.locator('[data-close="new-dialog"]').click();
   assert.ok((await page.locator('#memo-0').inputValue()).includes('メモ保存テスト'));
-  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 3 / 3');
-  assert.equal(await page.locator('#trust').textContent(), '★★★');
+  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 5');
+  assert.equal(await page.locator('#trust-value').textContent(), '5');
+  assert.equal(await page.locator('.trust-icon').textContent(), '☆');
   const storyTitle = await baseText(page.locator('#case-title'));
   const storyDescription = await baseText(page.locator('#case-description'));
   const expectedStory = await page.evaluate(() => {
@@ -144,6 +145,7 @@ async function checkReadings(page) {
   for (let i = 0; i < solution.length; i++) {
     await page.locator(`#person-${i} [data-judge="${solution[i] ? 'liar' : 'good'}"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
+    assert.equal(await page.locator('#trust-value').textContent(), String(6 + i));
     if (i === 0) {
       assert.deepEqual(await page.evaluate(() => window.playedTones), []);
       await setToggle(page.locator('#sound-toggle'), true);
@@ -167,6 +169,7 @@ async function checkReadings(page) {
   await checkReadings(page);
   await page.reload();
   assert.ok(await page.locator('#result').isVisible());
+  assert.equal(await page.locator('#trust-value').textContent(), '10');
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', true);
   assert.equal(await page.locator('#person-0 .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');
@@ -176,12 +179,12 @@ async function checkReadings(page) {
   assert.equal(await page.locator('.statement').count(), 0);
   const hard = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
   assert.equal(await page.locator('[data-portrait-state="neutral"]').count(), 15);
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 5; i++) {
     await page.locator(`#person-${i} [data-judge="${hard[i] ? 'good' : 'liar'}"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), hard[i] ? 'liar' : 'good');
     await page.waitForFunction(() => window.playedTones.length > 0);
-    assert.equal(await page.locator('#trust .spent').count(), i + 1);
-    assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り信用 ${2 - i} / 3`);
+    assert.equal(await page.locator('#trust-value').textContent(), String(4 - i));
+    assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り信用 ${4 - i}`);
     const tones = await page.evaluate(() => window.playedTones.splice(0));
     assert.equal(tones.length, 2);
     assert.ok(tones[0] > tones[1], 'incorrect answer plays descending tones');
@@ -246,6 +249,32 @@ async function checkReadings(page) {
   await page.evaluate(() => localStorage.setItem('beast-detective-v1', '{bad json'));
   await page.reload();
   assert.equal(await page.locator('.suspect').count(), 5);
+  const migrated = await browser.newPage();
+  await migrated.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
+  await migrated.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('beast-detective-v1'));
+    saved.version = 1;
+    delete saved.trust;
+    saved.lives = 2;
+    saved.resolved = saved.puzzle.answer.map((answer, i) => i < 3 ? { guess: i === 2 ? !answer : answer, correct: i !== 2 } : null);
+    saved.notes[0] = '以前のメモ';
+    saved.revealed[0] = true;
+    localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
+  });
+  await migrated.reload();
+  assert.equal(await migrated.locator('#trust-value').textContent(), '6');
+  assert.equal(await migrated.locator('#memo-0').inputValue(), '以前のメモ');
+  assert.equal(await migrated.locator('.statement').count(), 1);
+  assert.equal(await migrated.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).version), 2);
+  await migrated.reload();
+  assert.equal(await migrated.locator('#trust-value').textContent(), '6');
+  await migrated.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('beast-detective-v1'));
+    saved.trust = 999;
+    localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
+  });
+  await migrated.reload();
+  assert.equal(await migrated.locator('#trust-value').textContent(), '5');
   const blocked = await browser.newPage();
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
   await blocked.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
