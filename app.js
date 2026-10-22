@@ -3,7 +3,7 @@
   const E = window.DetectiveEngine;
   const $ = id => document.getElementById(id);
   const key = 'beast-detective-v1';
-  const saveVersion = 2;
+  const saveVersion = 3;
   const markers = [ { name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' } ];
   const preferencesKey = 'animal-detective-preferences-v1';
   const preferences = { ruby: true, sound: true };
@@ -53,7 +53,7 @@
       if (!saved.notes.every(v => typeof v === 'string' && v.length <= 1000) || !saved.markers.every(v => Number.isInteger(v) && v >= 0 && v <= 3)) return null;
       if (!saved.resolved.every((r, i) => r === null || (typeof r.guess === 'boolean' && r.correct === (r.guess === puzzle.answer[i])))) return null;
       const mistakes = saved.resolved.filter(r => r && !r.correct).length;
-      const trust = E.initialTrust + saved.resolved.filter(r => r?.correct).length - mistakes;
+      const trust = Math.max(0, E.initialTrust + saved.resolved.filter(r => r?.correct).length - 2 * mistakes);
       if (trust < 0 || saved.trust !== trust) return null;
       const status = trust === 0 ? 'lost' : saved.resolved.every(r => r !== null) ? 'won' : 'playing';
       if (saved.status !== status) return null;
@@ -152,7 +152,7 @@
       if (correct === null) return;
       if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
-      render(`${correct ? '✓ 正解です。信用 ＋1。' : '× 誤判定。信用 −1。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
+      render(`${correct ? '✓ 正解です。信用 ＋1。' : '× 誤判定。信用 −2。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
       if (state.status !== 'playing') {
         showResultDialog();
         return;

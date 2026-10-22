@@ -56,38 +56,41 @@ test('correct judgments add trust exactly once and finish with ten trust', () =>
   assert.equal(s.status, 'won');
   assert.equal(s.trust, 10);
 });
-test('five incorrect judgments exhaust trust and prohibit further judgments', () => {
+test('incorrect judgments deduct two, clamp to zero, and stop after the third mistake', () => {
   const s = state('hard');
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 3; i++) {
     assert.equal(E.judge(s, i, !s.puzzle.answer[i]), false);
-    assert.equal(s.trust, 4 - i);
-    assert.equal(s.status, i === 4 ? 'lost' : 'playing');
+    assert.equal(s.trust, [3, 1, 0][i]);
+    assert.equal(s.status, i === 2 ? 'lost' : 'playing');
+    assert.equal(E.judge(s, i, s.puzzle.answer[i]), null);
   }
-  assert.equal(E.judge(s, 5, s.puzzle.answer[5]), null);
+  assert.equal(E.judge(s, 3, s.puzzle.answer[3]), null);
   assert.equal(s.trust, 0);
 });
-test('correct answers recover trust and final mistakes respect the zero boundary', () => {
-  const s = state('hard');
-  for (let i = 0; i < 4; i++) E.judge(s, i, !s.puzzle.answer[i]);
+test('correct answers recover trust and losses also occur at exactly zero', () => {
+  const s = state();
+  E.judge(s, 0, !s.puzzle.answer[0]);
+  E.judge(s, 1, !s.puzzle.answer[1]);
   assert.equal(s.trust, 1);
-  E.judge(s, 4, s.puzzle.answer[4]);
+  E.judge(s, 2, s.puzzle.answer[2]);
   assert.equal(s.trust, 2);
-  E.judge(s, 5, !s.puzzle.answer[5]);
-  assert.equal(s.status, 'playing');
-  E.judge(s, 6, !s.puzzle.answer[6]);
+  E.judge(s, 3, !s.puzzle.answer[3]);
   assert.equal(s.status, 'lost');
   assert.equal(s.trust, 0);
   const t = state();
   for (let i = 0; i < 4; i++) E.judge(t, i, t.puzzle.answer[i]);
   E.judge(t, 4, !t.puzzle.answer[4]);
   assert.equal(t.status, 'won');
-  assert.equal(t.trust, 8);
+  assert.equal(t.trust, 7);
 });
-test('easy cases complete even with four mistakes because one trust remains', () => {
+test('final wrong judgment loses when it exhausts trust', () => {
   const s = state('easy');
-  s.puzzle.answer.forEach((answer, i) => E.judge(s, i, !answer));
-  assert.equal(s.trust, 1);
-  assert.equal(s.status, 'won');
+  E.judge(s, 0, !s.puzzle.answer[0]);
+  E.judge(s, 1, s.puzzle.answer[1]);
+  E.judge(s, 2, !s.puzzle.answer[2]);
+  E.judge(s, 3, !s.puzzle.answer[3]);
+  assert.equal(s.trust, 0);
+  assert.equal(s.status, 'lost');
 });
 test('all statement polarities and count boundaries are evaluated correctly', () => {
   assert.equal(E.evaluate({ type:'count', targets:[0,1,2], value:0 }, [false,false,false]), true);

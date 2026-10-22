@@ -84,7 +84,7 @@
     if (state.status !== 'playing' || state.resolved[index] !== null) return null;
     const correct = state.puzzle.answer[index] === guess;
     state.resolved[index] = { correct, guess };
-    state.trust += correct ? 1 : -1;
+    state.trust = Math.max(0, state.trust + (correct ? 1 : -2));
     if (state.trust === 0) state.status = 'lost';
     else if (state.resolved.every(r => r !== null)) state.status = 'won';
     return correct;

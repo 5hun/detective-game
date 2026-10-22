@@ -186,12 +186,12 @@ async function checkReadings(page) {
   assert.equal(await page.locator('.statement').count(), 0);
   const hard = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
   assert.equal(await page.locator('[data-portrait-state="neutral"]').count(), 15);
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 3; i++) {
     await page.locator(`#person-${i} [data-judge="${hard[i] ? 'good' : 'liar'}"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), hard[i] ? 'liar' : 'good');
     await page.waitForFunction(() => window.playedTones.length > 0);
-    assert.equal(await page.locator('#trust-value').textContent(), String(4 - i));
-    assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り信用 ${4 - i}`);
+    assert.equal(await page.locator('#trust-value').textContent(), String(Math.max(0, 3 - 2 * i)));
+    assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り信用 ${Math.max(0, 3 - 2 * i)}`);
     const tones = await page.evaluate(() => window.playedTones.splice(0));
     assert.equal(tones.length, 2);
     assert.ok(tones[0] > tones[1], 'incorrect answer plays descending tones');
@@ -202,6 +202,9 @@ async function checkReadings(page) {
   assert.equal(await page.locator('#result-dialog').isVisible(), false);
   assert.ok((await baseText(page.locator('#result'))).includes('信用がなくなりました'));
   assert.equal(await page.locator('[data-judge]').count(), 0);
+  await page.reload();
+  assert.equal(await page.locator('#trust-value').textContent(), '0');
+  assert.ok(await page.locator('#result').isVisible());
   await page.locator('#difficulty').selectOption('easy');
   await page.locator('#next-case').click();
   assert.equal(await page.locator('.suspect').count(), 4);
@@ -260,11 +263,12 @@ async function checkReadings(page) {
   assert.equal(await page.locator('.suspect').count(), 5);
   const invalidSave = await browser.newPage();
   await invalidSave.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
-  for (const problem of ['old-version', 'missing-revealed', 'wrong-trust', 'wrong-status']) {
+  for (const problem of ['old-version', 'previous-rules', 'missing-revealed', 'wrong-trust', 'wrong-status']) {
     await invalidSave.evaluate(problem => {
       const saved = JSON.parse(localStorage.getItem('beast-detective-v1'));
       saved.notes[0] = '引き継がないメモ';
       if (problem === 'old-version') saved.version = 1;
+      if (problem === 'previous-rules') saved.version = 2;
       if (problem === 'missing-revealed') delete saved.revealed;
       if (problem === 'wrong-trust') saved.trust = 999;
       if (problem === 'wrong-status') saved.status = 'won';
