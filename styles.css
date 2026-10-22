@@ -2,3 +2,7 @@
 
 .mobile-detective{display:none}.detective-name>span:not(.badge){font-size:10px;color:var(--muted);width:100%}
 @media(max-width:760px){.sidebar .detective-name{display:flex;grid-column:1/-1;margin:0 0 5px;gap:9px}.detective-name .mobile-detective{display:block;width:28px;height:32px}.detective-name>span:not(.badge){width:auto;font-size:9px}.detective-name strong{font-size:14px}.detective-name .badge{margin-left:auto}.judge{min-height:44px}.marker-button{width:28px;height:32px}.memo-row textarea{font-size:16px;height:35px}.memo-row textarea::placeholder{font-size:11px}}
+
+.animal-entry{display:grid;grid-template-columns:56px minmax(0,1fr);gap:16px;border-top:1px solid var(--line);padding:16px 0}
+.animal-entry h3,.animal-entry p{margin:0}.animal-entry small{font-size:11px;font-weight:normal}
+@media(max-width:760px){.masthead{height:auto;min-height:75px;flex-wrap:wrap;gap:10px;padding-top:12px;padding-bottom:12px}.header-right{gap:8px}}

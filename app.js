@@ -95,6 +95,8 @@
   $('suspects').addEventListener('input', event => {
     if (event.target.matches('[data-note]')) { state.notes[Number(event.target.dataset.note)] = event.target.value; save(); }
   });
+  $('animals-list').innerHTML = E.roles.map(person => `<article class="animal-entry"><div>${portrait(person.id)}</div><div><h3>${person.name} <small>${person.job}</small></h3><p>${person.rule}</p></div></article>`).join('');
+  $('animals-button').addEventListener('click', () => $('animals-dialog').showModal());
   $('help-button').addEventListener('click', () => $('help-dialog').showModal());
   $('new-case').addEventListener('click', () => {
     if (state.status === 'playing') $('new-dialog').showModal(); else startCase();
