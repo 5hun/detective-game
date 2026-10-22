@@ -129,7 +129,7 @@
     } catch (err) { $('feedback').textContent = err.message; addReadings($('feedback')); }
   }
   // Keep keyboard/scrollIntoView targets below the pinned summary, including with ruby enabled.
-  const summary = document.querySelector('.case-summary');
+  const summary = document.querySelector('.case-status');
   new ResizeObserver(() => {
     document.documentElement.style.setProperty('--summary-height', `${summary.getBoundingClientRect().height}px`);
   }).observe(summary);

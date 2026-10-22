@@ -146,6 +146,11 @@ async function checkReadings(page) {
     await page.locator(`#person-${i} [data-judge="${solution[i] ? 'liar' : 'good'}"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
     assert.equal(await page.locator('#trust-value').textContent(), String(6 + i));
+    if (i < solution.length - 1) {
+      const feedback = await page.locator('#feedback').boundingBox();
+      assert.ok(feedback.y >= 0 && feedback.y + feedback.height <= 1100, 'judgment message stays in viewport');
+      assert.ok((await baseText(page.locator('#feedback'))).includes('正解です。信用 ＋1。'));
+    }
     if (i === 0) {
       assert.deepEqual(await page.evaluate(() => window.playedTones), []);
       await setToggle(page.locator('#sound-toggle'), true);
@@ -217,6 +222,8 @@ async function checkReadings(page) {
       const summary = await page.locator('.case-summary').boundingBox();
       assert.ok(summary.y >= 0 && summary.y < 2, `summary pinned at ${width}, ruby=${rubyEnabled}`);
       assert.ok(summary.y + summary.height < 844);
+      const feedback = await page.locator('#feedback').boundingBox();
+      assert.ok(feedback.y >= summary.y + summary.height && feedback.y + feedback.height <= 844, 'feedback remains visible while scrolling');
       for (const id of ['liar-count', 'good-count', 'progress-count', 'trust']) {
         const box = await page.locator('#' + id).boundingBox();
         assert.ok(box.y >= summary.y && box.y + box.height <= summary.y + summary.height);
