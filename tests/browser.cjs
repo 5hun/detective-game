@@ -27,6 +27,21 @@ async function checkReadings(page) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
+  await page.addInitScript(() => {
+    window.playedTones = [];
+    const NativeAudioContext = window.AudioContext;
+    window.AudioContext = class extends NativeAudioContext {
+      createOscillator() {
+        const oscillator = super.createOscillator();
+        const setFrequency = oscillator.frequency.setValueAtTime.bind(oscillator.frequency);
+        oscillator.frequency.setValueAtTime = (value, time) => {
+          window.playedTones.push(value);
+          return setFrequency(value, time);
+        };
+        return oscillator;
+      }
+    };
+  });
   await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
   await page.locator('.suspect').last().waitFor();
   await page.evaluate(() => {
@@ -78,10 +93,23 @@ async function checkReadings(page) {
   await page.locator('[data-close="new-dialog"]').click();
   assert.ok((await page.locator('#memo-0').inputValue()).includes('メモ保存テスト'));
   const solution = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
+  assert.deepEqual(await page.evaluate(() => window.playedTones), []);
+  await page.locator('#sound-toggle').uncheck();
+  await page.reload();
+  assert.equal(await page.locator('#sound-toggle').isChecked(), false);
   const neutralPortrait = await page.locator('#person-0 .portrait').innerHTML();
   for (let i = 0; i < solution.length; i++) {
     await page.locator(`#person-${i} [data-judge="${solution[i] ? 'liar' : 'good'}"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
+    if (i === 0) {
+      assert.deepEqual(await page.evaluate(() => window.playedTones), []);
+      await page.locator('#sound-toggle').check();
+    } else {
+      await page.waitForFunction(() => window.playedTones.length > 0);
+      const tones = await page.evaluate(() => window.playedTones.splice(0));
+      assert.equal(tones.length, 3);
+      assert.ok(tones[0] < tones[1] && tones[1] < tones[2], 'correct answer plays ascending tones');
+    }
   }
   assert.notEqual(await page.locator('#person-0 .portrait').innerHTML(), neutralPortrait);
   assert.ok((await baseText(page.locator('#result'))).includes('事件解決'));
@@ -89,6 +117,8 @@ async function checkReadings(page) {
   await checkReadings(page);
   await page.reload();
   assert.ok(await page.locator('#result').isVisible());
+  assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
+  assert.equal(await page.locator('#sound-toggle').isChecked(), true);
   assert.equal(await page.locator('#person-0 .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');
   await page.locator('#difficulty').selectOption('hard');
   await page.locator('#next-case').click();
@@ -99,6 +129,10 @@ async function checkReadings(page) {
   for (let i = 0; i < 3; i++) {
     await page.locator(`#person-${i} [data-judge="${hard[i] ? 'good' : 'liar'}"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), hard[i] ? 'liar' : 'good');
+    await page.waitForFunction(() => window.playedTones.length > 0);
+    const tones = await page.evaluate(() => window.playedTones.splice(0));
+    assert.equal(tones.length, 2);
+    assert.ok(tones[0] > tones[1], 'incorrect answer plays descending tones');
   }
   assert.ok((await baseText(page.locator('#result'))).includes('ライフがなくなりました'));
   assert.equal(await page.locator('[data-judge]').count(), 0);
@@ -124,6 +158,16 @@ async function checkReadings(page) {
   await blocked.locator('#ruby-toggle').uncheck();
   assert.equal(await blocked.locator('ruby rt').first().isVisible(), false);
   assert.ok((await baseText(blocked.locator('#save-status'))).includes('保存できません'));
+  await blocked.locator('#sound-toggle').uncheck();
+  assert.equal(await blocked.locator('#sound-toggle').isChecked(), false);
+  const silent = await browser.newPage();
+  silent.on('pageerror', e => errors.push(e.message));
+  await silent.addInitScript(() => {
+    window.AudioContext = class { constructor() { throw new Error('audio unavailable'); } };
+  });
+  await silent.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
+  await silent.locator('#person-0 [data-judge="good"]').click();
+  assert.equal(await silent.locator('#person-0 .resolved-tag').count(), 1);
   assert.deepEqual(errors, []);
   await browser.close();
   console.log('PASS: file:// launch, desktop/mobile widths, notes/markers, restore, dialogs, wins/losses, all levels, corrupt/blocked storage.');

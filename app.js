@@ -5,7 +5,7 @@
   const key = 'beast-detective-v1';
   const markers = [ { name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' } ];
   const preferencesKey = 'animal-detective-preferences-v1';
-  const preferences = { ruby: true };
+  const preferences = { ruby: true, sound: true };
   try {
     const saved = JSON.parse(localStorage.getItem(preferencesKey));
     for (const name of Object.keys(preferences)) {
@@ -23,6 +23,12 @@
   $('ruby-toggle').addEventListener('change', event => {
     preferences.ruby = event.target.checked;
     applyRubyPreference();
+    savePreferences();
+  });
+  $('sound-toggle').checked = preferences.sound;
+  $('sound-toggle').addEventListener('change', event => {
+    preferences.sound = event.target.checked;
+    if (!preferences.sound) judgmentSound.stop();
     savePreferences();
   });
   let state; let storageAvailable = true;
@@ -86,6 +92,7 @@
   }
   function startCase() {
     try {
+      judgmentSound.stop();
       state = fresh($('difficulty').value);
       $('feedback').className = 'feedback';
       render('新しい事件が届きました。全員の証言が、捜査の手がかりです。');
@@ -110,6 +117,7 @@
     if (judge) {
       const i = Number(judge.dataset.index); const correct = E.judge(state, i, judge.dataset.judge === 'liar');
       if (correct === null) return;
+      if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
       render(`${correct ? '✓ 正解です。' : '× 誤判定。ライフ −1。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
       // Restore keyboard focus after replacing the card list.
