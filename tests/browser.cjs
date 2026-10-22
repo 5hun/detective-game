@@ -258,32 +258,23 @@ async function checkReadings(page) {
   await page.evaluate(() => localStorage.setItem('beast-detective-v1', '{bad json'));
   await page.reload();
   assert.equal(await page.locator('.suspect').count(), 5);
-  const migrated = await browser.newPage();
-  await migrated.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
-  await migrated.evaluate(() => {
-    const saved = JSON.parse(localStorage.getItem('beast-detective-v1'));
-    saved.version = 1;
-    delete saved.trust;
-    saved.lives = 2;
-    saved.resolved = saved.puzzle.answer.map((answer, i) => i < 3 ? { guess: i === 2 ? !answer : answer, correct: i !== 2 } : null);
-    saved.notes[0] = '以前のメモ';
-    saved.revealed[0] = true;
-    localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
-  });
-  await migrated.reload();
-  assert.equal(await migrated.locator('#trust-value').textContent(), '6');
-  assert.equal(await migrated.locator('#memo-0').inputValue(), '以前のメモ');
-  assert.equal(await migrated.locator('.statement').count(), 1);
-  assert.equal(await migrated.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).version), 2);
-  await migrated.reload();
-  assert.equal(await migrated.locator('#trust-value').textContent(), '6');
-  await migrated.evaluate(() => {
-    const saved = JSON.parse(localStorage.getItem('beast-detective-v1'));
-    saved.trust = 999;
-    localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
-  });
-  await migrated.reload();
-  assert.equal(await migrated.locator('#trust-value').textContent(), '5');
+  const invalidSave = await browser.newPage();
+  await invalidSave.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
+  for (const problem of ['old-version', 'missing-revealed', 'wrong-trust', 'wrong-status']) {
+    await invalidSave.evaluate(problem => {
+      const saved = JSON.parse(localStorage.getItem('beast-detective-v1'));
+      saved.notes[0] = '引き継がないメモ';
+      if (problem === 'old-version') saved.version = 1;
+      if (problem === 'missing-revealed') delete saved.revealed;
+      if (problem === 'wrong-trust') saved.trust = 999;
+      if (problem === 'wrong-status') saved.status = 'won';
+      localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
+    }, problem);
+    await invalidSave.reload();
+    assert.equal(await invalidSave.locator('#trust-value').textContent(), '5');
+    assert.equal(await invalidSave.locator('#memo-0').inputValue(), '', problem);
+    assert.equal(await invalidSave.locator('.resolved-tag').count(), 0);
+  }
   const blocked = await browser.newPage();
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
   await blocked.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);

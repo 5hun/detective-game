@@ -3,6 +3,7 @@
   const E = window.DetectiveEngine;
   const $ = id => document.getElementById(id);
   const key = 'beast-detective-v1';
+  const saveVersion = 2;
   const markers = [ { name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' } ];
   const preferencesKey = 'animal-detective-preferences-v1';
   const preferences = { ruby: true, sound: true };
@@ -41,25 +42,24 @@
   function fresh(level) {
     const seed = window.crypto ? crypto.getRandomValues(new Uint32Array(1))[0] : Date.now() >>> 0;
     const puzzle = E.generate(seed, level);
-    return { version: 2, puzzle, trust: E.initialTrust, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0), revealed: puzzle.people.map(() => false) };
+    return { version: saveVersion, puzzle, trust: E.initialTrust, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0), revealed: puzzle.people.map(() => false) };
   }
   function restore() {
     try {
       const saved = JSON.parse(localStorage.getItem(key));
-      if (!saved || ![1, 2].includes(saved.version) || !E.levels[saved.puzzle?.level] || !Number.isInteger(saved.puzzle.seed)) return null;
+      if (!saved || saved.version !== saveVersion || !E.levels[saved.puzzle?.level] || !Number.isInteger(saved.puzzle.seed)) return null;
       const puzzle = E.generate(saved.puzzle.seed, saved.puzzle.level); const n = puzzle.people.length;
       if (![saved.resolved, saved.notes, saved.markers].every(a => Array.isArray(a) && a.length === n)) return null;
       if (!saved.notes.every(v => typeof v === 'string' && v.length <= 1000) || !saved.markers.every(v => Number.isInteger(v) && v >= 0 && v <= 3)) return null;
       if (!saved.resolved.every((r, i) => r === null || (typeof r.guess === 'boolean' && r.correct === (r.guess === puzzle.answer[i])))) return null;
       const mistakes = saved.resolved.filter(r => r && !r.correct).length;
       const trust = E.initialTrust + saved.resolved.filter(r => r?.correct).length - mistakes;
-      if (saved.version === 1 && (mistakes > 3 || saved.lives !== 3 - mistakes)) return null;
-      if (trust < 0 || (saved.version === 2 && saved.trust !== trust)) return null;
+      if (trust < 0 || saved.trust !== trust) return null;
       const status = trust === 0 ? 'lost' : saved.resolved.every(r => r !== null) ? 'won' : 'playing';
-      const revealed = saved.revealed === undefined ? puzzle.people.map(() => false) : saved.revealed;
+      if (saved.status !== status) return null;
+      const revealed = saved.revealed;
       if (!Array.isArray(revealed) || revealed.length !== n || !revealed.every(v => typeof v === 'boolean')) return null;
-      const { lives, ...migrated } = saved;
-      return { ...migrated, version: 2, puzzle, trust, status, revealed };
+      return { ...saved, puzzle };
     } catch { return null; }
   }
   function save() {
