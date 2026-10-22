@@ -39,7 +39,7 @@
       }
       const mouthY = id === 'rabbit' ? 10 : ['owl', 'cat', 'frog'].includes(id) ? 8.5 : 9.5;
       expression += `<path d="M6.5 ${mouthY} q1.5 ${state === 'good' ? 2 : -1.8} 3 0" fill="none" stroke="#293b3e" stroke-width=".65"/>`;
-      if (state === 'liar') expression += '<path d="M13 5 l-1 2 q1 2 2 0Z" fill="#75b8d1"/><path d="M3 0v12 M8 0v12 M13 0v12" stroke="#52616a" stroke-width=".65" opacity=".65"/>';
+      if (state === 'liar') expression += '<path d="M13 5 l-1 2 q1 2 2 0Z" fill="#75b8d1"/><path d="M3 0v12 M8 0v12 M13 0v12" stroke="#26343c" stroke-width="1.2"/>';
     }
     const rects = rows.flatMap((row, y) => [...row].flatMap((ch, x) => palette[ch] ? [`<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[ch]}"/>`] : [])).join('');
     return `<svg class="portrait ${extra}" viewBox="0 0 16 12" data-portrait-state="${state}" aria-hidden="true" shape-rendering="crispEdges">${rects}${expression}</svg>`;
