@@ -101,8 +101,25 @@
     }
     save();
   }
+  function showResultDialog() {
+    const content = $('result-dialog-content');
+    const resultCopy = $('result').cloneNode(true);
+    resultCopy.querySelector('#next-case').remove();
+    resultCopy.querySelector('h2').id = 'result-dialog-title';
+    content.replaceChildren(...resultCopy.childNodes);
+    $('result-dialog').classList.toggle('lost', state.status === 'lost');
+    $('result-dialog').showModal();
+  }
+  $('dialog-next-case').addEventListener('click', startCase);
+  $('result-dialog').addEventListener('close', () => {
+    if (state.status !== 'playing') {
+      $('result').scrollIntoView({ block: 'start', behavior: 'instant' });
+      $('next-case').focus({ preventScroll: true });
+    }
+  });
   function startCase() {
     try {
+      $('result-dialog').close();
       judgmentSound.stop();
       state = fresh($('difficulty').value);
       $('feedback').className = 'feedback';
@@ -136,6 +153,10 @@
       if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
       render(`${correct ? '✓ 正解です。' : '× 誤判定。信用 −1。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
+      if (state.status !== 'playing') {
+        showResultDialog();
+        return;
+      }
       // Restore keyboard focus after replacing the card list.
       const next = $('suspects').querySelector('[data-judge]') || $('next-case');
       if (next) next.focus({ preventScroll: true });

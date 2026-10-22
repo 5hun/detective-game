@@ -35,3 +35,7 @@ html{scroll-padding-top:calc(var(--summary-height,120px) + 12px)}
 .preference-button:hover{background:#dfe7d5}
 .preference-button .toggle-off,.preference-button[aria-pressed="false"] .toggle-on{display:none}
 .preference-button[aria-pressed="false"] .toggle-off{display:block}
+
+#result-dialog{border-color:#afbea1;background:#f1f5e9}
+#result-dialog.lost{border-color:#cbb5a2;background:#f8eee6}
+#result-dialog .dialog-actions{flex-wrap:wrap}

@@ -151,6 +151,12 @@ async function checkReadings(page) {
       assert.ok(tones[0] < tones[1] && tones[1] < tones[2], 'correct answer plays ascending tones');
     }
   }
+  assert.ok(await page.locator('#result-dialog').isVisible());
+  assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('事件解決'));
+  await page.screenshot({ path: '/tmp/detective-result-dialog-desktop.png' });
+  await page.locator('#result-dialog .close-button').click();
+  assert.equal(await page.locator('#result-dialog').isVisible(), false);
+  assert.ok(await page.locator('#next-case').isVisible());
   assert.notEqual(await page.locator('#person-0 .portrait').innerHTML(), neutralPortrait);
   assert.ok((await baseText(page.locator('#result'))).includes('事件解決'));
   assert.equal(await page.locator('.truth-detail').count(), 5);
@@ -176,6 +182,10 @@ async function checkReadings(page) {
     assert.equal(tones.length, 2);
     assert.ok(tones[0] > tones[1], 'incorrect answer plays descending tones');
   }
+  assert.ok(await page.locator('#result-dialog').isVisible());
+  assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('信用がなくなりました'));
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#result-dialog').isVisible(), false);
   assert.ok((await baseText(page.locator('#result'))).includes('信用がなくなりました'));
   assert.equal(await page.locator('[data-judge]').count(), 0);
   await page.locator('#difficulty').selectOption('easy');
@@ -208,6 +218,18 @@ async function checkReadings(page) {
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: '/tmp/beast-detective-mobile.png', fullPage: true });
+  const easyAnswer = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
+  for (let i = 0; i < easyAnswer.length; i++) {
+    await page.locator(`#person-${i} [data-judge="${easyAnswer[i] ? 'liar' : 'good'}"]`).click();
+  }
+  const modal = await page.locator('#result-dialog').boundingBox();
+  assert.ok(modal.y >= 0 && modal.y + modal.height <= 844, 'result dialog fits mobile viewport');
+  assert.ok(Math.abs(modal.y + modal.height / 2 - 422) < 2, 'result dialog centered after scrolling');
+  await page.screenshot({ path: '/tmp/detective-result-dialog-mobile.png' });
+  await page.locator('#dialog-next-case').click();
+  assert.equal(await page.locator('#result-dialog').isVisible(), false);
+  assert.equal(await page.locator('#result').isVisible(), false);
+  assert.equal(await page.locator('.suspect').count(), 4);
   await page.evaluate(() => localStorage.setItem('beast-detective-v1', '{bad json'));
   await page.reload();
   assert.equal(await page.locator('.suspect').count(), 5);
