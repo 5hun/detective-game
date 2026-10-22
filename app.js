@@ -3,6 +3,7 @@
   const E = window.DetectiveEngine;
   const $ = id => document.getElementById(id);
   const key = 'beast-detective-v1';
+  // Keep the saved lives field compatible with existing games; the UI calls it 信用.
   const markers = [ { name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' } ];
   const preferencesKey = 'animal-detective-preferences-v1';
   const preferences = { ruby: true, sound: true };
@@ -75,8 +76,8 @@
     $('good-count').textContent = `善人 ${p.people.length - p.k}人`;
     $('progress-count').textContent = `${count} / ${p.people.length}`;
     $('people-count').textContent = `${p.people.length} PERSONS`;
-    $('lives').innerHTML = Array.from({ length: 3 }, (_, i) => `<span ${i >= state.lives ? 'class="spent"' : ''} aria-hidden="true">♥</span>`).join('');
-    $('lives').setAttribute('aria-label', `残りライフ ${state.lives} / 3`);
+    $('trust').innerHTML = Array.from({ length: 3 }, (_, i) => `<span ${i >= state.lives ? 'class="spent"' : ''} aria-hidden="true">${i >= state.lives ? '☆' : '★'}</span>`).join('');
+    $('trust').setAttribute('aria-label', `残り信用 ${state.lives} / 3`);
     $('suspects').innerHTML = p.people.map(renderCard).join('');
     state.notes.forEach((v, i) => { $(`memo-${i}`).value = v; });
     $('feedback').textContent = message || '「証言を聞く」をタップして、証言を読み比べましょう。';
@@ -85,7 +86,7 @@
     if (!result.hidden) {
       const won = state.status === 'won';
       result.className = `result ${won ? '' : 'lost'}`;
-      result.innerHTML = `<span class="eyebrow">${won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${won ? 'すべての嘘が、ほどけた。' : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。${3 - state.lives === 0 ? '一度も間違えず、全員の正体を見抜きました。' : `誤判定 ${3 - state.lives}回で、全員の正体が明らかになりました。`}` : 'ライフがなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>各カードの「真相と証言の照合」で振り返れます。犯人${p.k}人の組み合わせ${E.assignments(p.people.length, p.k).length}通りのうち、全員の証言と矛盾しないのはこの1通りです。</p><button class="primary-button" id="next-case">次の事件へ →</button>`;
+      result.innerHTML = `<span class="eyebrow">${won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${won ? 'すべての嘘が、ほどけた。' : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。${3 - state.lives === 0 ? '一度も間違えず、全員の正体を見抜きました。' : `誤判定 ${3 - state.lives}回で、全員の正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>各カードの「真相と証言の照合」で振り返れます。犯人${p.k}人の組み合わせ${E.assignments(p.people.length, p.k).length}通りのうち、全員の証言と矛盾しないのはこの1通りです。</p><button class="primary-button" id="next-case">次の事件へ →</button>`;
       $('next-case').addEventListener('click', startCase);
     }
     save();
@@ -119,7 +120,7 @@
       if (correct === null) return;
       if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
-      render(`${correct ? '✓ 正解です。' : '× 誤判定。ライフ −1。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
+      render(`${correct ? '✓ 正解です。' : '× 誤判定。信用 −1。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
       // Restore keyboard focus after replacing the card list.
       const next = $('suspects').querySelector('[data-judge]') || $('next-case');
       if (next) next.focus({ preventScroll: true });

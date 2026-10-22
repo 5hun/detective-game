@@ -92,6 +92,8 @@ async function checkReadings(page) {
   await page.locator('#new-case').click();
   await page.locator('[data-close="new-dialog"]').click();
   assert.ok((await page.locator('#memo-0').inputValue()).includes('メモ保存テスト'));
+  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 3 / 3');
+  assert.equal(await page.locator('#trust').textContent(), '★★★');
   const solution = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
   assert.deepEqual(await page.evaluate(() => window.playedTones), []);
   await page.locator('#sound-toggle').uncheck();
@@ -130,11 +132,13 @@ async function checkReadings(page) {
     await page.locator(`#person-${i} [data-judge="${hard[i] ? 'good' : 'liar'}"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), hard[i] ? 'liar' : 'good');
     await page.waitForFunction(() => window.playedTones.length > 0);
+    assert.equal(await page.locator('#trust .spent').count(), i + 1);
+    assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り信用 ${2 - i} / 3`);
     const tones = await page.evaluate(() => window.playedTones.splice(0));
     assert.equal(tones.length, 2);
     assert.ok(tones[0] > tones[1], 'incorrect answer plays descending tones');
   }
-  assert.ok((await baseText(page.locator('#result'))).includes('ライフがなくなりました'));
+  assert.ok((await baseText(page.locator('#result'))).includes('信用がなくなりました'));
   assert.equal(await page.locator('[data-judge]').count(), 0);
   await page.locator('#difficulty').selectOption('easy');
   await page.locator('#next-case').click();
