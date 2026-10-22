@@ -71,8 +71,6 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) { $('feedback').textContent = err.message; addReadings($('feedback')); }
   }
-  $('detective-scene').insertAdjacentHTML('beforeend', portrait('gorilla'));
-  document.querySelector('.detective-name').insertAdjacentHTML('afterbegin', portrait('gorilla', 'mobile-detective'));
   state = restore() || fresh('normal');
   $('difficulty').value = state.puzzle.level;
   render(state.status !== 'playing' ? '前回の捜査結果を開きました。新しい事件にも挑戦できます。' : undefined);

@@ -46,6 +46,7 @@ async function checkReadings(page) {
   await page.locator('#readings-probe').evaluate(element => element.remove());
   assert.ok(await page.locator('ruby rt').count() > 0);
   assert.equal(await page.locator('.suspect').count(), 5);
+  assert.equal(await page.locator('.detective-scene, .detective-name, .mobile-detective').count(), 0);
   await page.locator('#animals-button').click();
   assert.equal(await page.locator('.animal-entry').count(), 8);
   await page.locator('[data-close="animals-dialog"]').click();
