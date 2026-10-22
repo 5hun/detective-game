@@ -101,7 +101,7 @@ async function checkReadings(page) {
   await setToggle(page.locator('#ruby-toggle'), true);
   assert.ok(await page.locator('ruby rt').first().isVisible());
   assert.equal(await page.locator('.suspect').count(), 5);
-  assert.deepEqual(await page.locator('#person-0 .judge-icon').allTextContents(), ['😊', '😈']);
+  assert.deepEqual(await page.locator('#person-0 .judge-icon').allTextContents(), ['😈']);
   assert.equal(await page.locator('.detective-scene, .detective-name, .mobile-detective').count(), 0);
   await page.locator('#animals-button').click();
   assert.equal(await page.locator('.animal-entry').count(), 8);
@@ -145,16 +145,17 @@ async function checkReadings(page) {
   assert.equal(await baseText(page.locator('#case-title')), storyTitle);
   assert.equal(await baseText(page.locator('#case-description')), storyDescription);
   const neutralPortrait = await page.locator('#person-0 .portrait').innerHTML();
-  for (let i = 0; i < solution.length; i++) {
-    await page.locator(`#person-${i} [data-judge="${solution[i] ? 'liar' : 'good'}"]`).click();
+  const criminals = solution.flatMap((liar, i) => liar ? [i] : []);
+  for (const [step, i] of criminals.entries()) {
+    await page.locator(`#person-${i} [data-judge="liar"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
-    assert.equal(await page.locator('#trust-value').textContent(), String(6 + i));
-    if (i < solution.length - 1) {
+    assert.equal(await page.locator('#trust-value').textContent(), String(6 + step));
+    if (step < criminals.length - 1) {
       const feedback = await page.locator('#feedback').boundingBox();
       assert.ok(feedback.y >= 0 && feedback.y + feedback.height <= 1100, 'judgment message stays in viewport');
       assert.ok((await baseText(page.locator('#feedback'))).includes('正解です。信用 ＋1。'));
     }
-    if (i === 0) {
+    if (step === 0) {
       assert.deepEqual(await page.evaluate(() => window.playedTones), []);
       await setToggle(page.locator('#sound-toggle'), true);
     } else {
@@ -177,7 +178,7 @@ async function checkReadings(page) {
   await checkReadings(page);
   await page.reload();
   assert.ok(await page.locator('#result').isVisible());
-  assert.equal(await page.locator('#trust-value').textContent(), '10');
+  assert.equal(await page.locator('#trust-value').textContent(), '7');
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', true);
   assert.equal(await page.locator('#person-0 .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');
@@ -187,12 +188,14 @@ async function checkReadings(page) {
   assert.equal(await page.locator('.statement').count(), 0);
   const hard = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
   assert.equal(await page.locator('[data-portrait-state="neutral"]').count(), 15);
-  for (let i = 0; i < 3; i++) {
-    await page.locator(`#person-${i} [data-judge="${hard[i] ? 'good' : 'liar'}"]`).click();
+  const innocents = hard.flatMap((liar, i) => liar ? [] : [i]);
+  for (let step = 0; step < 3; step++) {
+    const i = innocents[step];
+    await page.locator(`#person-${i} [data-judge="liar"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), hard[i] ? 'liar' : 'good');
     await page.waitForFunction(() => window.playedTones.length > 0);
-    assert.equal(await page.locator('#trust-value').textContent(), String(Math.max(0, 3 - 2 * i)));
-    assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り信用 ${Math.max(0, 3 - 2 * i)}`);
+    assert.equal(await page.locator('#trust-value').textContent(), String(Math.max(0, 3 - 2 * step)));
+    assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り信用 ${Math.max(0, 3 - 2 * step)}`);
     const tones = await page.evaluate(() => window.playedTones.splice(0));
     assert.equal(tones.length, 2);
     assert.ok(tones[0] > tones[1], 'incorrect answer plays descending tones');
@@ -235,8 +238,8 @@ async function checkReadings(page) {
         assert.ok(box.y >= summary.y && box.y + box.height <= summary.y + summary.height);
         assert.ok(box.x >= 0 && box.x + box.width <= width);
       }
-      await page.locator('#person-3 [data-judge="good"]').evaluate(button => button.scrollIntoView({ block: 'start', behavior: 'instant' }));
-      const button = await page.locator('#person-3 [data-judge="good"]').boundingBox();
+      await page.locator('#person-3 [data-judge="liar"]').evaluate(button => button.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      const button = await page.locator('#person-3 [data-judge="liar"]').boundingBox();
       assert.ok(button.y >= summary.height, 'pinned summary must not cover the scrolled-to button');
       if (width === 390 && rubyEnabled) await page.screenshot({ path: '/tmp/detective-sticky-summary.png' });
     }
@@ -249,7 +252,8 @@ async function checkReadings(page) {
   await page.screenshot({ path: '/tmp/beast-detective-mobile.png', fullPage: true });
   const easyAnswer = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
   for (let i = 0; i < easyAnswer.length; i++) {
-    await page.locator(`#person-${i} [data-judge="${easyAnswer[i] ? 'liar' : 'good'}"]`).click();
+    if (!easyAnswer[i]) continue;
+    await page.locator(`#person-${i} [data-judge="liar"]`).click();
   }
   const modal = await page.locator('#result-dialog').boundingBox();
   assert.ok(modal.y >= 0 && modal.y + modal.height <= 844, 'result dialog fits mobile viewport');
@@ -269,7 +273,7 @@ async function checkReadings(page) {
       const saved = JSON.parse(localStorage.getItem('beast-detective-v1'));
       saved.notes[0] = '引き継がないメモ';
       if (problem === 'old-version') saved.version = 1;
-      if (problem === 'previous-rules') saved.version = 2;
+      if (problem === 'previous-rules') saved.version = 3;
       if (problem === 'missing-revealed') delete saved.revealed;
       if (problem === 'wrong-trust') saved.trust = 999;
       if (problem === 'wrong-status') saved.status = 'won';
@@ -295,7 +299,7 @@ async function checkReadings(page) {
     window.AudioContext = class { constructor() { throw new Error('audio unavailable'); } };
   });
   await silent.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
-  await silent.locator('#person-0 [data-judge="good"]').click();
+  await silent.locator('#person-0 [data-judge="liar"]').click();
   assert.equal(await silent.locator('#person-0 .resolved-tag').count(), 1);
   assert.deepEqual(errors, []);
   await browser.close();

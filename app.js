@@ -3,7 +3,7 @@
   const E = window.DetectiveEngine;
   const $ = id => document.getElementById(id);
   const key = 'beast-detective-v1';
-  const saveVersion = 3;
+  const saveVersion = 4;
   const markers = [ { name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' } ];
   const preferencesKey = 'animal-detective-preferences-v1';
   const preferences = { ruby: true, sound: true };
@@ -51,11 +51,11 @@
       const puzzle = E.generate(saved.puzzle.seed, saved.puzzle.level); const n = puzzle.people.length;
       if (![saved.resolved, saved.notes, saved.markers].every(a => Array.isArray(a) && a.length === n)) return null;
       if (!saved.notes.every(v => typeof v === 'string' && v.length <= 1000) || !saved.markers.every(v => Number.isInteger(v) && v >= 0 && v <= 3)) return null;
-      if (!saved.resolved.every((r, i) => r === null || (typeof r.guess === 'boolean' && r.correct === (r.guess === puzzle.answer[i])))) return null;
+      if (!saved.resolved.every((r, i) => r === null || (r.guess === true && r.correct === (r.guess === puzzle.answer[i])))) return null;
       const mistakes = saved.resolved.filter(r => r && !r.correct).length;
       const trust = Math.max(0, E.initialTrust + saved.resolved.filter(r => r?.correct).length - 2 * mistakes);
       if (trust < 0 || saved.trust !== trust) return null;
-      const status = trust === 0 ? 'lost' : saved.resolved.every(r => r !== null) ? 'won' : 'playing';
+      const status = trust === 0 ? 'lost' : puzzle.answer.every((liar, i) => !liar || saved.resolved[i] !== null) ? 'won' : 'playing';
       if (saved.status !== status) return null;
       const revealed = saved.revealed;
       if (!Array.isArray(revealed) || revealed.length !== n || !revealed.every(v => typeof v === 'boolean')) return null;
@@ -72,13 +72,14 @@
     const resolved = state.resolved[i]; const ended = state.status !== 'playing'; const liar = state.puzzle.answer[i];
     let actions;
     if (resolved) actions = `<span class="resolved-tag ${resolved.correct ? '' : 'wrong'}">${resolved.correct ? '✓ 正解' : '× 誤判定'} · ${person.name}は${liar ? '犯人' : '善人'}</span>`;
+    else if (state.status === 'won') actions = `<span class="resolved-tag revealed">✓ 善人と確定 · ${person.name}は善人</span>`;
     else if (ended) actions = `<span class="resolved-tag revealed">未判定 · 真相：${liar ? '犯人' : '善人'}</span>`;
-    else actions = `<button class="judge" data-judge="good" data-index="${i}" aria-label="${person.name}を善人と判定"><span class="judge-icon" aria-hidden="true">😊</span><span>善人と判定</span></button><button class="judge liar" data-judge="liar" data-index="${i}" aria-label="${person.name}を犯人と判定"><span class="judge-icon" aria-hidden="true">😈</span><span>犯人と判定</span></button>`;
+    else actions = `<button class="judge liar" data-judge="liar" data-index="${i}" aria-label="${person.name}を犯人と判定"><span class="judge-icon" aria-hidden="true">😈</span><span>犯人と判定</span></button>`;
     const truth = ended ? `<details class="truth-detail"><summary>真相と証言の照合：この証言は${liar ? '嘘' : '本当'}</summary><p>${state.puzzle.statements[i].targets.map(t => `${state.puzzle.people[t].name}＝${state.puzzle.answer[t] ? '犯人' : '善人'}`).join(' ／ ')}</p><p>この組み合わせでは、上の証言は${E.evaluate(state.puzzle.statements[i], state.puzzle.answer) ? '正しい' : '間違っています'}。${person.name}が${liar ? '犯人' : '善人'}という真相と一致します。</p></details>` : '';
-    return `<article class="suspect" data-marker="${state.markers[i]}" id="person-${i}" aria-labelledby="name-${i}"><div class="card-main"><div class="portrait-box"><span class="person-number">0${i + 1}</span>${portrait(person.id, '', resolved ? (liar ? 'liar' : 'good') : 'neutral')}</div><div class="person-content"><div class="person-heading"><h3 id="name-${i}">${person.name}</h3><span class="job">${person.job}</span><details class="role-details"><summary>証言ルール</summary><p>${person.rule}</p></details></div><div id="statement-${i}">${state.revealed[i] || ended ? `<p class="statement">${E.statementText(state.puzzle.statements[i], state.puzzle.people)}</p>` : `<button class="reveal-button quiet-button" data-reveal="${i}" aria-controls="statement-${i}">${person.name}の証言を聞く</button>`}</div><div class="actions">${actions}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="${person.name}のマーカー">${markers.map((m, j) => `<button class="marker-button" style="--dot:${m.color}" data-marker-value="${j}" data-index="${i}" aria-label="${person.name}：${m.name}" title="${m.name}" aria-pressed="${state.markers[i] === j}"></button>`).join('')}</div><label class="memo-label" for="memo-${i}">MEMO</label><textarea id="memo-${i}" data-note="${i}" aria-label="${person.name}の捜査メモ" maxlength="1000" rows="1" placeholder="きになることをメモ…"></textarea></div>${truth}</article>`;
+    return `<article class="suspect" data-marker="${state.markers[i]}" id="person-${i}" aria-labelledby="name-${i}"><div class="card-main"><div class="portrait-box"><span class="person-number">0${i + 1}</span>${portrait(person.id, '', (resolved || state.status === 'won') ? (liar ? 'liar' : 'good') : 'neutral')}</div><div class="person-content"><div class="person-heading"><h3 id="name-${i}">${person.name}</h3><span class="job">${person.job}</span><details class="role-details"><summary>証言ルール</summary><p>${person.rule}</p></details></div><div id="statement-${i}">${state.revealed[i] || ended ? `<p class="statement">${E.statementText(state.puzzle.statements[i], state.puzzle.people)}</p>` : `<button class="reveal-button quiet-button" data-reveal="${i}" aria-controls="statement-${i}">${person.name}の証言を聞く</button>`}</div><div class="actions">${actions}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="${person.name}のマーカー">${markers.map((m, j) => `<button class="marker-button" style="--dot:${m.color}" data-marker-value="${j}" data-index="${i}" aria-label="${person.name}：${m.name}" title="${m.name}" aria-pressed="${state.markers[i] === j}"></button>`).join('')}</div><label class="memo-label" for="memo-${i}">MEMO</label><textarea id="memo-${i}" data-note="${i}" aria-label="${person.name}の捜査メモ" maxlength="1000" rows="1" placeholder="きになることをメモ…"></textarea></div>${truth}</article>`;
   }
   function render(message) {
-    const p = state.puzzle; const count = state.resolved.filter(r => r !== null).length;
+    const p = state.puzzle; const count = state.resolved.filter((r, i) => r !== null && p.answer[i]).length;
     const mistakes = state.resolved.filter(r => r && !r.correct).length;
     const story = E.caseStories[p.seed % E.caseStories.length];
     $('case-title').textContent = story.title;
@@ -86,7 +87,7 @@
     document.title = `${story.title} — どうぶつ探偵`;
     $('liar-count').textContent = `犯人 ${p.k}匹`;
     $('good-count').textContent = `善人 ${p.people.length - p.k}匹`;
-    $('progress-count').textContent = `${count} / ${p.people.length}`;
+    $('progress-count').textContent = `${count} / ${p.k}`;
     $('trust-value').textContent = state.trust;
     $('trust').setAttribute('aria-label', `残り信用 ${state.trust}`);
     $('suspects').innerHTML = p.people.map(renderCard).join('');
@@ -148,7 +149,7 @@
     }
     const judge = event.target.closest('[data-judge]');
     if (judge) {
-      const i = Number(judge.dataset.index); const correct = E.judge(state, i, judge.dataset.judge === 'liar');
+      const i = Number(judge.dataset.index); const correct = E.judge(state, i);
       if (correct === null) return;
       if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;

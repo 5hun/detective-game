@@ -80,13 +80,13 @@
     }
   }
   const initialTrust = 5;
-  function judge(state, index, guess) {
+  function judge(state, index) {
     if (state.status !== 'playing' || state.resolved[index] !== null) return null;
-    const correct = state.puzzle.answer[index] === guess;
-    state.resolved[index] = { correct, guess };
+    const correct = state.puzzle.answer[index] === true;
+    state.resolved[index] = { correct, guess: true };
     state.trust = Math.max(0, state.trust + (correct ? 1 : -2));
     if (state.trust === 0) state.status = 'lost';
-    else if (state.resolved.every(r => r !== null)) state.status = 'won';
+    else if (state.puzzle.answer.every((liar, i) => !liar || state.resolved[i] !== null)) state.status = 'won';
     return correct;
   }
   const api = { initialTrust, roles, caseStories, levels, generate, solve, evaluate, statementText, assignments, judge };

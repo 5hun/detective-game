@@ -32,7 +32,7 @@
       <div class="case-status">
       <section class="case-summary" aria-label="事件の情報">
         <div class="population"><span class="summary-label">この事件の内訳</span><div><strong id="liar-count"></strong><span class="slash">/</span><strong id="good-count"></strong></div></div>
-        <div class="progress-summary"><span class="summary-label">判定済み</span><div><strong id="progress-count"></strong><span>匹</span></div></div>
+        <div class="progress-summary"><span class="summary-label">発見した犯人</span><div><strong id="progress-count"></strong><span>匹</span></div></div>
         <div class="trust-summary"><span class="summary-label">残り信用</span><div id="trust" role="img"><span class="trust-icon" aria-hidden="true">☆</span><strong id="trust-value" aria-hidden="true"></strong></div></div>
       </section>
       <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
@@ -40,11 +40,11 @@
       <section id="result" class="result" aria-live="polite" hidden></section>
       <div class="list-heading"><h2>関係者の証言</h2><span>色マーカーとメモで推理を整理</span></div>
       <section id="suspects" aria-label="関係者一覧"></section>
-      <footer class="case-footer"><span>◇ 善人か犯人か、1匹ずつ判定できます。</span><span id="save-status">捜査状況は自動保存されます</span></footer>
+      <footer class="case-footer"><span>◇ 犯人をすべて見つけると、残りは善人と確定します。</span><span id="save-status">捜査状況は自動保存されます</span></footer>
     </main>
   </div>
   <dialog id="animals-dialog"><div class="dialog-heading"><h2>すべての動物</h2><button class="close-button" aria-label="動物一覧を閉じる" data-close="animals-dialog">×</button></div><p>全8種類。どの動物も善人・犯人の両方になります。</p><div id="animals-list"></div></dialog>
-  <dialog id="help-dialog"><div class="dialog-heading"><span class="eyebrow">DETECTIVE'S HANDBOOK</span><button class="close-button" aria-label="遊び方を閉じる" data-close="help-dialog">×</button></div><h2>捜査を始める前に。</h2><p>動物たちの証言を読み、みんなを<strong>善人</strong>か<strong>犯人</strong>に判定しましょう。</p><ol><li><strong>タップして証言を聞こう。</strong><br>「証言を聞く」を押すと、その動物の発言が公開されます。</li><li><strong>数が、最初の手がかり。</strong><br>犯人と善人の数は事件の上部に表示されます。</li><li><strong>善人は真実を、犯人は嘘を。</strong><br>すべての証言と数の条件を同時に満たす答えは、ひとつだけです。「同じ立場」は両方善人、または両方犯人という意味です。</li><li><strong>種類ごとに、証言の形が違う。</strong><br>同じ動物は1事件に1匹だけ。役割名の横の「証言ルール」で説明を確認できます。</li><li><strong>判定は、その場で確定。</strong><br>信用は5から始まり、正解で1増え、間違えると2減ります。間違えた場合も正体が判明します。信用が0になると捜査終了。信用を残してみんなを判定すれば解決です。</li><li><strong>メモは、あなただけの手がかり。</strong><br>色マーカーは未設定・犯人候補・善人候補・要検討から選べます。マーカーやメモは判定に影響しません。</li></ol><p class="small-note">進行状況はこのブラウザに保存します。保存を利用できない環境でも、そのまま遊べます。終了後には各証言の真偽と参照先の正体を確認できます。</p><button class="primary-button" data-close="help-dialog">捜査に戻る →</button></dialog>
+  <dialog id="help-dialog"><div class="dialog-heading"><span class="eyebrow">DETECTIVE'S HANDBOOK</span><button class="close-button" aria-label="遊び方を閉じる" data-close="help-dialog">×</button></div><h2>捜査を始める前に。</h2><p>動物たちの証言を読み、<strong>犯人</strong>を見つけて「犯人と判定」を押しましょう。</p><ol><li><strong>タップして証言を聞こう。</strong><br>「証言を聞く」を押すと、その動物の発言が公開されます。</li><li><strong>数が、最初の手がかり。</strong><br>犯人と善人の数は事件の上部に表示されます。</li><li><strong>善人は真実を、犯人は嘘を。</strong><br>すべての証言と数の条件を同時に満たす答えは、ひとつだけです。「同じ立場」は両方善人、または両方犯人という意味です。</li><li><strong>種類ごとに、証言の形が違う。</strong><br>同じ動物は1事件に1匹だけ。役割名の横の「証言ルール」で説明を確認できます。</li><li><strong>判定は、その場で確定。</strong><br>信用は5から始まり、正解で1増え、間違えると2減ります。間違えた場合も正体が判明します。信用が0になると捜査終了。信用を残して犯人をすべて見つければ解決です。残りは善人と確定し、判定の操作は不要です。</li><li><strong>メモは、あなただけの手がかり。</strong><br>色マーカーは未設定・犯人候補・善人候補・要検討から選べます。マーカーやメモは判定に影響しません。</li></ol><p class="small-note">進行状況はこのブラウザに保存します。保存を利用できない環境でも、そのまま遊べます。終了後には各証言の真偽と参照先の正体を確認できます。</p><button class="primary-button" data-close="help-dialog">捜査に戻る →</button></dialog>
   <dialog id="result-dialog" aria-labelledby="result-dialog-title"><div class="dialog-heading"><button class="close-button" aria-label="結果を閉じる" data-close="result-dialog">×</button></div><div id="result-dialog-content"></div><div class="dialog-actions"><button class="quiet-button" data-close="result-dialog">結果を確認</button><button class="primary-button" id="dialog-next-case">次の事件へ →</button></div></dialog>
   <dialog id="new-dialog"><span class="eyebrow">NEW CASE</span><h2>新しい事件を始めますか？</h2><p>現在の事件とメモは、新しい事件に置き換わります。</p><div class="dialog-actions"><button class="quiet-button" data-close="new-dialog">捜査を続ける</button><button class="primary-button" id="confirm-new">新しい事件へ →</button></div></dialog>
   <noscript>このゲームにはJavaScriptがひつようです。ブラウザのせっていでゆうこうにしてください。</noscript>
