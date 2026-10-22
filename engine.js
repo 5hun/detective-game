@@ -19,7 +19,7 @@
     { title: 'お祭りのかざり事件', description: 'お祭りのために作ったかざりが、だれかにこわされてしまいました。準備に来ていた動物たちの証言から、犯人を見つけましょう。' },
     { title: '郵便局の手紙事件', description: '郵便局で仕分けた手紙が、だれかのいたずらでばらばらに。その場にいた動物たちの証言から、いたずらの犯人を見つけましょう。' }
   ];
-  const levels = { easy: { n: 4, k: 1, label: '入門' }, normal: { n: 5, k: 2, label: '通常' }, hard: { n: 7, k: 3, label: '難解' } };
+  const levels = { easy: { n: 4, k: 1, label: 'かんたん' }, normal: { n: 5, k: 2, label: 'ふつう' }, hard: { n: 7, k: 3, label: 'むずかしい' } };
   function random(seed) { let a = seed >>> 0; return () => { a += 0x6D2B79F5; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   function shuffle(a, rng) { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
   function combinations(a, n) { if (!n) return [[]]; return a.flatMap((v, i) => combinations(a.slice(i + 1), n - 1).map(rest => [v, ...rest])); }
