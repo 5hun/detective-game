@@ -87,7 +87,6 @@
     $('liar-count').textContent = `犯人 ${p.k}匹`;
     $('good-count').textContent = `善人 ${p.people.length - p.k}匹`;
     $('progress-count').textContent = `${count} / ${p.people.length}`;
-    $('people-count').textContent = `${p.people.length}匹`;
     $('trust-value').textContent = state.trust;
     $('trust').setAttribute('aria-label', `残り信用 ${state.trust}`);
     $('suspects').innerHTML = p.people.map(renderCard).join('');
