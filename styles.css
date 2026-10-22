@@ -50,3 +50,12 @@ html{scroll-padding-top:calc(var(--summary-height,120px) + 12px)}
   .header-right{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;gap:6px}
   .header-right button{min-width:0;padding:6px}
 }
+
+.header-right .quiet-button{display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.header-right .menu-icon{width:18px;height:18px;flex-shrink:0}
+.header-right .quiet-button .menu-label{display:block;width:auto;height:auto;border:0;border-radius:0;margin:0;font:inherit}
+@media(max-width:760px){
+  .header-right{grid-template-columns:1.3fr 1.3fr 1fr 1fr}
+  .header-right .quiet-button{gap:4px}
+  .header-right .menu-icon{width:14px;height:14px}
+}
