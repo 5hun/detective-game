@@ -154,6 +154,7 @@ async function checkReadings(page) {
       assert.ok(tones[0] < tones[1] && tones[1] < tones[2], 'correct answer plays ascending tones');
     }
   }
+  assert.equal(await page.locator('[data-portrait-state="liar"] .jail-bar').count(), solution.filter(Boolean).length * 4);
   assert.ok(await page.locator('#result-dialog').isVisible());
   assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('事件解決'));
   await page.screenshot({ path: '/tmp/detective-result-dialog-desktop.png' });

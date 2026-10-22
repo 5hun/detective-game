@@ -16,6 +16,7 @@
     cat: ['#c5a46b','#d48c80','#e8d6ad'], wolf: ['#82979c','#b8c7c6','#dce3d9'], bear: ['#987055','#c69878','#ccb48c'],
     raccoon: ['#9a9d92','#beb8a3','#d5d4bc'], frog: ['#86a175','#abc286','#c4d39f'], gorilla: ['#4c5658','#74807e','#a2aba3']
   };
+  let portraitSequence = 0;
   root.portrait = function (id, extra = '', state = 'neutral') {
     const [fur, inner, muzzle] = colors[id];
     const palette = { a: fur, b: inner, c: '#182c30', d: muzzle, e: '#354044', f: '#293b3e' };
@@ -39,7 +40,13 @@
       }
       const mouthY = id === 'rabbit' ? 10 : ['owl', 'cat', 'frog'].includes(id) ? 8.5 : 9.5;
       expression += `<path d="M6.5 ${mouthY} q1.5 ${state === 'good' ? 2 : -1.8} 3 0" fill="none" stroke="#293b3e" stroke-width=".65"/>`;
-      if (state === 'liar') expression += '<path d="M13 5 l-1 2 q1 2 2 0Z" fill="#75b8d1"/><path d="M3 0v12 M8 0v12 M13 0v12" stroke="#26343c" stroke-width="1.2"/>';
+      if (state === 'liar') {
+        const gradientId = `jail-bar-${++portraitSequence}`;
+        expression += `<defs><linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#c0c8ca"/><stop offset="50%" stop-color="#26343c"/><stop offset="100%" stop-color="#c0c8ca"/></linearGradient></defs><path d="M13 5 l-1 2 q1 2 2 0Z" fill="#75b8d1"/>`;
+        expression += [1.25, 5.25, 9.25, 13.25].map(x =>
+          `<rect class="jail-bar" x="${x}" y="0" width="1.5" height="12" fill="url(#${gradientId})" shape-rendering="geometricPrecision"/>`
+        ).join('');
+      }
     }
     const rects = rows.flatMap((row, y) => [...row].flatMap((ch, x) => palette[ch] ? [`<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[ch]}"/>`] : [])).join('');
     return `<svg class="portrait ${extra}" viewBox="0 0 16 12" data-portrait-state="${state}" aria-hidden="true" shape-rendering="crispEdges">${rects}${expression}</svg>`;
