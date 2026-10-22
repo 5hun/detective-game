@@ -91,7 +91,6 @@
     $('suspects').innerHTML = p.people.map(renderCard).join('');
     state.notes.forEach((v, i) => { $(`memo-${i}`).value = v; });
     $('feedback').textContent = message || '「証言を聞く」をタップして、証言を読み比べましょう。';
-    $('case-stamp').textContent = state.status === 'playing' ? '捜査中' : state.status === 'won' ? '解決済' : '捜査終了';
     const result = $('result'); result.hidden = state.status === 'playing';
     if (!result.hidden) {
       const won = state.status === 'won';
