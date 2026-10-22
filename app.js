@@ -8,7 +8,7 @@
   function fresh(level) {
     const seed = window.crypto ? crypto.getRandomValues(new Uint32Array(1))[0] : Date.now() >>> 0;
     const puzzle = E.generate(seed, level);
-    return { version: 1, puzzle, lives: 3, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0) };
+    return { version: 1, puzzle, lives: 3, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0), revealed: puzzle.people.map(() => false) };
   }
   function restore() {
     try {
@@ -21,7 +21,9 @@
       const mistakes = saved.resolved.filter(r => r && !r.correct).length;
       if (mistakes > 3 || saved.lives !== 3 - mistakes) return null;
       const status = saved.lives === 0 ? 'lost' : saved.resolved.every(r => r !== null) ? 'won' : 'playing';
-      return { ...saved, puzzle, status };
+      const revealed = saved.revealed === undefined ? puzzle.people.map(() => false) : saved.revealed;
+      if (!Array.isArray(revealed) || revealed.length !== n || !revealed.every(v => typeof v === 'boolean')) return null;
+      return { ...saved, puzzle, status, revealed };
     } catch { return null; }
   }
   function save() {
@@ -36,7 +38,7 @@
     else if (ended) actions = `<span class="resolved-tag revealed">未判定 · 真相：${liar ? '犯人' : '善人'}</span>`;
     else actions = `<button class="judge" data-judge="good" data-index="${i}" aria-label="${person.name}を善人と判定">◇ 善人と判定</button><button class="judge liar" data-judge="liar" data-index="${i}" aria-label="${person.name}を犯人と判定">⊗ 犯人と判定</button>`;
     const truth = ended ? `<details class="truth-detail"><summary>真相と証言の照合：この証言は${liar ? '嘘' : '本当'}</summary><p>${state.puzzle.statements[i].targets.map(t => `${state.puzzle.people[t].name}＝${state.puzzle.answer[t] ? '犯人' : '善人'}`).join(' ／ ')}</p><p>この組み合わせでは、上の証言は${E.evaluate(state.puzzle.statements[i], state.puzzle.answer) ? '正しい' : '間違っています'}。${person.name}が${liar ? '犯人' : '善人'}という真相と一致します。</p></details>` : '';
-    return `<article class="suspect" data-marker="${state.markers[i]}" id="person-${i}" aria-labelledby="name-${i}"><div class="card-main"><div class="portrait-box"><span class="person-number">0${i + 1}</span>${portrait(person.id)}</div><div class="person-content"><div class="person-heading"><h3 id="name-${i}">${person.name}</h3><span class="job">${person.job}</span><details class="role-details"><summary>証言ルール</summary><p>${person.rule}</p></details></div><p class="statement">${E.statementText(state.puzzle.statements[i], state.puzzle.people)}</p><div class="actions">${actions}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="${person.name}のマーカー">${markers.map((m, j) => `<button class="marker-button" style="--dot:${m.color}" data-marker-value="${j}" data-index="${i}" aria-label="${person.name}：${m.name}" title="${m.name}" aria-pressed="${state.markers[i] === j}"></button>`).join('')}</div><label class="memo-label" for="memo-${i}">MEMO</label><textarea id="memo-${i}" data-note="${i}" aria-label="${person.name}の捜査メモ" maxlength="1000" rows="1" placeholder="気になることをメモ…"></textarea></div>${truth}</article>`;
+    return `<article class="suspect" data-marker="${state.markers[i]}" id="person-${i}" aria-labelledby="name-${i}"><div class="card-main"><div class="portrait-box"><span class="person-number">0${i + 1}</span>${portrait(person.id)}</div><div class="person-content"><div class="person-heading"><h3 id="name-${i}">${person.name}</h3><span class="job">${person.job}</span><details class="role-details"><summary>証言ルール</summary><p>${person.rule}</p></details></div><div id="statement-${i}">${state.revealed[i] || ended ? `<p class="statement">${E.statementText(state.puzzle.statements[i], state.puzzle.people)}</p>` : `<button class="reveal-button quiet-button" data-reveal="${i}" aria-controls="statement-${i}">${person.name}の証言を聞く</button>`}</div><div class="actions">${actions}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="${person.name}のマーカー">${markers.map((m, j) => `<button class="marker-button" style="--dot:${m.color}" data-marker-value="${j}" data-index="${i}" aria-label="${person.name}：${m.name}" title="${m.name}" aria-pressed="${state.markers[i] === j}"></button>`).join('')}</div><label class="memo-label" for="memo-${i}">MEMO</label><textarea id="memo-${i}" data-note="${i}" aria-label="${person.name}の捜査メモ" maxlength="1000" rows="1" placeholder="気になることをメモ…"></textarea></div>${truth}</article>`;
   }
   function render(message) {
     const p = state.puzzle; const count = state.resolved.filter(r => r !== null).length;
@@ -49,7 +51,7 @@
     $('lives').setAttribute('aria-label', `残りライフ ${state.lives} / 3`);
     $('suspects').innerHTML = p.people.map(renderCard).join('');
     state.notes.forEach((v, i) => { $(`memo-${i}`).value = v; });
-    $('feedback').textContent = message || 'まずは証言を読み比べて、確信のある1人から。';
+    $('feedback').textContent = message || '「証言を聞く」をタップして、証言を読み比べましょう。';
     $('case-stamp').textContent = state.status === 'playing' ? '捜査中' : state.status === 'won' ? '解決済' : '捜査終了';
     const result = $('result'); result.hidden = state.status === 'playing';
     if (!result.hidden) {
@@ -74,6 +76,16 @@
   $('difficulty').value = state.puzzle.level;
   render(state.status !== 'playing' ? '前回の捜査結果を開きました。新しい事件にも挑戦できます。' : undefined);
   $('suspects').addEventListener('click', event => {
+    const reveal = event.target.closest('[data-reveal]');
+    if (reveal) {
+      const i = Number(reveal.dataset.reveal);
+      state.revealed[i] = true;
+      render();
+      const statement = $(`statement-${i}`);
+      statement.tabIndex = -1;
+      statement.focus({ preventScroll: true });
+      return;
+    }
     const judge = event.target.closest('[data-judge]');
     if (judge) {
       const i = Number(judge.dataset.index); const correct = E.judge(state, i, judge.dataset.judge === 'liar');
