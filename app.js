@@ -26,9 +26,14 @@
     applyRubyPreference();
     savePreferences();
   });
-  $('sound-toggle').checked = preferences.sound;
-  $('sound-toggle').addEventListener('change', event => {
-    preferences.sound = event.target.checked;
+  function applySoundPreference() {
+    $('sound-toggle').setAttribute('aria-pressed', String(preferences.sound));
+    $('sound-toggle').querySelector('[data-toggle-status]').textContent = preferences.sound ? 'ON' : 'OFF';
+  }
+  applySoundPreference();
+  $('sound-toggle').addEventListener('click', () => {
+    preferences.sound = !preferences.sound;
+    applySoundPreference();
     if (!preferences.sound) judgmentSound.stop();
     savePreferences();
   });

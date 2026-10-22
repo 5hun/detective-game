@@ -30,3 +30,11 @@ ruby{ruby-align:center}rt{font-size:.55em;font-family:"Hiragino Kaku Gothic ProN
 html{scroll-padding-top:calc(var(--summary-height,120px) + 12px)}
 .case-summary{position:sticky;top:0;z-index:10;box-shadow:0 5px 12px #283d3814}
 #trust{white-space:nowrap}
+
+.preference-button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:68px;min-height:64px;padding:6px 10px;border:1px solid #b5c3ae;border-radius:6px;color:var(--green);background:#e8efdf}
+.preference-button svg{width:26px;height:26px}
+.preference-caption{font-size:11px;white-space:nowrap}
+.preference-button[aria-pressed="false"]{background:#f9f7f1;color:#687166;border-color:var(--line)}
+.preference-button:hover{background:#dfe7d5}
+.preference-button .toggle-off,.preference-button[aria-pressed="false"] .toggle-on{display:none}
+.preference-button[aria-pressed="false"] .toggle-off{display:block}

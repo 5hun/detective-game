@@ -3,6 +3,9 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const { pathToFileURL } = require('node:url');
 const path = require('node:path');
 const assert = require('node:assert/strict');
+async function setToggle(locator, enabled) {
+  if ((await locator.getAttribute('aria-pressed')) !== String(enabled)) await locator.click();
+}
 async function baseText(locator) {
   return locator.evaluate(element => {
     const copy = element.cloneNode(true);
@@ -129,9 +132,9 @@ async function checkReadings(page) {
   assert.equal(storyDescription, expectedStory.description);
   const solution = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
   assert.deepEqual(await page.evaluate(() => window.playedTones), []);
-  await page.locator('#sound-toggle').uncheck();
+  await setToggle(page.locator('#sound-toggle'), false);
   await page.reload();
-  assert.equal(await page.locator('#sound-toggle').isChecked(), false);
+  assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', false);
   assert.equal(await baseText(page.locator('#case-title')), storyTitle);
   assert.equal(await baseText(page.locator('#case-description')), storyDescription);
   const neutralPortrait = await page.locator('#person-0 .portrait').innerHTML();
@@ -140,7 +143,7 @@ async function checkReadings(page) {
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
     if (i === 0) {
       assert.deepEqual(await page.evaluate(() => window.playedTones), []);
-      await page.locator('#sound-toggle').check();
+      await setToggle(page.locator('#sound-toggle'), true);
     } else {
       await page.waitForFunction(() => window.playedTones.length > 0);
       const tones = await page.evaluate(() => window.playedTones.splice(0));
@@ -155,7 +158,7 @@ async function checkReadings(page) {
   await page.reload();
   assert.ok(await page.locator('#result').isVisible());
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
-  assert.equal(await page.locator('#sound-toggle').isChecked(), true);
+  assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', true);
   assert.equal(await page.locator('#person-0 .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');
   await page.locator('#difficulty').selectOption('hard');
   await page.locator('#next-case').click();
@@ -215,8 +218,8 @@ async function checkReadings(page) {
   await blocked.locator('#ruby-toggle').uncheck();
   assert.equal(await blocked.locator('ruby rt').first().isVisible(), false);
   assert.ok((await baseText(blocked.locator('#save-status'))).includes('保存できません'));
-  await blocked.locator('#sound-toggle').uncheck();
-  assert.equal(await blocked.locator('#sound-toggle').isChecked(), false);
+  await setToggle(blocked.locator('#sound-toggle'), false);
+  assert.equal((await blocked.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', false);
   const silent = await browser.newPage();
   silent.on('pageerror', e => errors.push(e.message));
   await silent.addInitScript(() => {
