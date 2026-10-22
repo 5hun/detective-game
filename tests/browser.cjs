@@ -158,9 +158,27 @@ async function checkReadings(page) {
   await page.locator('#difficulty').selectOption('easy');
   await page.locator('#next-case').click();
   assert.equal(await page.locator('.suspect').count(), 4);
-  for (const width of [390, 320]) {
+  for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `overflow at ${width}`);
+    for (const rubyEnabled of [true, false]) {
+      await page.locator('#ruby-toggle').setChecked(rubyEnabled);
+      await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      const summary = await page.locator('.case-summary').boundingBox();
+      assert.ok(summary.y >= 0 && summary.y < 2, `summary pinned at ${width}, ruby=${rubyEnabled}`);
+      assert.ok(summary.y + summary.height < 844);
+      for (const id of ['liar-count', 'good-count', 'progress-count', 'trust']) {
+        const box = await page.locator('#' + id).boundingBox();
+        assert.ok(box.y >= summary.y && box.y + box.height <= summary.y + summary.height);
+        assert.ok(box.x >= 0 && box.x + box.width <= width);
+      }
+      await page.locator('#person-3 [data-judge="good"]').evaluate(button => button.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      const button = await page.locator('#person-3 [data-judge="good"]').boundingBox();
+      assert.ok(button.y >= summary.height, 'pinned summary must not cover the scrolled-to button');
+      if (width === 390 && rubyEnabled) await page.screenshot({ path: '/tmp/detective-sticky-summary.png' });
+    }
+    await page.locator('#ruby-toggle').check();
     await page.locator('#help-button').click();
     assert.ok(await page.locator('#help-dialog').isVisible());
     await page.keyboard.press('Escape');

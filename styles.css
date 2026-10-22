@@ -26,3 +26,7 @@ ruby{ruby-align:center}rt{font-size:.55em;font-family:"Hiragino Kaku Gothic ProN
 .case-description{max-width:48em;font-size:14px;line-height:2.2;margin:16px 0 8px}
 #case-title{line-height:1.9}
 @media(max-width:760px){.case-description{font-size:13px}}
+
+html{scroll-padding-top:calc(var(--summary-height,120px) + 12px)}
+.case-summary{position:sticky;top:0;z-index:10;box-shadow:0 5px 12px #283d3814}
+#trust{white-space:nowrap}
