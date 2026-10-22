@@ -16,11 +16,32 @@
     cat: ['#c5a46b','#d48c80','#e8d6ad'], wolf: ['#82979c','#b8c7c6','#dce3d9'], bear: ['#987055','#c69878','#ccb48c'],
     raccoon: ['#9a9d92','#beb8a3','#d5d4bc'], frog: ['#86a175','#abc286','#c4d39f'], gorilla: ['#4c5658','#74807e','#a2aba3']
   };
-  root.portrait = function (id, extra = '') {
+  root.portrait = function (id, extra = '', state = 'neutral') {
     const [fur, inner, muzzle] = colors[id];
     const palette = { a: fur, b: inner, c: '#182c30', d: muzzle, e: '#354044', f: '#293b3e' };
-    const rows = faces[id];
+    const changed = state === 'good' || state === 'liar';
+    const eyes = [];
+    const rows = faces[id].map((row, y) => [...row].map((ch, x) => {
+      if (!changed) return ch;
+      if (ch === 'c') {
+        eyes.push({ x, y });
+        return id === 'raccoon' ? 'f' : ['owl', 'frog', 'gorilla'].includes(id) ? 'd' : 'a';
+      }
+      return ch === 'f' && y >= 8 ? 'd' : ch;
+    }).join(''));
+    let expression = '';
+    if (changed) {
+      for (const side of [eyes.filter(p => p.x < 8), eyes.filter(p => p.x >= 8)]) {
+        const x = side.reduce((sum, p) => sum + p.x + .5, 0) / side.length;
+        const y = side.reduce((sum, p) => sum + p.y + .5, 0) / side.length;
+        const bend = state === 'good' ? -.7 : .6;
+        expression += `<path d="M${x - 1} ${y} l1 ${bend} 1 ${-bend}" fill="none" stroke="#182c30" stroke-width=".65"/>`;
+      }
+      const mouthY = id === 'rabbit' ? 10 : ['owl', 'cat', 'frog'].includes(id) ? 8.5 : 9.5;
+      expression += `<path d="M6.5 ${mouthY} q1.5 ${state === 'good' ? 2 : -1.8} 3 0" fill="none" stroke="#293b3e" stroke-width=".65"/>`;
+      if (state === 'liar') expression += '<path d="M13 5 l-1 2 q1 2 2 0Z" fill="#75b8d1"/><path d="M3 0v12 M8 0v12 M13 0v12" stroke="#52616a" stroke-width=".65" opacity=".65"/>';
+    }
     const rects = rows.flatMap((row, y) => [...row].flatMap((ch, x) => palette[ch] ? [`<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[ch]}"/>`] : [])).join('');
-    return `<svg class="portrait ${extra}" viewBox="0 0 16 12" aria-hidden="true" shape-rendering="crispEdges">${rects}</svg>`;
+    return `<svg class="portrait ${extra}" viewBox="0 0 16 12" data-portrait-state="${state}" aria-hidden="true" shape-rendering="crispEdges">${rects}${expression}</svg>`;
   };
 })(globalThis);

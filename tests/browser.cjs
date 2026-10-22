@@ -78,18 +78,28 @@ async function checkReadings(page) {
   await page.locator('[data-close="new-dialog"]').click();
   assert.ok((await page.locator('#memo-0').inputValue()).includes('メモ保存テスト'));
   const solution = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
-  for (let i = 0; i < solution.length; i++) await page.locator(`#person-${i} [data-judge="${solution[i] ? 'liar' : 'good'}"]`).click();
+  const neutralPortrait = await page.locator('#person-0 .portrait').innerHTML();
+  for (let i = 0; i < solution.length; i++) {
+    await page.locator(`#person-${i} [data-judge="${solution[i] ? 'liar' : 'good'}"]`).click();
+    assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
+  }
+  assert.notEqual(await page.locator('#person-0 .portrait').innerHTML(), neutralPortrait);
   assert.ok((await baseText(page.locator('#result'))).includes('事件解決'));
   assert.equal(await page.locator('.truth-detail').count(), 5);
   await checkReadings(page);
   await page.reload();
   assert.ok(await page.locator('#result').isVisible());
+  assert.equal(await page.locator('#person-0 .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');
   await page.locator('#difficulty').selectOption('hard');
   await page.locator('#next-case').click();
   assert.equal(await page.locator('.suspect').count(), 7);
   assert.equal(await page.locator('.statement').count(), 0);
   const hard = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
-  for (let i = 0; i < 3; i++) await page.locator(`#person-${i} [data-judge="${hard[i] ? 'good' : 'liar'}"]`).click();
+  assert.equal(await page.locator('[data-portrait-state="neutral"]').count(), 15);
+  for (let i = 0; i < 3; i++) {
+    await page.locator(`#person-${i} [data-judge="${hard[i] ? 'good' : 'liar'}"]`).click();
+    assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), hard[i] ? 'liar' : 'good');
+  }
   assert.ok((await baseText(page.locator('#result'))).includes('ライフがなくなりました'));
   assert.equal(await page.locator('[data-judge]').count(), 0);
   await page.locator('#difficulty').selectOption('easy');
