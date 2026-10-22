@@ -53,6 +53,9 @@ async function checkReadings(page) {
   });
   await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
   await page.locator('.suspect').last().waitFor();
+  assert.deepEqual(await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => button.id)),
+    ['help-button', 'animals-button', 'sound-toggle', 'ruby-toggle']);
+  assert.equal(await page.locator('.offline, .case-stamp, .preferences').count(), 0);
   await page.evaluate(() => {
     const probe = document.createElement('div');
     probe.id = 'readings-probe';
@@ -194,6 +197,15 @@ async function checkReadings(page) {
   for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `overflow at ${width}`);
+    const menu = await page.locator('.header-right').boundingBox();
+    const brand = await page.locator('.brand').boundingBox();
+    if (width > 760) assert.ok(menu.x > brand.x + brand.width, 'desktop menu shares brand row');
+    else assert.ok(menu.y >= brand.y + brand.height, 'mobile menu wraps below brand');
+    const menuButtons = await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => { const box = button.getBoundingClientRect(); return box.top + box.height / 2; }));
+    assert.ok(menuButtons.every(top => Math.abs(top - menuButtons[0]) < 1), 'four menu controls share one center line');
+    const textButton = await page.locator('#help-button').boundingBox();
+    const iconButton = await page.locator('#sound-toggle').boundingBox();
+    assert.ok(textButton.height < iconButton.height, 'text buttons retain compact height');
     for (const rubyEnabled of [true, false]) {
       await setToggle(page.locator('#ruby-toggle'), rubyEnabled);
       await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
