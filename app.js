@@ -81,7 +81,6 @@
     $('case-title').textContent = story.title;
     $('case-description').textContent = story.description;
     document.title = `${story.title} — どうぶつ探偵`;
-    $('case-id').textContent = `#${p.seed.toString(16).toUpperCase().padStart(8, '0')} · ${E.levels[p.level].label}`;
     $('liar-count').textContent = `犯人 ${p.k}人`;
     $('good-count').textContent = `善人 ${p.people.length - p.k}人`;
     $('progress-count').textContent = `${count} / ${p.people.length}`;
