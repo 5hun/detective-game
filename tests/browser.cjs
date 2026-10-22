@@ -19,7 +19,7 @@ async function checkReadings(page) {
     const missing = [];
     while (walker.nextNode()) {
       const node = walker.currentNode;
-      if (!node.parentElement.closest('ruby, script, style, textarea, select, noscript') && /[一-龯々]/.test(node.textContent)) missing.push(node.textContent);
+      if (!node.parentElement.closest('ruby, svg, script, style, textarea, select, noscript') && /[一-龯々]/.test(node.textContent)) missing.push(node.textContent);
     }
     return missing;
   });
@@ -88,12 +88,12 @@ async function checkReadings(page) {
   ]);
   await page.locator('#readings-probe').evaluate(element => element.remove());
   assert.ok(await page.locator('ruby rt').count() > 0);
-  await page.locator('#ruby-toggle').uncheck();
+  await setToggle(page.locator('#ruby-toggle'), false);
   assert.equal(await page.locator('ruby rt').first().isVisible(), false);
   await page.reload();
-  assert.equal(await page.locator('#ruby-toggle').isChecked(), false);
+  assert.equal((await page.locator('#ruby-toggle').getAttribute('aria-pressed')) === 'true', false);
   assert.equal(await page.locator('ruby rt').first().isVisible(), false);
-  await page.locator('#ruby-toggle').check();
+  await setToggle(page.locator('#ruby-toggle'), true);
   assert.ok(await page.locator('ruby rt').first().isVisible());
   assert.equal(await page.locator('.suspect').count(), 5);
   assert.equal(await page.locator('.detective-scene, .detective-name, .mobile-detective').count(), 0);
@@ -185,7 +185,7 @@ async function checkReadings(page) {
     await page.setViewportSize({ width, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `overflow at ${width}`);
     for (const rubyEnabled of [true, false]) {
-      await page.locator('#ruby-toggle').setChecked(rubyEnabled);
+      await setToggle(page.locator('#ruby-toggle'), rubyEnabled);
       await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       const summary = await page.locator('.case-summary').boundingBox();
@@ -201,7 +201,7 @@ async function checkReadings(page) {
       assert.ok(button.y >= summary.height, 'pinned summary must not cover the scrolled-to button');
       if (width === 390 && rubyEnabled) await page.screenshot({ path: '/tmp/detective-sticky-summary.png' });
     }
-    await page.locator('#ruby-toggle').check();
+    await setToggle(page.locator('#ruby-toggle'), true);
     await page.locator('#help-button').click();
     assert.ok(await page.locator('#help-dialog').isVisible());
     await page.keyboard.press('Escape');
@@ -215,7 +215,7 @@ async function checkReadings(page) {
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
   await blocked.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
   assert.equal(await blocked.locator('.suspect').count(), 5);
-  await blocked.locator('#ruby-toggle').uncheck();
+  await setToggle(blocked.locator('#ruby-toggle'), false);
   assert.equal(await blocked.locator('ruby rt').first().isVisible(), false);
   assert.ok((await baseText(blocked.locator('#save-status'))).includes('保存できません'));
   await setToggle(blocked.locator('#sound-toggle'), false);

@@ -58,7 +58,7 @@
   window.addReadings = function (root = document.body) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
-        return node.parentElement.closest('ruby, script, style, textarea, select, option, noscript')
+        return node.parentElement.closest('ruby, svg, script, style, textarea, select, option, noscript')
           ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
       }
     });

@@ -18,11 +18,12 @@
   }
   function applyRubyPreference() {
     document.documentElement.classList.toggle('ruby-off', !preferences.ruby);
-    $('ruby-toggle').checked = preferences.ruby;
+    $('ruby-toggle').setAttribute('aria-pressed', String(preferences.ruby));
+    $('ruby-toggle').querySelector('[data-toggle-status]').textContent = preferences.ruby ? 'ON' : 'OFF';
   }
   applyRubyPreference();
-  $('ruby-toggle').addEventListener('change', event => {
-    preferences.ruby = event.target.checked;
+  $('ruby-toggle').addEventListener('click', () => {
+    preferences.ruby = !preferences.ruby;
     applyRubyPreference();
     savePreferences();
   });
