@@ -45,6 +45,13 @@ async function checkReadings(page) {
   await checkReadings(page);
   await page.locator('#readings-probe').evaluate(element => element.remove());
   assert.ok(await page.locator('ruby rt').count() > 0);
+  await page.locator('#ruby-toggle').uncheck();
+  assert.equal(await page.locator('ruby rt').first().isVisible(), false);
+  await page.reload();
+  assert.equal(await page.locator('#ruby-toggle').isChecked(), false);
+  assert.equal(await page.locator('ruby rt').first().isVisible(), false);
+  await page.locator('#ruby-toggle').check();
+  assert.ok(await page.locator('ruby rt').first().isVisible());
   assert.equal(await page.locator('.suspect').count(), 5);
   assert.equal(await page.locator('.detective-scene, .detective-name, .mobile-detective').count(), 0);
   await page.locator('#animals-button').click();
@@ -101,6 +108,8 @@ async function checkReadings(page) {
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
   await blocked.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
   assert.equal(await blocked.locator('.suspect').count(), 5);
+  await blocked.locator('#ruby-toggle').uncheck();
+  assert.equal(await blocked.locator('ruby rt').first().isVisible(), false);
   assert.ok((await baseText(blocked.locator('#save-status'))).includes('保存できません'));
   assert.deepEqual(errors, []);
   await browser.close();

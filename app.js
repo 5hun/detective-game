@@ -4,6 +4,27 @@
   const $ = id => document.getElementById(id);
   const key = 'beast-detective-v1';
   const markers = [ { name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' } ];
+  const preferencesKey = 'animal-detective-preferences-v1';
+  const preferences = { ruby: true };
+  try {
+    const saved = JSON.parse(localStorage.getItem(preferencesKey));
+    for (const name of Object.keys(preferences)) {
+      if (typeof saved?.[name] === 'boolean') preferences[name] = saved[name];
+    }
+  } catch { /* Settings still work when storage is unavailable. */ }
+  function savePreferences() {
+    try { localStorage.setItem(preferencesKey, JSON.stringify(preferences)); } catch { /* Optional persistence. */ }
+  }
+  function applyRubyPreference() {
+    document.documentElement.classList.toggle('ruby-off', !preferences.ruby);
+    $('ruby-toggle').checked = preferences.ruby;
+  }
+  applyRubyPreference();
+  $('ruby-toggle').addEventListener('change', event => {
+    preferences.ruby = event.target.checked;
+    applyRubyPreference();
+    savePreferences();
+  });
   let state; let storageAvailable = true;
   function fresh(level) {
     const seed = window.crypto ? crypto.getRandomValues(new Uint32Array(1))[0] : Date.now() >>> 0;
