@@ -101,6 +101,7 @@ async function checkReadings(page) {
   await setToggle(page.locator('#ruby-toggle'), true);
   assert.ok(await page.locator('ruby rt').first().isVisible());
   assert.equal(await page.locator('.suspect').count(), 5);
+  assert.deepEqual(await page.locator('#person-0 .judge-icon').allTextContents(), ['😊', '😈']);
   assert.equal(await page.locator('.detective-scene, .detective-name, .mobile-detective').count(), 0);
   await page.locator('#animals-button').click();
   assert.equal(await page.locator('.animal-entry').count(), 8);

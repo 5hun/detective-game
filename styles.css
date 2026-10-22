@@ -67,4 +67,4 @@ html{scroll-padding-top:calc(var(--summary-height,120px) + 12px)}
 .case-status .feedback{padding:12px 8px;background:var(--paper)}
 
 .judge{display:inline-flex;align-items:center;justify-content:center;gap:6px}
-.judge-icon{width:18px;height:18px;flex-shrink:0}
+.judge-icon{font-size:18px;line-height:1;flex-shrink:0}
