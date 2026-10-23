@@ -99,7 +99,7 @@
       const won = state.status === 'won';
       result.className = `result ${won ? '' : 'lost'}`;
       result.innerHTML = `<span class="eyebrow">${won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${won ? 'すべての嘘が、ほどけた。' : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>各カードの「真相と証言の照合」で振り返れます。犯人${p.k}匹の組み合わせ${E.assignments(p.people.length, p.k).length}通りのうち、みんなの証言と矛盾しないのはこの1通りです。</p><button class="primary-button" id="next-case">次の事件へ →</button>`;
-      $('next-case').addEventListener('click', startCase);
+      $('next-case').addEventListener('click', openNewCaseDialog);
     }
     save();
   }
@@ -112,13 +112,19 @@
     $('result-dialog').classList.toggle('lost', state.status === 'lost');
     $('result-dialog').showModal();
   }
-  $('dialog-next-case').addEventListener('click', startCase);
+  $('dialog-next-case').addEventListener('click', openNewCaseDialog);
   $('result-dialog').addEventListener('close', () => {
-    if (state.status !== 'playing') {
+    if (state.status !== 'playing' && !$('new-dialog').open) {
       $('result').scrollIntoView({ block: 'start', behavior: 'instant' });
       $('next-case').focus({ preventScroll: true });
     }
   });
+  function openNewCaseDialog() {
+    $('difficulty').value = state.puzzle.level;
+    $('replace-case-note').hidden = state.status !== 'playing';
+    $('result-dialog').close();
+    $('new-dialog').showModal();
+  }
   function startCase() {
     try {
       $('result-dialog').close();
@@ -178,9 +184,7 @@
   addReadings($('animals-list'));
   $('animals-button').addEventListener('click', () => $('animals-dialog').showModal());
   $('help-button').addEventListener('click', () => $('help-dialog').showModal());
-  $('new-case').addEventListener('click', () => {
-    if (state.status === 'playing') $('new-dialog').showModal(); else startCase();
-  });
+  $('new-case').addEventListener('click', openNewCaseDialog);
   $('confirm-new').addEventListener('click', () => { $('new-dialog').close(); startCase(); });
   document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => $(b.dataset.close).close()));
   document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) { const r = d.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) d.close(); } }));

@@ -124,7 +124,13 @@ async function checkReadings(page) {
   assert.ok(await page.locator('#help-dialog').isVisible());
   await page.keyboard.press('Escape');
   await page.locator('#new-case').click();
+  assert.ok(await page.locator('#new-dialog').isVisible());
+  assert.equal(await page.locator('#difficulty').inputValue(), 'normal');
+  await page.locator('#difficulty').selectOption('hard');
   await page.locator('[data-close="new-dialog"]').click();
+  await page.locator('#new-case').click();
+  assert.equal(await page.locator('#difficulty').inputValue(), 'normal');
+  await page.keyboard.press('Escape');
   assert.ok((await page.locator('#memo-0').inputValue()).includes('メモ保存テスト'));
   assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 5');
   assert.equal(await page.locator('#trust-value').textContent(), '5');
@@ -182,8 +188,9 @@ async function checkReadings(page) {
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', true);
   assert.equal(await page.locator('#person-0 .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');
+  await page.locator('#new-case').click();
   await page.locator('#difficulty').selectOption('hard');
-  await page.locator('#next-case').click();
+  await page.locator('#confirm-new').click();
   assert.equal(await page.locator('.suspect').count(), 7);
   assert.equal(await page.locator('.statement').count(), 0);
   const hard = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
@@ -210,8 +217,9 @@ async function checkReadings(page) {
   await page.reload();
   assert.equal(await page.locator('#trust-value').textContent(), '0');
   assert.ok(await page.locator('#result').isVisible());
-  await page.locator('#difficulty').selectOption('easy');
   await page.locator('#next-case').click();
+  await page.locator('#difficulty').selectOption('easy');
+  await page.locator('#confirm-new').click();
   assert.equal(await page.locator('.suspect').count(), 4);
   for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 844 });
@@ -262,6 +270,9 @@ async function checkReadings(page) {
   await page.screenshot({ path: '/tmp/detective-result-dialog-mobile.png' });
   await page.locator('#dialog-next-case').click();
   assert.equal(await page.locator('#result-dialog').isVisible(), false);
+  assert.ok(await page.locator('#new-dialog').isVisible());
+  assert.equal(await page.locator('#difficulty').inputValue(), 'easy');
+  await page.locator('#confirm-new').click();
   assert.equal(await page.locator('#result').isVisible(), false);
   assert.equal(await page.locator('.suspect').count(), 4);
   await page.evaluate(() => localStorage.setItem('beast-detective-v1', '{bad json'));
