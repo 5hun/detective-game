@@ -22,8 +22,8 @@ ruby{ruby-align:center}rt{font-size:.55em;font-family:"Hiragino Kaku Gothic ProN
 .portrait-box{align-items:center}
 .portrait,.portrait-box .portrait{height:auto;aspect-ratio:4/3}
 
-.portrait-box:has([data-portrait-state="good"]),.testimony-link:has([data-portrait-state="good"]){background:#e0edd6}
-.portrait-box:has([data-portrait-state="good"]){border-color:#90a782}
+.portrait-box:has([data-portrait-state="good"],[data-portrait-state="sad"]),.testimony-link:has([data-portrait-state="good"],[data-portrait-state="sad"]){background:#e0edd6}
+.portrait-box:has([data-portrait-state="good"],[data-portrait-state="sad"]){border-color:#90a782}
 .portrait-box:has([data-portrait-state="liar"]),.testimony-link:has([data-portrait-state="liar"]){background:#e9ddd3}
 .portrait-box:has([data-portrait-state="liar"]){border-color:#b89b88}
 
