@@ -1,9 +1,9 @@
 /* Short local tones. Audio is created only in response to a judgment. */
 (function () {
   'use strict';
-  let context;
+  let context: AudioContext;
   let generation = 0;
-  const active = new Set();
+  const active = new Set<{ oscillator: OscillatorNode; gain: GainNode }>();
   function stop() {
     generation++;
     for (const voice of active) {
@@ -13,7 +13,7 @@
     }
     active.clear();
   }
-  async function play(correct) {
+  async function play(correct: boolean) {
     stop();
     const request = generation;
     try {

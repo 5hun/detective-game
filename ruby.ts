@@ -46,7 +46,7 @@
   // Match whole words for context, but annotate only their kanji runs.
   // Kana is aligned with the reading so okurigana stays outside <ruby>.
   const annotations = new Map(Object.entries(readings).map(([word, reading]) => {
-    const parts = word.match(/[一-龯々]+|[^一-龯々]+/g);
+    const parts = word.match(/[一-龯々]+|[^一-龯々]+/g)!;
     const alignment = new RegExp('^' + parts.map(part =>
       /^[一-龯々]+$/.test(part) ? '(.+?)' : part.replace(/[0-9]/g, '')
     ).join('') + '$');
@@ -59,21 +59,21 @@
   window.addReadings = function (root = document.body) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
-        return node.parentElement.closest('ruby, svg, script, style, textarea, select, option, noscript')
+        return node.parentElement?.closest('ruby, svg, script, style, textarea, select, option, noscript')
           ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
       }
     });
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
+    const nodes: Text[] = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode as Text);
     for (const node of nodes) {
-      const text = node.textContent;
+      const text = node.textContent || "";
       const matches = [...text.matchAll(pattern)];
       if (!matches.length) continue;
       const fragment = document.createDocumentFragment();
       let offset = 0;
       for (const match of matches) {
         fragment.append(text.slice(offset, match.index));
-        for (const part of annotations.get(match[0])) {
+        for (const part of annotations.get(match[0])!) {
           if (!part.reading) {
             fragment.append(part.text);
             continue;

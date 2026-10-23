@@ -1,10 +1,10 @@
 'use strict';
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const E = require('../engine.js');
+import { test } from 'node:test';
+import assert = require('node:assert/strict');
+const E: typeof DetectiveEngine = require('../engine.js');
 
 test('3,000 generated cases have exactly one solution and obey every role', () => {
-  for (const [level, config] of Object.entries(E.levels)) {
+  for (const [level, config] of (Object.entries(E.levels) as [Level, (typeof E.levels)[Level]][])) {
     for (let seed = 0; seed < 1000; seed++) {
       const p = E.generate(seed, level);
       assert.equal(p.people.length, config.n);
@@ -37,15 +37,15 @@ test('3,000 generated cases have exactly one solution and obey every role', () =
   }
 });
 test('same seed reproduces the case, different seeds vary it', () => {
-  for (const level of Object.keys(E.levels)) {
+  for (const level of Object.keys(E.levels) as Level[]) {
     assert.deepEqual(E.generate(4294967295, level), E.generate(4294967295, level));
     const cases = new Set(Array.from({ length: 100 }, (_, i) => JSON.stringify(E.generate(i, level).statements)));
     assert.ok(cases.size > 90);
   }
 });
-function state(level = 'normal') { const puzzle = E.generate(333, level); return { puzzle, resolved: puzzle.people.map(() => null), trust: E.initialTrust, status: 'playing' }; }
+function state(level: Level = 'normal'): JudgmentState { const puzzle = E.generate(333, level); return { puzzle, resolved: puzzle.people.map(() => null), trust: E.initialTrust, status: 'playing' }; }
 test('only criminals need judgment at every difficulty', () => {
-  for (const level of Object.keys(E.levels)) {
+  for (const level of Object.keys(E.levels) as Level[]) {
     const s = state(level);
     const criminals = s.puzzle.answer.flatMap((liar, i) => liar ? [i] : []);
     criminals.forEach((index, j) => {
@@ -94,5 +94,5 @@ test('all statement polarities and count boundaries are evaluated correctly', ()
   assert.equal(E.evaluate({ type:'ordered', targets:[0,1], value:false }, [true,false]), false);
   assert.equal(E.evaluate({ type:'both', targets:[0,1], value:false }, [true,false]), true);
   assert.equal(E.evaluate({ type:'parity', targets:[0,1,2], value:false }, [false,false,false]), true);
-  assert.throws(() => E.generate(0, 'unknown'));
+  assert.throws(() => E.generate(0, 'unknown' as Level));
 });

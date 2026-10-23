@@ -1,16 +1,22 @@
 (function () {
   'use strict';
   const E = window.DetectiveEngine;
-  const $ = id => document.getElementById(id);
+  function $<T extends HTMLElement = HTMLElement>(id: string): T {
+    const element = document.getElementById(id);
+    if (!element) throw new Error(`Missing element: ${id}`);
+    return element as T;
+  }
   const key = 'beast-detective-v1';
   const saveVersion = 4;
   const markers = [ { name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' } ];
   const preferencesKey = 'animal-detective-preferences-v1';
   const preferences = { ruby: true, sound: true };
   try {
-    const saved = JSON.parse(localStorage.getItem(preferencesKey));
-    for (const name of Object.keys(preferences)) {
-      if (typeof saved?.[name] === 'boolean') preferences[name] = saved[name];
+    const saved: unknown = JSON.parse(localStorage.getItem(preferencesKey) || 'null');
+    if (!saved || typeof saved !== 'object') throw new Error('Invalid preferences');
+    const values = saved as Record<string, unknown>;
+    for (const name of Object.keys(preferences) as (keyof typeof preferences)[]) {
+      if (typeof values[name] === 'boolean') preferences[name] = values[name];
     }
   } catch { /* Settings still work when storage is unavailable. */ }
   function savePreferences() {
@@ -19,7 +25,7 @@
   function applyRubyPreference() {
     document.documentElement.classList.toggle('ruby-off', !preferences.ruby);
     $('ruby-toggle').setAttribute('aria-pressed', String(preferences.ruby));
-    $('ruby-toggle').querySelector('[data-toggle-status]').textContent = preferences.ruby ? 'ON' : 'OFF';
+    $('ruby-toggle').querySelector('[data-toggle-status]')!.textContent = preferences.ruby ? 'ON' : 'OFF';
   }
   applyRubyPreference();
   $('ruby-toggle').addEventListener('click', () => {
@@ -29,7 +35,7 @@
   });
   function applySoundPreference() {
     $('sound-toggle').setAttribute('aria-pressed', String(preferences.sound));
-    $('sound-toggle').querySelector('[data-toggle-status]').textContent = preferences.sound ? 'ON' : 'OFF';
+    $('sound-toggle').querySelector('[data-toggle-status]')!.textContent = preferences.sound ? 'ON' : 'OFF';
   }
   applySoundPreference();
   $('sound-toggle').addEventListener('click', () => {
@@ -38,28 +44,37 @@
     if (!preferences.sound) judgmentSound.stop();
     savePreferences();
   });
-  let state; let storageAvailable = true;
-  function fresh(level) {
+  let state: GameState; let storageAvailable = true;
+  function fresh(level: Level): GameState {
     const seed = window.crypto ? crypto.getRandomValues(new Uint32Array(1))[0] : Date.now() >>> 0;
     const puzzle = E.generate(seed, level);
     return { version: saveVersion, puzzle, trust: E.initialTrust, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0), revealed: puzzle.people.map(() => false) };
   }
-  function restore() {
+  function restore(): GameState | null {
     try {
-      const saved = JSON.parse(localStorage.getItem(key));
-      if (!saved || saved.version !== saveVersion || !E.levels[saved.puzzle?.level] || !Number.isInteger(saved.puzzle.seed)) return null;
-      const puzzle = E.generate(saved.puzzle.seed, saved.puzzle.level); const n = puzzle.people.length;
-      if (![saved.resolved, saved.notes, saved.markers].every(a => Array.isArray(a) && a.length === n)) return null;
-      if (!saved.notes.every(v => typeof v === 'string' && v.length <= 1000) || !saved.markers.every(v => Number.isInteger(v) && v >= 0 && v <= 3)) return null;
-      if (!saved.resolved.every((r, i) => r === null || (r.guess === true && r.correct === (r.guess === puzzle.answer[i])))) return null;
-      const mistakes = saved.resolved.filter(r => r && !r.correct).length;
-      const trust = Math.max(0, E.initialTrust + saved.resolved.filter(r => r?.correct).length - 2 * mistakes);
+      const raw: unknown = JSON.parse(localStorage.getItem(key) || 'null');
+      if (!raw || typeof raw !== 'object') return null;
+      const saved = raw as Record<string, unknown>;
+      const storedPuzzle = saved.puzzle as Partial<Puzzle> | undefined;
+      if (saved.version !== saveVersion || !storedPuzzle ||
+          !Object.hasOwnProperty.call(E.levels, storedPuzzle.level || '') ||
+          !Number.isInteger(storedPuzzle.seed)) return null;
+      const puzzle = E.generate(storedPuzzle.seed!, storedPuzzle.level!);
+      const n = puzzle.people.length;
+      const { resolved, notes, markers, revealed } = saved;
+      if (!Array.isArray(resolved) || !Array.isArray(notes) || !Array.isArray(markers) ||
+          ![resolved, notes, markers].every(a => a.length === n)) return null;
+      if (!notes.every((v: unknown): v is string => typeof v === 'string' && v.length <= 1000) ||
+          !markers.every((v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 3)) return null;
+      if (!resolved.every((r: unknown, i): r is Resolution | null => r === null ||
+          (typeof r === 'object' && 'guess' in r && 'correct' in r && r.guess === true && r.correct === puzzle.answer[i]))) return null;
+      const mistakes = resolved.filter(r => r && !r.correct).length;
+      const trust = Math.max(0, E.initialTrust + resolved.filter(r => r?.correct).length - 2 * mistakes);
       if (trust < 0 || saved.trust !== trust) return null;
-      const status = trust === 0 ? 'lost' : puzzle.answer.every((liar, i) => !liar || saved.resolved[i] !== null) ? 'won' : 'playing';
+      const status = trust === 0 ? 'lost' : puzzle.answer.every((liar, i) => !liar || resolved[i] !== null) ? 'won' : 'playing';
       if (saved.status !== status) return null;
-      const revealed = saved.revealed;
       if (!Array.isArray(revealed) || revealed.length !== n || !revealed.every(v => typeof v === 'boolean')) return null;
-      return { ...saved, puzzle };
+      return { version: saveVersion, puzzle, trust, status, resolved, notes, markers, revealed };
     } catch { return null; }
   }
   function save() {
@@ -68,7 +83,7 @@
     $('save-status').textContent = storageAvailable ? '捜査状況は自動保存されます' : 'この環境では保存できません（現在の画面では遊べます）';
     addReadings();
   }
-  function renderCard(person, i) {
+  function renderCard(person: Person, i: number) {
     const resolved = state.resolved[i]; const ended = state.status !== 'playing'; const liar = state.puzzle.answer[i];
     const portraitState = resolved ? (liar ? 'liar' : 'sad') : state.status === 'won' ? 'good' : 'neutral';
     let actions;
@@ -79,7 +94,7 @@
     const truth = ended ? `<details class="truth-detail"><summary>真相と証言の照合：この証言は${liar ? '嘘' : '本当'}</summary><p>${state.puzzle.statements[i].targets.map(t => `${state.puzzle.people[t].name}＝${state.puzzle.answer[t] ? '犯人' : '善人'}`).join(' ／ ')}</p><p>この組み合わせでは、上の証言は${E.evaluate(state.puzzle.statements[i], state.puzzle.answer) ? '正しい' : '間違っています'}。${person.name}が${liar ? '犯人' : '善人'}という真相と一致します。</p></details>` : '';
     return `<article class="suspect" data-marker="${state.markers[i]}" id="person-${i}" aria-labelledby="name-${i}"><div class="card-main"><div class="portrait-box"><span class="person-number">0${i + 1}</span>${portrait(person.id, '', portraitState)}</div><div class="person-content"><div class="person-heading"><h3 id="name-${i}">${person.name}</h3><span class="job">${person.job}</span><details class="role-details"><summary>証言ルール</summary><p>${person.rule}</p></details></div><div id="statement-${i}">${state.revealed[i] || ended ? `<p class="statement">${E.statementText(state.puzzle.statements[i], state.puzzle.people)}</p>` : `<button class="reveal-button quiet-button" data-reveal="${i}" aria-controls="statement-${i}">${person.name}の証言を聞く</button>`}</div><div class="actions">${actions}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="${person.name}のマーカー">${markers.map((m, j) => `<button class="marker-button" style="--dot:${m.color}" data-marker-value="${j}" data-index="${i}" aria-label="${person.name}：${m.name}" title="${m.name}" aria-pressed="${state.markers[i] === j}"></button>`).join('')}</div><label class="memo-label" for="memo-${i}">MEMO</label><textarea id="memo-${i}" data-note="${i}" aria-label="${person.name}の捜査メモ" maxlength="1000" rows="1" placeholder="きになることをメモ…"></textarea></div>${truth}</article>`;
   }
-  function render(message) {
+  function render(message?: string) {
     const p = state.puzzle; const count = state.resolved.filter((r, i) => r !== null && p.answer[i]).length;
     const mistakes = state.resolved.filter(r => r && !r.correct).length;
     const story = E.caseStories[p.seed % E.caseStories.length];
@@ -89,10 +104,10 @@
     $('liar-count').textContent = `犯人 ${p.k}匹`;
     $('good-count').textContent = `善人 ${p.people.length - p.k}匹`;
     $('progress-count').textContent = `${count} / ${p.k}`;
-    $('trust-value').textContent = state.trust;
+    $('trust-value').textContent = String(state.trust);
     $('trust').setAttribute('aria-label', `残り信用 ${state.trust}`);
     $('suspects').innerHTML = p.people.map(renderCard).join('');
-    state.notes.forEach((v, i) => { $(`memo-${i}`).value = v; });
+    state.notes.forEach((v, i) => { $<HTMLTextAreaElement>(`memo-${i}`).value = v; });
     $('feedback').textContent = message || '「証言を聞く」をタップして、証言を読み比べましょう。';
     const result = $('result'); result.hidden = state.status === 'playing';
     if (!result.hidden) {
@@ -105,46 +120,46 @@
   }
   function showResultDialog() {
     const content = $('result-dialog-content');
-    const resultCopy = $('result').cloneNode(true);
-    resultCopy.querySelector('#next-case').remove();
-    resultCopy.querySelector('h2').id = 'result-dialog-title';
+    const resultCopy = $('result').cloneNode(true) as HTMLElement;
+    resultCopy.querySelector('#next-case')!.remove();
+    resultCopy.querySelector('h2')!.id = 'result-dialog-title';
     content.replaceChildren(...resultCopy.childNodes);
     $('result-dialog').classList.toggle('lost', state.status === 'lost');
-    $('result-dialog').showModal();
+    $<HTMLDialogElement>('result-dialog').showModal();
   }
   $('dialog-next-case').addEventListener('click', openNewCaseDialog);
   $('result-dialog').addEventListener('close', () => {
-    if (state.status !== 'playing' && !$('new-dialog').open) {
+    if (state.status !== 'playing' && !$<HTMLDialogElement>('new-dialog').open) {
       $('result').scrollIntoView({ block: 'start', behavior: 'instant' });
       $('next-case').focus({ preventScroll: true });
     }
   });
   function openNewCaseDialog() {
-    $('difficulty').value = state.puzzle.level;
+    $<HTMLSelectElement>('difficulty').value = state.puzzle.level;
     $('replace-case-note').hidden = state.status !== 'playing';
-    $('result-dialog').close();
-    $('new-dialog').showModal();
+    $<HTMLDialogElement>('result-dialog').close();
+    $<HTMLDialogElement>('new-dialog').showModal();
   }
   function startCase() {
     try {
-      $('result-dialog').close();
+      $<HTMLDialogElement>('result-dialog').close();
       judgmentSound.stop();
-      state = fresh($('difficulty').value);
+      state = fresh($<HTMLSelectElement>('difficulty').value as Level);
       $('feedback').className = 'feedback';
       render('新しい事件が届きました。みんなの証言が、捜査の手がかりです。');
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (err) { $('feedback').textContent = err.message; addReadings($('feedback')); }
+    } catch (err) { $('feedback').textContent = err instanceof Error ? err.message : String(err); addReadings($('feedback')); }
   }
   // Keep keyboard/scrollIntoView targets below the pinned summary, including with ruby enabled.
-  const summary = document.querySelector('.case-status');
+  const summary = document.querySelector<HTMLElement>('.case-status')!;
   new ResizeObserver(() => {
     document.documentElement.style.setProperty('--summary-height', `${summary.getBoundingClientRect().height}px`);
   }).observe(summary);
   state = restore() || fresh('normal');
-  $('difficulty').value = state.puzzle.level;
+  $<HTMLSelectElement>('difficulty').value = state.puzzle.level;
   render(state.status !== 'playing' ? '前回の捜査結果を開きました。新しい事件にも挑戦できます。' : undefined);
   $('suspects').addEventListener('click', event => {
-    const reveal = event.target.closest('[data-reveal]');
+    const reveal = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-reveal]');
     if (reveal) {
       const i = Number(reveal.dataset.reveal);
       state.revealed[i] = true;
@@ -154,7 +169,7 @@
       statement.focus({ preventScroll: true });
       return;
     }
-    const judge = event.target.closest('[data-judge]');
+    const judge = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-judge]');
     if (judge) {
       const i = Number(judge.dataset.index); const correct = E.judge(state, i);
       if (correct === null) return;
@@ -166,26 +181,27 @@
         return;
       }
       // Restore keyboard focus after replacing the card list.
-      const next = $('suspects').querySelector('[data-judge]') || $('next-case');
+      const next = $('suspects').querySelector<HTMLElement>('[data-judge]') || $('next-case');
       if (next) next.focus({ preventScroll: true });
     }
-    const marker = event.target.closest('[data-marker-value]');
+    const marker = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-marker-value]');
     if (marker) {
       const i = Number(marker.dataset.index); state.markers[i] = Number(marker.dataset.markerValue);
-      $(`person-${i}`).dataset.marker = state.markers[i];
-      marker.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === marker)));
+      $(`person-${i}`).dataset.marker = String(state.markers[i]);
+      marker.parentElement!.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === marker)));
       save();
     }
   });
   $('suspects').addEventListener('input', event => {
-    if (event.target.matches('[data-note]')) { state.notes[Number(event.target.dataset.note)] = event.target.value; save(); }
+    const target = event.target;
+    if (target instanceof HTMLTextAreaElement && target.matches('[data-note]')) { state.notes[Number(target.dataset.note)] = target.value; save(); }
   });
   $('animals-list').innerHTML = E.roles.map(person => `<article class="animal-entry"><div>${portrait(person.id)}</div><div><h3>${person.name} <small>${person.job}</small></h3><p>${person.rule}</p></div></article>`).join('');
   addReadings($('animals-list'));
-  $('animals-button').addEventListener('click', () => $('animals-dialog').showModal());
-  $('help-button').addEventListener('click', () => $('help-dialog').showModal());
+  $('animals-button').addEventListener('click', () => $<HTMLDialogElement>('animals-dialog').showModal());
+  $('help-button').addEventListener('click', () => $<HTMLDialogElement>('help-dialog').showModal());
   $('new-case').addEventListener('click', openNewCaseDialog);
-  $('confirm-new').addEventListener('click', () => { $('new-dialog').close(); startCase(); });
-  document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => $(b.dataset.close).close()));
+  $('confirm-new').addEventListener('click', () => { $<HTMLDialogElement>('new-dialog').close(); startCase(); });
+  document.querySelectorAll<HTMLElement>('[data-close]').forEach(b => b.addEventListener('click', () => $<HTMLDialogElement>(b.dataset.close!).close()));
   document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) { const r = d.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) d.close(); } }));
 })();

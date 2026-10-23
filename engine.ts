@@ -1,7 +1,7 @@
 /* Pure, deterministic puzzle engine. true means liar. No network or DOM needed. */
-(function (root) {
+var DetectiveEngine = (function () {
   'use strict';
-  const roles = [
+  const roles: Person[] = [
     { id: 'fox', name: 'キツネ', job: '目撃者', rule: 'ほかの1匹が犯人か善人かを証言する。', type: 'single' },
     { id: 'rabbit', name: 'ウサギ', job: '比較屋', rule: 'ほかの2匹が同じ立場か、違う立場かを証言する。', type: 'same' },
     { id: 'owl', name: 'フクロウ', job: '記録係', rule: '指定した3匹の中にいる犯人の数を証言する。', type: 'count' },
@@ -20,11 +20,11 @@
     { title: '郵便局の手紙事件', description: '郵便局で仕分けた手紙が、だれかのいたずらでばらばらに。その場にいた動物たちの証言から、いたずらの犯人を見つけましょう。' }
   ];
   const levels = { easy: { n: 4, k: 1, label: 'かんたん' }, normal: { n: 5, k: 2, label: 'ふつう' }, hard: { n: 7, k: 3, label: 'むずかしい' } };
-  function random(seed) { let a = seed >>> 0; return () => { a += 0x6D2B79F5; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-  function shuffle(a, rng) { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
-  function combinations(a, n) { if (!n) return [[]]; return a.flatMap((v, i) => combinations(a.slice(i + 1), n - 1).map(rest => [v, ...rest])); }
-  function assignments(n, k) { return combinations(Array.from({ length: n }, (_, i) => i), k).map(ids => Array.from({ length: n }, (_, i) => ids.includes(i))); }
-  function evaluate(s, a) {
+  function random(seed: number) { let a = seed >>> 0; return () => { a += 0x6D2B79F5; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function shuffle<T>(a: readonly T[], rng: () => number): T[] { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+  function combinations<T>(a: T[], n: number): T[][] { if (!n) return [[]]; return a.flatMap((v, i) => combinations(a.slice(i + 1), n - 1).map(rest => [v, ...rest])); }
+  function assignments(n: number, k: number) { return combinations(Array.from({ length: n }, (_, i) => i), k).map(ids => Array.from({ length: n }, (_, i) => ids.includes(i))); }
+  function evaluate(s: Statement, a: boolean[]) {
     const values = s.targets.map(i => a[i]); const count = values.filter(Boolean).length;
     switch (s.type) {
       case 'single': return values[0] === s.value;
@@ -38,35 +38,37 @@
       default: throw new Error('Unknown statement type');
     }
   }
-  function candidates(type, speaker, n) {
+  function candidates(type: StatementType, speaker: number, n: number): Statement[] {
     const targets = Array.from({ length: n }, (_, i) => i).filter(i => i !== speaker);
     const size = type === 'single' ? 1 : ['count', 'parity', 'majority'].includes(type) ? 3 : 2;
     let groups = combinations(targets, size);
     if (type === 'ordered') groups = groups.flatMap(g => [g, [...g].reverse()]);
-    return groups.flatMap(g => (type === 'count' ? [0, 1, 2, 3] : [false, true]).map(value => ({ type, targets: g, value })));
+    if (type === 'count') return groups.flatMap(targets => [0, 1, 2, 3].map(value => ({ type, targets, value })));
+    return groups.flatMap(targets => [false, true].map(value => ({ type, targets, value })));
   }
-  function solve(puzzle) { return assignments(puzzle.people.length, puzzle.k).filter(a => puzzle.statements.every((s, i) => evaluate(s, a) === !a[i])); }
-  function generate(seed, level = 'normal') {
+  function solve(puzzle: Puzzle) { return assignments(puzzle.people.length, puzzle.k).filter(a => puzzle.statements.every((s, i) => evaluate(s, a) === !a[i])); }
+  function generate(seed: number, level: Level = 'normal'): Puzzle {
     if (!levels[level]) throw new Error('Invalid difficulty');
     const rng = random(seed); const { n, k } = levels[level]; const all = assignments(n, k);
     for (let attempt = 0; attempt < 2000; attempt++) {
       const people = shuffle(roles, rng).slice(0, n);
       const answer = all[Math.floor(rng() * all.length)];
-      let remaining = all; const statements = Array(n);
+      let remaining = all; const statements: Statement[] = Array(n);
       for (const i of shuffle(Array.from({ length: n }, (_, j) => j), rng)) {
         const valid = shuffle(candidates(people[i].type, i, n), rng).filter(s => evaluate(s, answer) === !answer[i]);
-        let best; let survivors;
+        let best: Statement | undefined; let survivors: boolean[][] | undefined;
         for (const s of valid) {
           const next = remaining.filter(a => evaluate(s, a) === !a[i]);
           if (!survivors || next.length < survivors.length) { best = s; survivors = next; }
         }
+        if (!best || !survivors) throw new Error('No valid statement for this role');
         statements[i] = best; remaining = survivors;
       }
       if (remaining.length === 1) return { seed: seed >>> 0, level, k, people, statements, answer };
     }
     throw new Error('問題を生成できませんでした。もう一度お試しください。');
   }
-  function statementText(s, people) {
+  function statementText(s: Statement, people: Person[]) {
     const names = s.targets.map(i => people[i].name); const [a, b] = names; const list = names.join('、');
     switch (s.type) {
       case 'single': return `${a}は${s.value ? '犯人' : '善人'}だ。`;
@@ -80,7 +82,7 @@
     }
   }
   const initialTrust = 5;
-  function judge(state, index) {
+  function judge(state: JudgmentState, index: number) {
     if (state.status !== 'playing' || state.resolved[index] !== null) return null;
     const correct = state.puzzle.answer[index] === true;
     state.resolved[index] = { correct, guess: true };
@@ -91,5 +93,5 @@
   }
   const api = { initialTrust, roles, caseStories, levels, generate, solve, evaluate, statementText, assignments, judge };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  else root.DetectiveEngine = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this);
+  return api;
+})();

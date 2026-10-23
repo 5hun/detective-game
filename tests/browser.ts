@@ -1,40 +1,41 @@
 // Optional browser check: PLAYWRIGHT_MODULE may point to an existing Playwright installation.
-const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const { pathToFileURL } = require('node:url');
-const path = require('node:path');
-const assert = require('node:assert/strict');
-async function setToggle(locator, enabled) {
+import type { Locator, Page } from 'playwright';
+const { chromium }: typeof import('playwright') = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+import { pathToFileURL } from 'node:url';
+import path = require('node:path');
+import assert = require('node:assert/strict');
+async function setToggle(locator: Locator, enabled: boolean) {
   if ((await locator.getAttribute('aria-pressed')) !== String(enabled)) await locator.click();
 }
-async function baseText(locator) {
+async function baseText(locator: Locator) {
   return locator.evaluate(element => {
-    const copy = element.cloneNode(true);
+    const copy = element.cloneNode(true) as HTMLElement;
     copy.querySelectorAll('rt').forEach(rt => rt.remove());
     return copy.textContent;
   });
 }
-async function checkReadings(page) {
+async function checkReadings(page: Page) {
   const missing = await page.evaluate(() => {
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    const missing = [];
+    const missing: string[] = [];
     while (walker.nextNode()) {
       const node = walker.currentNode;
-      if (!node.parentElement.closest('ruby, svg, script, style, textarea, select, noscript') && /[一-龯々]/.test(node.textContent)) missing.push(node.textContent);
+      if (!node.parentElement?.closest('ruby, svg, script, style, textarea, select, noscript') && /[一-龯々]/.test(node.textContent || '')) missing.push(node.textContent || '');
     }
     return missing;
   });
   const invalidBases = await page.locator('ruby').evaluateAll(elements => elements.map(element => {
-    const copy = element.cloneNode(true);
+    const copy = element.cloneNode(true) as HTMLElement;
     copy.querySelectorAll('rt').forEach(rt => rt.remove());
     return copy.textContent;
-  }).filter(text => !/^[一-龯々]+$/.test(text)));
+  }).filter(text => !/^[一-龯々]+$/.test(text || '')));
   assert.deepEqual(invalidBases, [], 'ruby must cover kanji only');
   assert.deepEqual(missing, [], `game text without readings: ${JSON.stringify(missing)}`);
 }
 (async () => {
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
-  const errors = [];
+  const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.addInitScript(() => {
     window.playedTones = [];
@@ -51,7 +52,7 @@ async function checkReadings(page) {
       }
     };
   });
-  await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
+  await page.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
   await page.locator('.suspect').last().waitFor();
   assert.deepEqual(await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => button.id)),
     ['help-button', 'animals-button', 'sound-toggle', 'ruby-toggle']);
@@ -65,9 +66,13 @@ async function checkReadings(page) {
       probe.append(line);
     }
     for (const role of DetectiveEngine.roles) {
-      for (const value of role.type === 'count' ? [0, 1, 2, 3] : [false, true]) {
+      const type = role.type;
+      const statements: Statement[] = type === 'count'
+        ? [0, 1, 2, 3].map(value => ({ type, targets: [0, 1, 2], value }))
+        : [false, true].map(value => ({ type, targets: [0, 1, 2], value }));
+      for (const statement of statements) {
         const line = document.createElement('p');
-        line.textContent = DetectiveEngine.statementText({ type: role.type, targets: [0, 1, 2], value }, DetectiveEngine.roles);
+        line.textContent = DetectiveEngine.statementText(statement, DetectiveEngine.roles);
         probe.append(line);
       }
     }
@@ -85,7 +90,7 @@ async function checkReadings(page) {
     addReadings(sample);
     if (sample.innerHTML !== once) throw new Error('Ruby is not idempotent');
     return [...sample.childNodes].map(node => node.nodeType === Node.TEXT_NODE ? node.textContent :
-      [node.firstChild.textContent, node.querySelector('rt').textContent]).filter(value => value !== '');
+      [node.firstChild!.textContent, (node as Element).querySelector('rt')!.textContent]).filter(value => value !== '');
   });
   assert.deepEqual(segments, [
     ['消', 'き'], 'えた', ' ', '3', ['匹', 'びき'], ' ', ['持', 'も'], 'ち', ['去', 'さ'], 'られ', ' ',
@@ -138,12 +143,12 @@ async function checkReadings(page) {
   const storyTitle = await baseText(page.locator('#case-title'));
   const storyDescription = await baseText(page.locator('#case-description'));
   const expectedStory = await page.evaluate(() => {
-    const seed = JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.seed;
+    const seed = (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.seed;
     return DetectiveEngine.caseStories[seed % DetectiveEngine.caseStories.length];
   });
   assert.equal(storyTitle, expectedStory.title);
   assert.equal(storyDescription, expectedStory.description);
-  const solution = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
+  const solution = await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.answer);
   assert.deepEqual(await page.evaluate(() => window.playedTones), []);
   await setToggle(page.locator('#sound-toggle'), false);
   await page.reload();
@@ -158,6 +163,7 @@ async function checkReadings(page) {
     assert.equal(await page.locator('#trust-value').textContent(), String(6 + step));
     if (step < criminals.length - 1) {
       const feedback = await page.locator('#feedback').boundingBox();
+      assert.ok(feedback);
       assert.ok(feedback.y >= 0 && feedback.y + feedback.height <= 1100, 'judgment message stays in viewport');
       assert.ok((await baseText(page.locator('#feedback'))).includes('正解です。信用 ＋1。'));
     }
@@ -193,7 +199,7 @@ async function checkReadings(page) {
   await page.locator('#confirm-new').click();
   assert.equal(await page.locator('.suspect').count(), 7);
   assert.equal(await page.locator('.statement').count(), 0);
-  const hard = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
+  const hard = await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.answer);
   assert.equal(await page.locator('[data-portrait-state="neutral"]').count(), 15);
   const innocents = hard.flatMap((liar, i) => liar ? [] : [i]);
   for (let step = 0; step < 3; step++) {
@@ -225,30 +231,38 @@ async function checkReadings(page) {
     await page.setViewportSize({ width, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `overflow at ${width}`);
     const menu = await page.locator('.header-right').boundingBox();
+      assert.ok(menu);
     const brand = await page.locator('.brand').boundingBox();
+      assert.ok(brand);
     if (width > 760) assert.ok(menu.x > brand.x + brand.width, 'desktop menu shares brand row');
     else assert.ok(menu.y >= brand.y + brand.height, 'mobile menu wraps below brand');
     const menuButtons = await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => { const box = button.getBoundingClientRect(); return box.top + box.height / 2; }));
     assert.ok(menuButtons.every(top => Math.abs(top - menuButtons[0]) < 1), 'four menu controls share one center line');
     const textButton = await page.locator('#help-button').boundingBox();
+      assert.ok(textButton);
     const iconButton = await page.locator('#sound-toggle').boundingBox();
+      assert.ok(iconButton);
     assert.ok(textButton.height < iconButton.height, 'text buttons retain compact height');
     for (const rubyEnabled of [true, false]) {
       await setToggle(page.locator('#ruby-toggle'), rubyEnabled);
       await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
-      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
       const summary = await page.locator('.case-summary').boundingBox();
+      assert.ok(summary);
       assert.ok(summary.y >= 0 && summary.y < 2, `summary pinned at ${width}, ruby=${rubyEnabled}`);
       assert.ok(summary.y + summary.height < 844);
       const feedback = await page.locator('#feedback').boundingBox();
+      assert.ok(feedback);
       assert.ok(feedback.y >= summary.y + summary.height && feedback.y + feedback.height <= 844, 'feedback remains visible while scrolling');
       for (const id of ['liar-count', 'good-count', 'progress-count', 'trust']) {
         const box = await page.locator('#' + id).boundingBox();
+      assert.ok(box);
         assert.ok(box.y >= summary.y && box.y + box.height <= summary.y + summary.height);
         assert.ok(box.x >= 0 && box.x + box.width <= width);
       }
       await page.locator('#person-3 [data-judge="liar"]').evaluate(button => button.scrollIntoView({ block: 'start', behavior: 'instant' }));
       const button = await page.locator('#person-3 [data-judge="liar"]').boundingBox();
+      assert.ok(button);
       assert.ok(button.y >= summary.height, 'pinned summary must not cover the scrolled-to button');
       if (width === 390 && rubyEnabled) await page.screenshot({ path: '/tmp/detective-sticky-summary.png' });
     }
@@ -259,12 +273,13 @@ async function checkReadings(page) {
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: '/tmp/beast-detective-mobile.png', fullPage: true });
-  const easyAnswer = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')).puzzle.answer);
+  const easyAnswer = await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.answer);
   for (let i = 0; i < easyAnswer.length; i++) {
     if (!easyAnswer[i]) continue;
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
   }
   const modal = await page.locator('#result-dialog').boundingBox();
+      assert.ok(modal);
   assert.ok(modal.y >= 0 && modal.y + modal.height <= 844, 'result dialog fits mobile viewport');
   assert.ok(Math.abs(modal.y + modal.height / 2 - 422) < 2, 'result dialog centered after scrolling');
   await page.screenshot({ path: '/tmp/detective-result-dialog-mobile.png' });
@@ -279,14 +294,14 @@ async function checkReadings(page) {
   await page.reload();
   assert.equal(await page.locator('.suspect').count(), 5);
   const invalidSave = await browser.newPage();
-  await invalidSave.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
+  await invalidSave.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
   for (const problem of ['old-version', 'previous-rules', 'missing-revealed', 'wrong-trust', 'wrong-status']) {
     await invalidSave.evaluate(problem => {
-      const saved = JSON.parse(localStorage.getItem('beast-detective-v1'));
+      const saved = (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState);
       saved.notes[0] = '引き継がないメモ';
       if (problem === 'old-version') saved.version = 1;
       if (problem === 'previous-rules') saved.version = 3;
-      if (problem === 'missing-revealed') delete saved.revealed;
+      if (problem === 'missing-revealed') Reflect.deleteProperty(saved, 'revealed');
       if (problem === 'wrong-trust') saved.trust = 999;
       if (problem === 'wrong-status') saved.status = 'won';
       localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
@@ -298,7 +313,7 @@ async function checkReadings(page) {
   }
   const blocked = await browser.newPage();
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
-  await blocked.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
+  await blocked.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
   assert.equal(await blocked.locator('.suspect').count(), 5);
   await setToggle(blocked.locator('#ruby-toggle'), false);
   assert.equal(await blocked.locator('ruby rt').first().isVisible(), false);
@@ -308,9 +323,9 @@ async function checkReadings(page) {
   const silent = await browser.newPage();
   silent.on('pageerror', e => errors.push(e.message));
   await silent.addInitScript(() => {
-    window.AudioContext = class { constructor() { throw new Error('audio unavailable'); } };
+    Object.defineProperty(window, 'AudioContext', { value: class { constructor() { throw new Error('audio unavailable'); } } });
   });
-  await silent.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
+  await silent.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
   await silent.locator('#person-0 [data-judge="liar"]').click();
   assert.equal(await silent.locator('#person-0 .resolved-tag').count(), 1);
   assert.deepEqual(errors, []);

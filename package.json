@@ -1,0 +1,16 @@
+{
+  "name": "animal-detective",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.tests.json --noEmit",
+    "test": "npm run build && tsc -p tsconfig.tests.json && node --test dist/tests/engine.test.js",
+    "test:browser": "npm run build && tsc -p tsconfig.tests.json && node dist/tests/browser.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/node": "^20.19.0",
+    "playwright": "^1.56.0"
+  }
+}

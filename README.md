@@ -4,9 +4,16 @@
 
 ## 起動
 
-**`index.html` をブラウザで開くだけで遊べます。** インストール、ビルド、サーバー起動は不要です。`index.html`・`styles.css`・`engine.js`・`portraits.js`・`ruby.js`・`sound.js`・`app.js` は同じフォルダに置いてください。外部通信も不要です。
+Node.js 20以降で、初回に依存パッケージをインストールし、TypeScriptをビルドしてください。
 
-PCでは `index.html` をダブルクリックするか、ブラウザにドラッグしてください。スマホの画面幅にも対応しています。ただし、スマホOSやファイル管理アプリによってはローカルHTMLのJavaScript実行を制限します。その場合は、静的ホスティングに同じ7ファイルを置いてアクセスできます（アプリ用のバックエンドは不要です）。
+```sh
+npm ci
+npm run build
+```
+
+ビルド後は **`index.html` をブラウザで開くだけで遊べます。** サーバー起動は不要です。配布するときは `index.html`・`styles.css` と `dist/` 内の `engine.js`・`portraits.js`・`ruby.js`・`sound.js`・`app.js` を、フォルダ構成を保って配置してください。実行時の外部通信は不要です。
+
+PCでは `index.html` をダブルクリックするか、ブラウザにドラッグしてください。スマホの画面幅にも対応しています。ただし、スマホOSやファイル管理アプリによってはローカルHTMLのJavaScript実行を制限します。その場合は、静的ホスティングに同じファイルと `dist/` フォルダを置いてアクセスできます（アプリ用のバックエンドは不要です）。
 
 ## 遊び方
 
@@ -44,18 +51,20 @@ PCでは `index.html` をダブルクリックするか、ブラウザにドラ�
 
 ## 実装と検証
 
-依存ライブラリなしのHTML/CSS/JavaScriptです。動物のオリジナルドット絵はSVGの矩形で描画しています。生成器は数の条件を満たす全組み合わせを列挙し、発言の真偽と発言者の立場が一致する解が1つだけの問題を採用します。保存された乱数シードで同じ問題を再現できます。
+HTML/CSS/TypeScriptで実装しています。実行時の依存ライブラリはありません。TypeScriptは `strict` モードで検査し、`dist/` にJavaScriptを出力します。ゲーム状態・難易度・証言・ブラウザAPIの型は `types.d.ts` で共有しています。生成ファイルと `node_modules/` はGit管理対象外です。ソースを変更したら再度 `npm run build` を実行してください。動物のオリジナルドット絵はSVGの矩形で描画しています。生成器は数の条件を満たす全組み合わせを列挙し、発言の真偽と発言者の立場が一致する解が1つだけの問題を採用します。保存された乱数シードで同じ問題を再現できます。
 
-Node.js 18以降で、3難易度・計3,000問の独立した全探索検証と、信用／勝敗／再現性のテストを実行できます。
+Node.js 20以降で、3難易度・計3,000問の独立した全探索検証と、信用／勝敗／再現性のテストを実行できます。
 
 ```sh
-node tests/engine.test.js
+npm run typecheck
+npm test
 ```
 
-任意のブラウザテスト（PlaywrightとChromiumが別途必要）:
+ブラウザテスト（初回にChromiumをインストール）:
 
 ```sh
-node tests/browser.cjs
+npx playwright install chromium
+npm run test:browser
 ```
 
 既存の環境を使う場合、`PLAYWRIGHT_MODULE` にPlaywrightパッケージのパス、`CHROMIUM_PATH` にChromium実行ファイルのパスを指定できます。テストは `file://` で開き、メモ・マーカーの保存、勝敗、難易度、ダイアログ、320px／390pxの横幅、保存不可の場合を確認します。スクリーンショットは `/tmp/beast-detective-desktop.png` と `/tmp/beast-detective-mobile.png` に保存します。
