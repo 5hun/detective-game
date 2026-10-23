@@ -81,7 +81,7 @@ async function checkReadings(page: Page) {
   assert.ok(await page.locator('#menu-toggle').evaluate(button => button === document.activeElement));
   await page.locator('#menu-toggle').click();
   assert.deepEqual(await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => button.id)),
-    ['new-case', 'help-button', 'animals-button', 'sound-toggle', 'ruby-toggle']);
+    ['animals-button', 'sound-toggle', 'ruby-toggle', 'delete-save']);
   assert.equal(await page.locator('.offline, .case-stamp, .preferences').count(), 0);
   await page.evaluate(() => {
     const probe = document.createElement('div');
@@ -313,16 +313,16 @@ async function checkReadings(page: Page) {
     assert.equal(expandedHeader?.height, collapsedHeader?.height, 'overlay does not expand header');
     assert.equal(expandedContent?.y, collapsedContent?.y, 'overlay does not push page content down');
     await page.locator('#menu-toggle').click();
-    const textButton = await page.locator('#help-button').boundingBox();
-      assert.ok(textButton);
-    const iconButton = await page.locator('#sound-toggle').boundingBox();
-      assert.ok(iconButton);
-    assert.ok(Math.abs(textButton.height - iconButton.height) < 1, 'menu buttons share the same height');
-    for (const id of ['help-button', 'animals-button']) {
-      const icon = await page.locator('#' + id + ' svg').boundingBox();
-      const label = await page.locator('#' + id + ' .menu-label').boundingBox();
-      assert.ok(icon && label && label.y >= icon.y + icon.height, 'menu caption appears below icon');
-    }
+    const headerButtons = await page.locator('.header-actions > button').evaluateAll(buttons => buttons.map(button => {
+      const box = button.getBoundingClientRect();
+      return { left: box.left, right: box.right, top: box.top, height: box.height };
+    }));
+    assert.equal(headerButtons.length, 3);
+    assert.ok(headerButtons.every((box, i) => box.height >= 44 && (i === 0 || box.left >= headerButtons[i - 1].right)), 'header actions appear in order');
+    assert.ok(headerButtons.every(box => box.top === headerButtons[0].top), 'header actions share a row');
+    assert.equal(await page.locator('#game-menu #new-case, #game-menu #help-button').count(), 0);
+    assert.equal(await baseText(page.locator('#help-button')), '?');
+    assert.equal(await baseText(page.locator('#new-case')), '+最初から');
     for (const rubyEnabled of [true, false]) {
       await setToggle(page.locator('#ruby-toggle'), rubyEnabled);
       await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
@@ -414,6 +414,23 @@ async function checkReadings(page: Page) {
     assert.equal(await invalidSave.locator('#memo-0').inputValue(), '', problem);
     assert.equal(await invalidSave.locator('.resolved-tag').count(), 0);
   }
+  await page.locator('#memo-0').fill('消去の確認用メモ');
+  const saveBeforeDelete = await page.evaluate(() => localStorage.getItem('beast-detective-v1'));
+  const preferencesBeforeDelete = await page.evaluate(() => localStorage.getItem('animal-detective-preferences-v1'));
+  await openMenu(page);
+  await page.locator('#delete-save').click();
+  assert.ok(await page.locator('#delete-save-dialog').isVisible());
+  await page.locator('[data-close="delete-save-dialog"]').click();
+  assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), saveBeforeDelete);
+  await openMenu(page);
+  await page.locator('#delete-save').click();
+  await page.locator('#confirm-delete-save').click();
+  assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), null);
+  assert.equal(await page.locator('#memo-0').inputValue(), '');
+  assert.equal(await page.locator('#trust-value').textContent(), '5');
+  assert.equal(await page.evaluate(() => localStorage.getItem('animal-detective-preferences-v1')), preferencesBeforeDelete);
+  await page.reload();
+  assert.equal(await page.locator('#memo-0').inputValue(), '');
   const blocked = await browser.newPage();
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
   await blocked.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);

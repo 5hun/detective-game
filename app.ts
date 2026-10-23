@@ -100,7 +100,7 @@
     const truth = ended ? `<details class="truth-detail"><summary>真相と証言の照合：この証言は${liar ? '嘘' : '本当'}</summary><p>${state.puzzle.statements[i].targets.map(t => `${state.puzzle.people[t].name}＝${state.puzzle.answer[t] ? '犯人' : '善人'}`).join(' ／ ')}</p><p>この組み合わせでは、上の証言は${E.evaluate(state.puzzle.statements[i], state.puzzle.answer) ? '正しい' : '間違っています'}。${person.name}が${liar ? '犯人' : '善人'}という真相と一致します。</p></details>` : '';
     return `<article class="suspect" data-marker="${state.markers[i]}" id="person-${i}" aria-labelledby="name-${i}"><div class="card-main"><div class="portrait-box"><span class="person-number">0${i + 1}</span>${portrait(person.id, '', portraitState)}</div><div class="person-content"><div class="person-heading"><h3 id="name-${i}">${person.name}</h3><span class="job">${person.job}</span><details class="role-details"><summary>証言ルール</summary><p>${person.rule}</p></details></div><div id="statement-${i}">${state.revealed[i] || ended ? `<p class="statement">${E.statementText(state.puzzle.statements[i], state.puzzle.people)}</p>` : `<button class="reveal-button quiet-button" data-reveal="${i}" aria-controls="statement-${i}">${person.name}の証言を聞く</button>`}</div><div class="actions">${actions}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="${person.name}のマーカー">${markers.map((m, j) => `<button class="marker-button" style="--dot:${m.color}" data-marker-value="${j}" data-index="${i}" aria-label="${person.name}：${m.name}" title="${m.name}" aria-pressed="${state.markers[i] === j}"></button>`).join('')}</div><label class="memo-label" for="memo-${i}">MEMO</label><textarea id="memo-${i}" data-note="${i}" aria-label="${person.name}の捜査メモ" maxlength="1000" rows="1" placeholder="きになることをメモ…"></textarea></div>${truth}</article>`;
   }
-  function render(message?: string) {
+  function render(message?: string, persist = true) {
     const p = state.puzzle; const count = state.resolved.filter((r, i) => r !== null && p.answer[i]).length;
     const mistakes = state.resolved.filter(r => r && !r.correct).length;
     const story = E.caseStories[p.seed % E.caseStories.length];
@@ -127,7 +127,8 @@
       result.innerHTML = `<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${cleared ? '全5回の捜査完了！ ゲームクリア！' : won ? `捜査 ${p.round} / ${E.totalCases} 事件解決！` : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。信用 ＋1。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>${won && !cleared ? '次の捜査へ進みましょう。' : cleared ? `信用 ${state.trust}を残して、すべての事件を解決しました。` : `${p.round - 1} / ${E.totalCases}の事件を解決しました。最初から挑戦できます。`}</p><p>各カードの「真相と証言の照合」で振り返れます。</p><button class="primary-button" id="next-case">${nextLabel}</button>`;
       $('next-case').addEventListener('click', nextCase);
     }
-    save();
+    if (persist) save();
+    else addReadings();
   }
   function showResultDialog() {
     const content = $('result-dialog-content');
@@ -258,6 +259,25 @@
   $('animals-button').addEventListener('click', () => $<HTMLDialogElement>('animals-dialog').showModal());
   $('help-button').addEventListener('click', () => $<HTMLDialogElement>('help-dialog').showModal());
   $('new-case').addEventListener('click', openNewCaseDialog);
+  $('delete-save').addEventListener('click', () => {
+    setMenuOpen(false);
+    $('delete-save-error').hidden = true;
+    $<HTMLDialogElement>('delete-save-dialog').showModal();
+  });
+  $('confirm-delete-save').addEventListener('click', () => {
+    try { localStorage.removeItem(key); }
+    catch { $('delete-save-error').hidden = false; return; }
+    judgmentSound.stop();
+    state = fresh('normal');
+    $<HTMLSelectElement>('difficulty').value = 'normal';
+    $('feedback').className = 'feedback';
+    render('セーブデータを消去しました。', false);
+    $('save-status').textContent = 'セーブデータを消去しました。次の操作から自動保存します。';
+    addReadings($('save-status'));
+    $<HTMLDialogElement>('delete-save-dialog').close();
+    menuToggle.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  });
   $('confirm-new').addEventListener('click', () => { $<HTMLDialogElement>('new-dialog').close(); startCase(); });
   document.querySelectorAll<HTMLElement>('[data-close]').forEach(b => b.addEventListener('click', () => $<HTMLDialogElement>(b.dataset.close!).close()));
   document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) { const r = d.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) d.close(); } }));
