@@ -277,6 +277,7 @@ async function checkReadings(page: Page) {
     const menuButtons = await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => { const box = button.getBoundingClientRect(); return { top: box.top, bottom: box.bottom, left: box.left, width: box.width }; }));
     assert.ok(menuButtons.every((box, i) => i === 0 || box.top >= menuButtons[i - 1].bottom), 'each menu button occupies its own row');
     assert.ok(menuButtons.every(box => Math.abs(box.left - menuButtons[0].left) < 1 && Math.abs(box.width - menuButtons[0].width) < 1), 'menu buttons share column width');
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     const expandedHeader = await page.locator('.masthead').boundingBox();
     const expandedContent = await page.locator('.title-row').boundingBox();
     await page.locator('#menu-toggle').click();
@@ -338,13 +339,32 @@ async function checkReadings(page: Page) {
   assert.ok(modal.y >= 0 && modal.y + modal.height <= 844, 'result dialog fits mobile viewport');
   assert.ok(Math.abs(modal.y + modal.height / 2 - 422) < 2, 'result dialog centered after scrolling');
   await page.screenshot({ path: '/tmp/detective-result-dialog-mobile.png' });
+  for (let round = 2; round <= 5; round++) {
+    const previous = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState);
+    await page.locator('#dialog-next-case').click();
+    assert.equal(await page.locator('#new-dialog').isVisible(), false);
+    assert.equal(await page.locator('#trust-value').textContent(), String(previous.trust));
+    assert.equal(await page.locator('#result').isVisible(), false);
+    await page.reload();
+    const current = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState);
+    assert.equal(current.puzzle.round, round);
+    assert.equal(current.trust, previous.trust);
+    assert.ok(current.puzzle.people.length >= previous.puzzle.people.length);
+    assert.ok(current.puzzle.k >= previous.puzzle.k);
+    assert.ok(current.resolved.every(r => r === null));
+    assert.ok(current.revealed.every(r => !r));
+    for (let i = 0; i < current.puzzle.answer.length; i++) {
+      if (current.puzzle.answer[i]) await page.locator(`#person-${i} [data-judge="liar"]`).click();
+    }
+    const result = await baseText(page.locator('#result-dialog-content'));
+    assert.equal(result!.includes('ゲームクリア'), round === 5);
+    await checkReadings(page);
+  }
   await page.locator('#dialog-next-case').click();
-  assert.equal(await page.locator('#result-dialog').isVisible(), false);
   assert.ok(await page.locator('#new-dialog').isVisible());
-  assert.equal(await page.locator('#difficulty').inputValue(), 'easy');
   await page.locator('#confirm-new').click();
-  assert.equal(await page.locator('#result').isVisible(), false);
-  assert.equal(await page.locator('.suspect').count(), 4);
+  assert.equal(await page.locator('#trust-value').textContent(), '5');
+  assert.equal(await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.round), 1);
   await page.evaluate(() => localStorage.setItem('beast-detective-v1', '{bad json'));
   await page.reload();
   await page.locator('#menu-toggle').click();

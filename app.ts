@@ -7,7 +7,7 @@
     return element as T;
   }
   const key = 'beast-detective-v1';
-  const saveVersion = 5;
+  const saveVersion = 6;
   const markers = [ { name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' } ];
   const preferencesKey = 'animal-detective-preferences-v1';
   const preferences = { ruby: true, sound: true };
@@ -45,10 +45,10 @@
     savePreferences();
   });
   let state: GameState; let storageAvailable = true;
-  function fresh(level: Level): GameState {
+  function fresh(level: Level, round = 1, trust = E.initialTrust): GameState {
     const seed = window.crypto ? crypto.getRandomValues(new Uint32Array(1))[0] : Date.now() >>> 0;
-    const puzzle = E.generate(seed, level);
-    return { version: saveVersion, puzzle, trust: E.initialTrust, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0), revealed: puzzle.people.map(() => false) };
+    const puzzle = E.generate(seed, level, round);
+    return { version: saveVersion, puzzle, startingTrust: trust, trust, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0), revealed: puzzle.people.map(() => false) };
   }
   function restore(): GameState | null {
     try {
@@ -58,8 +58,11 @@
       const storedPuzzle = saved.puzzle as Partial<Puzzle> | undefined;
       if (saved.version !== saveVersion || !storedPuzzle ||
           !Object.hasOwnProperty.call(E.levels, storedPuzzle.level || '') ||
-          !Number.isInteger(storedPuzzle.seed)) return null;
-      const puzzle = E.generate(storedPuzzle.seed!, storedPuzzle.level!);
+          !Number.isInteger(storedPuzzle.seed) ||
+          !Number.isInteger(storedPuzzle.round) || storedPuzzle.round! < 1 || storedPuzzle.round! > E.totalCases ||
+          !Number.isInteger(saved.startingTrust) || (saved.startingTrust as number) < 1 ||
+          (storedPuzzle.round === 1 && saved.startingTrust !== E.initialTrust)) return null;
+      const puzzle = E.generate(storedPuzzle.seed!, storedPuzzle.level!, storedPuzzle.round!);
       const n = puzzle.people.length;
       const { resolved, notes, markers, revealed } = saved;
       if (!Array.isArray(resolved) || !Array.isArray(notes) || !Array.isArray(markers) ||
@@ -69,12 +72,12 @@
       if (!resolved.every((r: unknown, i): r is Resolution | null => r === null ||
           (typeof r === 'object' && 'guess' in r && 'correct' in r && r.guess === true && r.correct === puzzle.answer[i] &&
             (!('reward' in r) || (r.correct ? r.reward === 1 || r.reward === 2 : r.reward === -2))))) return null;
-      const trust = Math.max(0, E.initialTrust + resolved.reduce((sum, r) => sum + (r ? r.reward ?? (r.correct ? 1 : -2) : 0), 0));
+      const trust = Math.max(0, (saved.startingTrust as number) + resolved.reduce((sum, r) => sum + (r ? r.reward ?? (r.correct ? 1 : -2) : 0), 0));
       if (trust < 0 || saved.trust !== trust) return null;
       const status = trust === 0 ? 'lost' : puzzle.answer.every((liar, i) => !liar || resolved[i] !== null) ? 'won' : 'playing';
       if (saved.status !== status) return null;
       if (!Array.isArray(revealed) || revealed.length !== n || !revealed.every(v => typeof v === 'boolean')) return null;
-      return { version: saveVersion, puzzle, trust, status, resolved, notes, markers, revealed };
+      return { version: saveVersion, puzzle, startingTrust: saved.startingTrust as number, trust, status, resolved, notes, markers, revealed };
     } catch { return null; }
   }
   function save() {
@@ -98,6 +101,7 @@
     const p = state.puzzle; const count = state.resolved.filter((r, i) => r !== null && p.answer[i]).length;
     const mistakes = state.resolved.filter(r => r && !r.correct).length;
     const story = E.caseStories[p.seed % E.caseStories.length];
+    $('campaign-progress').textContent = `捜査 ${p.round} / ${E.totalCases} · ${E.levels[p.level].label} · 動物 ${p.people.length}匹`;
     $('case-title').textContent = story.title;
     $('case-description').textContent = story.description;
     document.title = `${story.title} — どうぶつ探偵`;
@@ -113,9 +117,12 @@
     const result = $('result'); result.hidden = state.status === 'playing';
     if (!result.hidden) {
       const won = state.status === 'won';
+      const cleared = won && p.round === E.totalCases;
+      const nextLabel = won && !cleared ? '次の事件へ →' : 'もう一度挑戦 →';
+      $('dialog-next-case').textContent = nextLabel;
       result.className = `result ${won ? '' : 'lost'}`;
-      result.innerHTML = `<span class="eyebrow">${won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${won ? 'すべての嘘が、ほどけた。' : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>各カードの「真相と証言の照合」で振り返れます。犯人${p.k}匹の組み合わせ${E.assignments(p.people.length, p.k).length}通りのうち、みんなの証言と矛盾しない組み合わせは${E.solve(p).length}通り。そのうち、今回の真相は表示された組み合わせです。</p><button class="primary-button" id="next-case">次の事件へ →</button>`;
-      $('next-case').addEventListener('click', openNewCaseDialog);
+      result.innerHTML = `<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${cleared ? '全5回の捜査完了！ ゲームクリア！' : won ? `捜査 ${p.round} / ${E.totalCases} 事件解決！` : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>${won && !cleared ? `信用 ${state.trust}を引き継いで、次の捜査へ進みましょう。` : cleared ? `信用 ${state.trust}を残して、すべての事件を解決しました。` : `${p.round - 1} / ${E.totalCases}の事件を解決しました。最初から挑戦できます。`}</p><p>各カードの「真相と証言の照合」で振り返れます。犯人${p.k}匹の組み合わせ${E.assignments(p.people.length, p.k).length}通りのうち、みんなの証言と矛盾しない組み合わせは${E.solve(p).length}通り。そのうち、今回の真相は表示された組み合わせです。</p><button class="primary-button" id="next-case">${nextLabel}</button>`;
+      $('next-case').addEventListener('click', nextCase);
     }
     save();
   }
@@ -128,7 +135,16 @@
     $('result-dialog').classList.toggle('lost', state.status === 'lost');
     $<HTMLDialogElement>('result-dialog').showModal();
   }
-  $('dialog-next-case').addEventListener('click', openNewCaseDialog);
+  function nextCase() {
+    if (state.status !== 'won' || state.puzzle.round === E.totalCases) { openNewCaseDialog(); return; }
+    $<HTMLDialogElement>('result-dialog').close();
+    judgmentSound.stop();
+    state = fresh(state.puzzle.level, state.puzzle.round + 1, state.trust);
+    $('feedback').className = 'feedback';
+    render('信用を引き継いで、新しい事件の捜査を始めましょう。');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  $('dialog-next-case').addEventListener('click', nextCase);
   $('result-dialog').addEventListener('close', () => {
     if (state.status !== 'playing' && !$<HTMLDialogElement>('new-dialog').open) {
       $('result').scrollIntoView({ block: 'start', behavior: 'instant' });
@@ -137,7 +153,7 @@
   });
   function openNewCaseDialog() {
     $<HTMLSelectElement>('difficulty').value = state.puzzle.level;
-    $('replace-case-note').hidden = state.status !== 'playing';
+    $('replace-case-note').hidden = false;
     $<HTMLDialogElement>('result-dialog').close();
     $<HTMLDialogElement>('new-dialog').showModal();
   }

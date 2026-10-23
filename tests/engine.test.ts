@@ -154,3 +154,25 @@ test('ambiguous cases judge the fixed truth even when an alternative fits testim
     assert.equal(s.status, 'won');
   }
 });
+
+
+test('five-case campaigns grow in size and preserve valid testimony at every starting level', () => {
+  for (const level of Object.keys(E.levels) as Level[]) {
+    let previous = E.caseConfig(level, 1);
+    for (let round = 1; round <= E.totalCases; round++) {
+      const config = E.caseConfig(level, round);
+      assert.ok(config.n >= previous.n && config.k >= previous.k);
+      assert.ok(config.k < config.n);
+      for (let seed = 0; seed < 100; seed++) {
+        const p = E.generate(seed, level, round);
+        assert.equal(p.round, round);
+        assert.equal(p.people.length, config.n);
+        assert.equal(p.answer.filter(Boolean).length, config.k);
+        assert.ok(p.statements.every((statement, i) => E.evaluate(statement, p.answer) !== p.answer[i]));
+        assert.ok(E.solve(p).some(a => a.every((value, i) => value === p.answer[i])));
+      }
+      previous = config;
+    }
+  }
+  for (const round of [0, 6, 1.5, NaN]) assert.throws(() => E.generate(1, 'normal', round));
+});

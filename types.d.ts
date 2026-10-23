@@ -4,10 +4,10 @@ interface Person { id: string; name: string; job: string; rule: string; type: St
 type Statement =
   | { type: 'count'; targets: number[]; value: number }
   | { type: Exclude<StatementType, 'count'>; targets: number[]; value: boolean };
-interface Puzzle { seed: number; level: Level; k: number; people: Person[]; statements: Statement[]; answer: boolean[] }
+interface Puzzle { round: number; seed: number; level: Level; k: number; people: Person[]; statements: Statement[]; answer: boolean[] }
 interface Resolution { reward?: number; correct: boolean; guess: true }
 interface JudgmentState { revealed: boolean[]; puzzle: Puzzle; resolved: (Resolution | null)[]; trust: number; status: 'playing' | 'won' | 'lost' }
-interface GameState extends JudgmentState { version: number; notes: string[]; markers: number[] }
+interface GameState extends JudgmentState { version: number; startingTrust: number; notes: string[]; markers: number[] }
 interface Window { DetectiveEngine: typeof DetectiveEngine; portrait: typeof portrait; addReadings: typeof addReadings; judgmentSound: typeof judgmentSound; webkitAudioContext?: typeof AudioContext; playedTones: number[] }
 declare var portrait: (id: string, extra?: string, state?: 'neutral' | 'good' | 'liar' | 'sad') => string;
 declare var addReadings: (root?: HTMLElement) => void;

@@ -47,9 +47,15 @@ var DetectiveEngine = (function () {
     return groups.flatMap(targets => [false, true].map(value => ({ type, targets, value })));
   }
   function solve(puzzle: Puzzle) { return assignments(puzzle.people.length, puzzle.k).filter(a => puzzle.statements.every((s, i) => evaluate(s, a) === !a[i])); }
-  function generate(seed: number, level: Level = 'normal'): Puzzle {
+  const totalCases = 5;
+  function caseConfig(level: Level, round: number) {
+    if (!Number.isInteger(round) || round < 1 || round > totalCases) throw new Error('Invalid round');
+    const base = levels[level];
+    return { n: Math.min(8, base.n + round - 1), k: Math.min(4, base.k + Math.floor((round - 1) / 2)) };
+  }
+  function generate(seed: number, level: Level = 'normal', round = 1): Puzzle {
     if (!levels[level]) throw new Error('Invalid difficulty');
-    const rng = random(seed); const { n, k } = levels[level]; const all = assignments(n, k);
+    const rng = random(seed); const { n, k } = caseConfig(level, round); const all = assignments(n, k);
     const people = shuffle(roles, rng).slice(0, n);
     const answer = all[Math.floor(rng() * all.length)];
     // Keep the actual answer consistent without forcing testimony to identify it uniquely.
@@ -58,7 +64,7 @@ var DetectiveEngine = (function () {
       if (!valid.length) throw new Error('No valid statement for this role');
       return valid[Math.floor(rng() * valid.length)];
     });
-    return { seed: seed >>> 0, level, k, people, statements, answer };
+    return { seed: seed >>> 0, level, round, k, people, statements, answer };
   }
   function statementText(s: Statement, people: Person[]) {
     const names = s.targets.map(i => people[i].name); const [a, b] = names; const list = names.join('、');
@@ -84,7 +90,7 @@ var DetectiveEngine = (function () {
     else if (state.puzzle.answer.every((liar, i) => !liar || state.resolved[i] !== null)) state.status = 'won';
     return correct;
   }
-  const api = { initialTrust, roles, caseStories, levels, generate, solve, evaluate, statementText, assignments, judge };
+  const api = { totalCases, caseConfig, initialTrust, roles, caseStories, levels, generate, solve, evaluate, statementText, assignments, judge };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   return api;
 })();
