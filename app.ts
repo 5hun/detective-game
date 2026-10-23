@@ -242,6 +242,7 @@
     $('start-game').focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: 'instant' });
   });
+  let testimonyHighlight: Animation | undefined;
   $('testimony-nav').addEventListener('click', event => {
     const button = (event.target as Element).closest<HTMLButtonElement>('[data-person]');
     if (!button) return;
@@ -249,6 +250,12 @@
     card.tabIndex = -1;
     card.focus({ preventScroll: true });
     card.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    testimonyHighlight?.cancel();
+    testimonyHighlight = card.animate([
+      { backgroundColor: '#fff0bd', boxShadow: 'inset 0 0 0 2px #b19458', offset: 0 },
+      { backgroundColor: '#fff0bd', boxShadow: 'inset 0 0 0 2px #b19458', offset: 0.65 },
+      { backgroundColor: getComputedStyle(card).backgroundColor, boxShadow: 'inset 0 0 0 2px transparent', offset: 1 },
+    ], { duration: 1500, easing: 'ease-out' });
   });
   $('suspects').addEventListener('click', event => {
     const reveal = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-reveal]');
