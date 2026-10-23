@@ -7,6 +7,10 @@ import assert = require('node:assert/strict');
 async function openMenu(page: Page) {
   if (await page.locator('#game-menu').isHidden()) await page.locator('#menu-toggle').click();
 }
+async function startGame(page: Page) {
+  await page.locator('#start-game').click();
+  await page.locator('#confirm-new').click();
+}
 async function setToggle(locator: Locator, enabled: boolean) {
   const page = locator.page();
   if (await page.locator('#game-menu').isHidden()) await page.locator('#menu-toggle').click();
@@ -64,6 +68,15 @@ async function checkReadings(page: Page) {
     };
   });
   await page.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
+  assert.ok(await page.locator('#home-page').isVisible());
+  assert.ok(await page.locator('#game-page').isHidden());
+  assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), null);
+  await page.locator('#start-game').click();
+  await page.locator('[data-close="new-dialog"]').click();
+  assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), null);
+  await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible());
+  await startGame(page);
   await page.locator('.suspect').last().waitFor();
   const durations = await page.evaluate(() => Promise.all(
     ['assets/sounds/correct2.mp3', 'assets/sounds/incorrect2.mp3'].map(src => new Promise<number>((resolve, reject) => {
@@ -409,10 +422,11 @@ async function checkReadings(page: Page) {
   assert.equal(await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.round), 1);
   await page.evaluate(() => localStorage.setItem('beast-detective-v1', '{bad json'));
   await page.reload();
-  await page.locator('#menu-toggle').click();
-  assert.equal(await page.locator('.suspect').count(), 5);
+  assert.ok(await page.locator('#home-page').isVisible());
+  await startGame(page);
   const invalidSave = await browser.newPage();
   await invalidSave.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
+  await startGame(invalidSave);
   for (const problem of ['old-version', 'previous-rules', 'missing-revealed', 'wrong-trust', 'wrong-status']) {
     await invalidSave.evaluate(problem => {
       const saved = (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState);
@@ -425,6 +439,8 @@ async function checkReadings(page: Page) {
       localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
     }, problem);
     await invalidSave.reload();
+    assert.ok(await invalidSave.locator('#home-page').isVisible(), problem);
+    await startGame(invalidSave);
     assert.equal(await invalidSave.locator('#trust-value').textContent(), '5');
     assert.equal(await invalidSave.locator('#memo-0').inputValue(), '', problem);
     assert.equal(await invalidSave.locator('.resolved-tag').count(), 0);
@@ -441,14 +457,20 @@ async function checkReadings(page: Page) {
   await page.locator('#delete-save').click();
   await page.locator('#confirm-delete-save').click();
   assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), null);
-  assert.equal(await page.locator('#memo-0').inputValue(), '');
-  assert.equal(await page.locator('#trust-value').textContent(), '5');
+  assert.ok(await page.locator('#home-page').isVisible());
+  assert.ok(await page.locator('#game-page').isHidden());
+  assert.equal(await page.locator('.suspect').count(), 0);
   assert.equal(await page.evaluate(() => localStorage.getItem('animal-detective-preferences-v1')), preferencesBeforeDelete);
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible());
+  assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), null);
+  await startGame(page);
   assert.equal(await page.locator('#memo-0').inputValue(), '');
   const blocked = await browser.newPage();
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
   await blocked.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
+  assert.ok(await blocked.locator('#home-page').isVisible());
+  await startGame(blocked);
   assert.equal(await blocked.locator('.suspect').count(), 5);
   await setToggle(blocked.locator('#ruby-toggle'), false);
   assert.equal(await blocked.locator('ruby rt').first().isVisible(), false);
@@ -462,6 +484,7 @@ async function checkReadings(page: Page) {
     Object.defineProperty(window, 'AudioContext', { value: class { constructor() { throw new Error('audio unavailable'); } } });
   });
   await silent.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
+  await startGame(silent);
   await silent.locator('#person-0 [data-judge="liar"]').click();
   assert.equal(await silent.locator('#person-0 .resolved-tag').count(), 1);
   assert.deepEqual(errors, []);

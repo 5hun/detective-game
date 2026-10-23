@@ -120,3 +120,10 @@ html{scroll-padding-top:calc(var(--menu-height,64px) + var(--summary-height,120p
 @media(max-width:400px){.masthead{column-gap:6px}.brand{gap:4px;font-size:16px;letter-spacing:0}.brand-symbol{width:26px;font-size:20px}.header-actions{gap:4px}.header-actions .new-case{gap:4px;padding:4px 6px;font-size:11px}}
 
 .header-actions > button{height:52px;min-height:52px}
+
+[hidden]{display:none!important}
+.home-page{text-align:center;max-width:680px;margin:24px auto;padding:40px 20px;background:#fcfaf4;border:1px solid var(--line);border-radius:6px}
+.home-symbol{font-size:64px;margin:20px 0;color:var(--green)}
+.home-page h1{font-size:clamp(28px,6vw,44px)}
+.home-description{font-family:serif;font-size:18px;line-height:2.3;margin:24px 0}
+.home-page .primary-button{margin:24px 0 12px;min-width:220px;min-height:48px}

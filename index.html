@@ -21,6 +21,16 @@
   </header>
   <div class="workspace">
     <main>
+      <section id="home-page" class="home-page" aria-labelledby="home-title">
+        <p class="eyebrow">ANIMAL DETECTIVE</p>
+        <div class="home-symbol" aria-hidden="true">🐾</div>
+        <h1 id="home-title">どうぶつ探偵</h1>
+        <p class="home-description">動物たちの証言を読み比べて、<br>嘘をつく犯人を見つけましょう。</p>
+        <p>善人は本当のことを、犯人は嘘を話します。<br>全5回の事件に挑戦しましょう。</p>
+        <button id="start-game" class="primary-button" type="button">捜査を始める →</button>
+        <p id="home-status" class="small-note" role="status">捜査状況はこのブラウザに自動保存されます。</p>
+      </section>
+      <div id="game-page" hidden>
       <div class="title-row"><div><p id="campaign-progress" class="eyebrow"></p><h1 id="case-title"></h1><p id="case-description" class="case-description"></p></div></div>
       <div class="case-status">
       <section class="case-summary" aria-label="事件の情報">
@@ -34,6 +44,7 @@
       <section id="result" class="result" aria-live="polite" hidden></section>
       <section id="suspects" aria-label="関係者一覧"></section>
       <footer class="case-footer"><span>◇ 犯人をすべて見つけると、残りは善人と確定します。</span><span id="save-status">捜査状況は自動保存されます</span></footer>
+      </div>
     </main>
   </div>
   <dialog id="animals-dialog"><div class="dialog-heading"><h2>すべての動物</h2><button class="close-button" aria-label="動物一覧を閉じる" data-close="animals-dialog">×</button></div><p>全8種類。どの動物も善人・犯人の両方になります。</p><div id="animals-list"></div></dialog>

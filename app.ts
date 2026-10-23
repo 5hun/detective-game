@@ -44,7 +44,7 @@
     if (!preferences.sound) judgmentSound.stop();
     savePreferences();
   });
-  let state: GameState; let storageAvailable = true;
+  let state: GameState; let hasGame = false; let storageAvailable = true;
   function fresh(level: Level, round = 1, trust = E.initialTrust): GameState {
     const seed = window.crypto ? crypto.getRandomValues(new Uint32Array(1))[0] : Date.now() >>> 0;
     const puzzle = E.generate(seed, level, round);
@@ -101,6 +101,10 @@
     return `<article class="suspect" data-marker="${state.markers[i]}" id="person-${i}" aria-labelledby="name-${i}"><div class="card-main"><div class="portrait-box"><span class="person-number">0${i + 1}</span>${portrait(person.id, '', portraitState)}</div><div class="person-content"><div class="person-heading"><h3 id="name-${i}">${person.name}</h3><span class="job">${person.job}</span><details class="role-details"><summary>証言ルール</summary><p>${person.rule}</p></details></div><div id="statement-${i}">${state.revealed[i] || ended ? `<p class="statement">${E.statementText(state.puzzle.statements[i], state.puzzle.people)}</p>` : `<button class="reveal-button quiet-button" data-reveal="${i}" aria-controls="statement-${i}">${person.name}の証言を聞く</button>`}</div><div class="actions">${actions}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="${person.name}のマーカー">${markers.map((m, j) => `<button class="marker-button" style="--dot:${m.color}" data-marker-value="${j}" data-index="${i}" aria-label="${person.name}：${m.name}" title="${m.name}" aria-pressed="${state.markers[i] === j}"></button>`).join('')}</div><label class="memo-label" for="memo-${i}">MEMO</label><textarea id="memo-${i}" data-note="${i}" aria-label="${person.name}の捜査メモ" maxlength="1000" rows="1" placeholder="きになることをメモ…"></textarea></div>${truth}</article>`;
   }
   function render(message?: string, persist = true) {
+    hasGame = true;
+    $('home-page').hidden = true;
+    $('game-page').hidden = false;
+    $('new-case').hidden = false;
     const p = state.puzzle; const count = state.resolved.filter((r, i) => r !== null && p.answer[i]).length;
     const mistakes = state.resolved.filter(r => r && !r.correct).length;
     const story = E.caseStories[p.seed % E.caseStories.length];
@@ -150,14 +154,14 @@
   }
   $('dialog-next-case').addEventListener('click', nextCase);
   $('result-dialog').addEventListener('close', () => {
-    if (state.status !== 'playing' && !$<HTMLDialogElement>('new-dialog').open) {
+    if (hasGame && state.status !== 'playing' && !$<HTMLDialogElement>('new-dialog').open) {
       $('result').scrollIntoView({ block: 'start', behavior: 'instant' });
       $('next-case').focus({ preventScroll: true });
     }
   });
   function openNewCaseDialog() {
-    $<HTMLSelectElement>('difficulty').value = state.puzzle.level;
-    $('replace-case-note').hidden = false;
+    $<HTMLSelectElement>('difficulty').value = hasGame ? state.puzzle.level : 'normal';
+    $('replace-case-note').hidden = !hasGame;
     $<HTMLDialogElement>('result-dialog').close();
     $<HTMLDialogElement>('new-dialog').showModal();
   }
@@ -196,9 +200,24 @@
   new ResizeObserver(() => {
     document.documentElement.style.setProperty('--menu-height', `${menu.getBoundingClientRect().height}px`);
   }).observe(menu);
-  state = restore() || fresh('normal');
-  $<HTMLSelectElement>('difficulty').value = state.puzzle.level;
-  render(state.status !== 'playing' ? '前回の捜査結果を開きました。新しい事件にも挑戦できます。' : undefined);
+  function showHome(message = '捜査状況はこのブラウザに自動保存されます。') {
+    hasGame = false;
+    $('home-page').hidden = false;
+    $('game-page').hidden = true;
+    $('new-case').hidden = true;
+    $('suspects').replaceChildren();
+    $('testimony-nav').replaceChildren();
+    document.title = 'どうぶつ探偵';
+    $('home-status').textContent = message;
+    addReadings();
+  }
+  const restored = restore();
+  if (restored) {
+    state = restored;
+    $<HTMLSelectElement>('difficulty').value = state.puzzle.level;
+    render(state.status !== 'playing' ? '前回の捜査結果を開きました。新しい事件にも挑戦できます。' : undefined);
+  } else showHome();
+  $('start-game').addEventListener('click', openNewCaseDialog);
   $('testimony-nav').addEventListener('click', event => {
     const button = (event.target as Element).closest<HTMLButtonElement>('[data-person]');
     if (!button) return;
@@ -268,14 +287,10 @@
     try { localStorage.removeItem(key); }
     catch { $('delete-save-error').hidden = false; return; }
     judgmentSound.stop();
-    state = fresh('normal');
-    $<HTMLSelectElement>('difficulty').value = 'normal';
-    $('feedback').className = 'feedback';
-    render('セーブデータを消去しました。', false);
-    $('save-status').textContent = 'セーブデータを消去しました。次の操作から自動保存します。';
-    addReadings($('save-status'));
+    $<HTMLDialogElement>('result-dialog').close();
+    showHome('セーブデータを消去しました。');
     $<HTMLDialogElement>('delete-save-dialog').close();
-    menuToggle.focus({ preventScroll: true });
+    $('start-game').focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: 'instant' });
   });
   $('confirm-new').addEventListener('click', () => { $<HTMLDialogElement>('new-dialog').close(); startCase(); });
