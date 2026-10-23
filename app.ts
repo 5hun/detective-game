@@ -154,7 +154,7 @@
   }
   $('dialog-next-case').addEventListener('click', nextCase);
   $('result-dialog').addEventListener('close', () => {
-    if (hasGame && state.status !== 'playing' && !$<HTMLDialogElement>('new-dialog').open) {
+    if (hasGame && !$('game-page').hidden && state.status !== 'playing' && !$<HTMLDialogElement>('new-dialog').open) {
       $('result').scrollIntoView({ block: 'start', behavior: 'instant' });
       $('next-case').focus({ preventScroll: true });
     }
@@ -200,15 +200,18 @@
   new ResizeObserver(() => {
     document.documentElement.style.setProperty('--menu-height', `${menu.getBoundingClientRect().height}px`);
   }).observe(menu);
-  function showHome(message = '捜査状況はこのブラウザに自動保存されます。') {
-    hasGame = false;
+  function showHome() {
+    judgmentSound.stop();
+    setMenuOpen(false);
     $('home-page').hidden = false;
     $('game-page').hidden = true;
     $('new-case').hidden = true;
-    $('suspects').replaceChildren();
-    $('testimony-nav').replaceChildren();
+    $('continue-game').hidden = !hasGame;
+    if (!hasGame) {
+      $('suspects').replaceChildren();
+      $('testimony-nav').replaceChildren();
+    }
     document.title = 'どうぶつ探偵';
-    $('home-status').textContent = message;
     addReadings();
   }
   const restored = restore();
@@ -218,6 +221,20 @@
     render(state.status !== 'playing' ? '前回の捜査結果を開きました。新しい事件にも挑戦できます。' : undefined);
   } else showHome();
   $('start-game').addEventListener('click', openNewCaseDialog);
+  $('continue-game').addEventListener('click', () => {
+    if (!hasGame) return;
+    render(undefined, false);
+    $('case-title').tabIndex = -1;
+    $('case-title').focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  });
+  document.querySelector<HTMLAnchorElement>('.brand')!.addEventListener('click', event => {
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    showHome();
+    $('start-game').focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  });
   $('testimony-nav').addEventListener('click', event => {
     const button = (event.target as Element).closest<HTMLButtonElement>('[data-person]');
     if (!button) return;
@@ -288,7 +305,8 @@
     catch { $('delete-save-error').hidden = false; return; }
     judgmentSound.stop();
     $<HTMLDialogElement>('result-dialog').close();
-    showHome('セーブデータを消去しました。');
+    hasGame = false;
+    showHome();
     $<HTMLDialogElement>('delete-save-dialog').close();
     $('start-game').focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: 'instant' });

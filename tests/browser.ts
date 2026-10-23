@@ -70,6 +70,7 @@ async function checkReadings(page: Page) {
   await page.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
   assert.ok(await page.locator('#home-page').isVisible());
   assert.ok(await page.locator('#game-page').isHidden());
+  assert.ok(await page.locator('#continue-game').isHidden());
   assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), null);
   await page.locator('#start-game').click();
   await page.locator('[data-close="new-dialog"]').click();
@@ -78,6 +79,28 @@ async function checkReadings(page: Page) {
   assert.ok(await page.locator('#home-page').isVisible());
   await startGame(page);
   await page.locator('.suspect').last().waitFor();
+  await page.locator('#memo-0').fill('初期ページから再開');
+  const saveBeforeHome = await page.evaluate(() => localStorage.getItem('beast-detective-v1'));
+  await page.locator('.brand').click();
+  assert.ok(await page.locator('#home-page').isVisible());
+  assert.ok(await page.locator('#game-page').isHidden());
+  assert.ok(await page.locator('#continue-game').isVisible());
+  assert.equal(await page.locator('#home-status').count(), 0);
+  await page.locator('#start-game').click();
+  assert.ok(await page.locator('#replace-case-note').isVisible());
+  await page.locator('[data-close="new-dialog"]').click();
+  assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), saveBeforeHome);
+  await page.locator('#continue-game').click();
+  assert.ok(await page.locator('#game-page').isVisible());
+  assert.equal(await page.locator('#memo-0').inputValue(), '初期ページから再開');
+  assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), saveBeforeHome);
+  await page.reload();
+  await page.locator('.brand').click();
+  assert.ok(await page.locator('#continue-game').isVisible());
+  await page.locator('#start-game').click();
+  await page.locator('#confirm-new').click();
+  assert.equal(await page.locator('#memo-0').inputValue(), '');
+
   const durations = await page.evaluate(() => Promise.all(
     ['assets/sounds/correct2.mp3', 'assets/sounds/incorrect2.mp3'].map(src => new Promise<number>((resolve, reject) => {
       const audio = new Audio(src);
@@ -460,6 +483,7 @@ async function checkReadings(page: Page) {
   assert.ok(await page.locator('#home-page').isVisible());
   assert.ok(await page.locator('#game-page').isHidden());
   assert.equal(await page.locator('.suspect').count(), 0);
+  assert.ok(await page.locator('#continue-game').isHidden());
   assert.equal(await page.evaluate(() => localStorage.getItem('animal-detective-preferences-v1')), preferencesBeforeDelete);
   await page.reload();
   assert.ok(await page.locator('#home-page').isVisible());
