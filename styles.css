@@ -132,8 +132,10 @@ html{scroll-padding-top:calc(var(--menu-height,64px) + var(--summary-height,120p
 .brand-symbol img{display:block;width:100%;height:auto}
 .home-symbol img{display:block;width:80px;height:80px;margin:auto}
 
-.header-actions .new-case,.home-page .primary-button{background:var(--green);color:#f8f3e8;border:0}
-.header-actions .new-case:hover,.home-page .primary-button:hover{background:#326551}
+.header-actions .new-case{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.header-actions .new-case:hover{background:#e8efdf}
+.home-page .primary-button{background:var(--green);color:#f8f3e8;border:0}
+.home-page .primary-button:hover{background:#326551}
 
 /* Campaign progress: completed, current, and upcoming investigations. */
 .campaign-progress{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;margin:0 0 14px}
