@@ -1,0 +1,1 @@
+- Run `git commit` after editing files.
