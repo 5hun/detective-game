@@ -2,6 +2,14 @@
 
 動物たちの証言を読み、善人と犯人を見分ける、日本語の論理推理ゲームです。
 
+## 公開版
+
+[どうぶつ探偵を遊ぶ](https://5hun.github.io/detective-game/)
+
+ブラウザからアクセスすれば、インストールやログインなしで遊べます。
+`main` ブランチへの更新時にGitHub Actionsで型検査・テスト・ビルドを行い、GitHub Pagesへ自動公開します。
+公開対象はHTML・CSSとゲーム用JavaScriptのみです。リポジトリの Settings → Pages → Source は `GitHub Actions` に設定します。
+
 ## 起動
 
 Node.js 20以降で、初回に依存パッケージをインストールし、TypeScriptをビルドしてください。
