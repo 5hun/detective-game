@@ -50,23 +50,15 @@ var DetectiveEngine = (function () {
   function generate(seed: number, level: Level = 'normal'): Puzzle {
     if (!levels[level]) throw new Error('Invalid difficulty');
     const rng = random(seed); const { n, k } = levels[level]; const all = assignments(n, k);
-    for (let attempt = 0; attempt < 2000; attempt++) {
-      const people = shuffle(roles, rng).slice(0, n);
-      const answer = all[Math.floor(rng() * all.length)];
-      let remaining = all; const statements: Statement[] = Array(n);
-      for (const i of shuffle(Array.from({ length: n }, (_, j) => j), rng)) {
-        const valid = shuffle(candidates(people[i].type, i, n), rng).filter(s => evaluate(s, answer) === !answer[i]);
-        let best: Statement | undefined; let survivors: boolean[][] | undefined;
-        for (const s of valid) {
-          const next = remaining.filter(a => evaluate(s, a) === !a[i]);
-          if (!survivors || next.length < survivors.length) { best = s; survivors = next; }
-        }
-        if (!best || !survivors) throw new Error('No valid statement for this role');
-        statements[i] = best; remaining = survivors;
-      }
-      if (remaining.length === 1) return { seed: seed >>> 0, level, k, people, statements, answer };
-    }
-    throw new Error('問題を生成できませんでした。もう一度お試しください。');
+    const people = shuffle(roles, rng).slice(0, n);
+    const answer = all[Math.floor(rng() * all.length)];
+    // Keep the actual answer consistent without forcing testimony to identify it uniquely.
+    const statements = people.map((person, i) => {
+      const valid = candidates(person.type, i, n).filter(s => evaluate(s, answer) === !answer[i]);
+      if (!valid.length) throw new Error('No valid statement for this role');
+      return valid[Math.floor(rng() * valid.length)];
+    });
+    return { seed: seed >>> 0, level, k, people, statements, answer };
   }
   function statementText(s: Statement, people: Person[]) {
     const names = s.targets.map(i => people[i].name); const [a, b] = names; const list = names.join('、');

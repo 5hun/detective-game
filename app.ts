@@ -7,7 +7,7 @@
     return element as T;
   }
   const key = 'beast-detective-v1';
-  const saveVersion = 4;
+  const saveVersion = 5;
   const markers = [ { name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' } ];
   const preferencesKey = 'animal-detective-preferences-v1';
   const preferences = { ruby: true, sound: true };
@@ -114,7 +114,7 @@
     if (!result.hidden) {
       const won = state.status === 'won';
       result.className = `result ${won ? '' : 'lost'}`;
-      result.innerHTML = `<span class="eyebrow">${won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${won ? 'すべての嘘が、ほどけた。' : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>各カードの「真相と証言の照合」で振り返れます。犯人${p.k}匹の組み合わせ${E.assignments(p.people.length, p.k).length}通りのうち、みんなの証言と矛盾しないのはこの1通りです。</p><button class="primary-button" id="next-case">次の事件へ →</button>`;
+      result.innerHTML = `<span class="eyebrow">${won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${won ? 'すべての嘘が、ほどけた。' : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>各カードの「真相と証言の照合」で振り返れます。犯人${p.k}匹の組み合わせ${E.assignments(p.people.length, p.k).length}通りのうち、みんなの証言と矛盾しない組み合わせは${E.solve(p).length}通り。そのうち、今回の真相は表示された組み合わせです。</p><button class="primary-button" id="next-case">次の事件へ →</button>`;
       $('next-case').addEventListener('click', openNewCaseDialog);
     }
     save();
