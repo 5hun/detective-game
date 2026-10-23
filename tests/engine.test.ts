@@ -20,7 +20,9 @@ test('3,000 generated cases include the actual answer and obey every role', () =
           const v = s.targets.map(t => a[t]);
           const count = v.filter(Boolean).length;
           const propositions = { single: v[0], same: v[0] === v[1], any: v.some(Boolean), both: v.every(Boolean), parity: Boolean(count % 2), ordered: v[0] && !v[1], majority: count >= 2 };
-          const truth = s.type === 'count' ? count === s.value : propositions[s.type] === s.value;
+          const before = a.filter((liar, index) => liar && index < i).length;
+          const after = a.filter((liar, index) => liar && index > i).length;
+          const truth = s.type === 'balance' ? Math.sign(before - after) === s.value : s.type === 'allSame' ? (count === 0 || count === 3) === s.value : s.type === 'count' ? count === s.value : propositions[s.type] === s.value;
           return truth !== a[i];
         });
         if (valid) solutions.push(a);

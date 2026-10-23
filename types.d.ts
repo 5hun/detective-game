@@ -1,9 +1,10 @@
 type Level = 'easy' | 'normal' | 'hard';
-type StatementType = 'single' | 'same' | 'count' | 'any' | 'both' | 'parity' | 'ordered' | 'majority';
+type StatementType = 'single' | 'same' | 'count' | 'any' | 'both' | 'parity' | 'ordered' | 'majority' | 'allSame' | 'balance';
 interface Person { id: string; name: string; job: string; rule: string; type: StatementType }
 type Statement =
+  | { type: 'balance'; targets: number[]; value: number }
   | { type: 'count'; targets: number[]; value: number }
-  | { type: Exclude<StatementType, 'count'>; targets: number[]; value: boolean };
+  | { type: Exclude<StatementType, 'count' | 'balance'>; targets: number[]; value: boolean };
 interface Puzzle { round: number; seed: number; level: Level; k: number; people: Person[]; statements: Statement[]; answer: boolean[] }
 interface Resolution { reward?: number; correct: boolean; guess: true }
 interface JudgmentState { revealed: boolean[]; puzzle: Puzzle; resolved: (Resolution | null)[]; trust: number; status: 'playing' | 'won' | 'lost' }

@@ -129,7 +129,9 @@ async function checkReadings(page: Page) {
     }
     for (const role of DetectiveEngine.roles) {
       const type = role.type;
-      const statements: Statement[] = type === 'count'
+      const statements: Statement[] = type === 'balance'
+        ? [-1, 0, 1].map(value => ({ type, targets: [0, 1, 2], value }))
+        : type === 'count'
         ? [0, 1, 2, 3].map(value => ({ type, targets: [0, 1, 2], value }))
         : [false, true].map(value => ({ type, targets: [0, 1, 2], value }));
       for (const statement of statements) {

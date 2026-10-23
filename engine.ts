@@ -9,7 +9,9 @@ var DetectiveEngine = (function () {
     { id: 'wolf', name: 'オオカミ', job: '見張り', rule: '指定した2匹が両方とも犯人かを証言する。', type: 'both' },
     { id: 'bear', name: 'クマ', job: '帳簿係', rule: '指定した3匹の犯人の数が奇数か偶数かを証言する。', type: 'parity' },
     { id: 'raccoon', name: 'アライグマ', job: '仲介人', rule: '「Aが犯人で、Bが善人」という組み合わせかを証言する。', type: 'ordered' },
-    { id: 'frog', name: 'カエル', job: '調査員', rule: '指定した3匹の中に犯人が2匹以上いるかを証言する。', type: 'majority' }
+    { id: 'frog', name: 'カエル', job: '調査員', rule: '指定した3匹の中に犯人が2匹以上いるかを証言する。', type: 'majority' },
+    { id: 'dog', name: 'イヌ', job: '比較係', rule: '自分より小さい番号と大きい番号で、犯人が多い側か同数かを証言する。自分は数に含めない。', type: 'balance' },
+    { id: 'deer', name: 'シカ', job: '観察係', rule: '指定した3匹が全員同じ立場か、犯人と善人が混ざっているかを証言する。', type: 'allSame' }
   ];
   const caseStories = [
     { title: '消えたケーキ事件', description: '広場のパーティーに用意したケーキが、始まる前に食べられてしまいました。集まった動物たちの証言から、犯人を見つけましょう。' },
@@ -27,6 +29,13 @@ var DetectiveEngine = (function () {
   function evaluate(s: Statement, a: boolean[]) {
     const values = s.targets.map(i => a[i]); const count = values.filter(Boolean).length;
     switch (s.type) {
+      case 'balance': {
+        const missing = a.findIndex((_, i) => !s.targets.includes(i));
+        const before = s.targets.filter(t => t < missing && a[t]).length;
+        const after = s.targets.filter(t => t > missing && a[t]).length;
+        return Math.sign(before - after) === s.value;
+      }
+      case 'allSame': return (count === 0 || count === 3) === s.value;
       case 'single': return values[0] === s.value;
       case 'same': return (values[0] === values[1]) === s.value;
       case 'count': return count === s.value;
@@ -40,7 +49,8 @@ var DetectiveEngine = (function () {
   }
   function candidates(type: StatementType, speaker: number, n: number): Statement[] {
     const targets = Array.from({ length: n }, (_, i) => i).filter(i => i !== speaker);
-    const size = type === 'single' ? 1 : ['count', 'parity', 'majority'].includes(type) ? 3 : 2;
+    if (type === 'balance') return [-1, 0, 1].map(value => ({ type, targets, value }));
+    const size = type === 'single' ? 1 : ['count', 'parity', 'majority', 'allSame'].includes(type) ? 3 : 2;
     let groups = combinations(targets, size);
     if (type === 'ordered') groups = groups.flatMap(g => [g, [...g].reverse()]);
     if (type === 'count') return groups.flatMap(targets => [0, 1, 2, 3].map(value => ({ type, targets, value })));
@@ -51,7 +61,7 @@ var DetectiveEngine = (function () {
   function caseConfig(level: Level, round: number) {
     if (!Number.isInteger(round) || round < 1 || round > totalCases) throw new Error('Invalid round');
     const base = levels[level];
-    return { n: Math.min(8, base.n + round - 1), k: Math.min(4, base.k + Math.floor((round - 1) / 2)) };
+    return { n: Math.min(10, base.n + round - 1), k: Math.min(4, base.k + Math.floor((round - 1) / 2)) };
   }
   function generate(seed: number, level: Level = 'normal', round = 1): Puzzle {
     if (!levels[level]) throw new Error('Invalid difficulty');
@@ -69,6 +79,8 @@ var DetectiveEngine = (function () {
   function statementText(s: Statement, people: Person[]) {
     const names = s.targets.map(i => people[i].name); const [a, b] = names; const list = names.join('、');
     switch (s.type) {
+      case 'balance': return s.value === 0 ? '私より小さい番号と大きい番号では、犯人の数が同じだ。' : `私より${s.value === 1 ? '小さい' : '大きい'}番号のほうが、犯人が多い。`;
+      case 'allSame': return s.value ? `${list}の3匹は、全員同じ立場だ。` : `${list}の3匹には、犯人と善人が混ざっている。`;
       case 'single': return `${a}は${s.value ? '犯人' : '善人'}だ。`;
       case 'same': return `${a}と${b}は、${s.value ? '同じ立場' : '違う立場'}だ。`;
       case 'count': return `${list}の3匹のうち、犯人はちょうど${s.value}匹だ。`;
