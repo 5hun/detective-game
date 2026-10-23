@@ -126,3 +126,8 @@ html{scroll-padding-top:calc(var(--menu-height,64px) + var(--summary-height,120p
 .home-page h1{font-size:clamp(28px,6vw,44px)}
 .home-description{font-family:serif;font-size:18px;line-height:2.3;margin:24px 0}
 .home-page .primary-button{margin:24px 0 12px;min-width:220px;min-height:48px}
+
+/* Shared title mark: a paw viewed through a handheld magnifier. */
+.brand-symbol{background:transparent;flex-shrink:0}
+.brand-symbol img{display:block;width:100%;height:auto}
+.home-symbol img{display:block;width:80px;height:80px;margin:auto}
