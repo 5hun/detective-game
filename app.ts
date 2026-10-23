@@ -86,9 +86,12 @@
     $('save-status').textContent = storageAvailable ? '捜査状況は自動保存されます' : 'この環境では保存できません（現在の画面では遊べます）';
     addReadings();
   }
+  function portraitStateFor(i: number) {
+    return state.resolved[i] ? (state.puzzle.answer[i] ? 'liar' : 'sad') : state.status === 'won' ? 'good' : 'neutral';
+  }
   function renderCard(person: Person, i: number) {
     const resolved = state.resolved[i]; const ended = state.status !== 'playing'; const liar = state.puzzle.answer[i];
-    const portraitState = resolved ? (liar ? 'liar' : 'sad') : state.status === 'won' ? 'good' : 'neutral';
+    const portraitState = portraitStateFor(i);
     let actions;
     if (resolved) actions = `<span class="resolved-tag ${resolved.correct ? '' : 'wrong'}">${resolved.correct ? '✓ 正解' : '× 誤判定'} · ${person.name}は${liar ? '犯人' : '善人'}</span>`;
     else if (state.status === 'won') actions = `<span class="resolved-tag revealed">✓ 善人と確定 · ${person.name}は善人</span>`;
@@ -111,7 +114,7 @@
     $('trust-value').textContent = String(state.trust);
     $('trust').setAttribute('aria-label', `残り信用 ${state.trust}`);
     $('suspects').innerHTML = p.people.map(renderCard).join('');
-    $('testimony-nav').innerHTML = p.people.map((person, i) => `<button type="button" class="testimony-link" data-person="${i}" aria-label="${person.name}の証言へ移動" title="${person.name}">${portrait(person.id)}</button>`).join('');
+    $('testimony-nav').innerHTML = p.people.map((person, i) => `<button type="button" class="testimony-link" data-person="${i}" style="--marker-color:${markers[state.markers[i]].color}" aria-label="${person.name}の証言へ移動（${markers[state.markers[i]].name}）" title="${person.name}：${markers[state.markers[i]].name}">${portrait(person.id, '', portraitStateFor(i))}</button>`).join('');
     state.notes.forEach((v, i) => { $<HTMLTextAreaElement>(`memo-${i}`).value = v; });
     $('feedback').textContent = message || '「証言を聞く」をタップして、証言を読み比べましょう。';
     const result = $('result'); result.hidden = state.status === 'playing';
@@ -236,6 +239,12 @@
     if (marker) {
       const i = Number(marker.dataset.index); state.markers[i] = Number(marker.dataset.markerValue);
       $(`person-${i}`).dataset.marker = String(state.markers[i]);
+      const navLink = $('testimony-nav').querySelector<HTMLButtonElement>(`[data-person="${i}"]`)!;
+      const selectedMarker = markers[state.markers[i]];
+      const person = state.puzzle.people[i];
+      navLink.style.setProperty('--marker-color', selectedMarker.color);
+      navLink.setAttribute('aria-label', `${person.name}の証言へ移動（${selectedMarker.name}）`);
+      navLink.title = `${person.name}：${selectedMarker.name}`;
       marker.parentElement!.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === marker)));
       save();
     }

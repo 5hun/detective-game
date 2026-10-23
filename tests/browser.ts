@@ -151,11 +151,15 @@ async function checkReadings(page: Page) {
   await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('.statement').count(), 2);
   await page.locator('#memo-0').fill('<script>alert("memo")</script> メモ保存テスト');
-  await page.locator('#person-0 [data-marker-value="1"]').click();
+  for (const [value, color] of ['rgb(212, 215, 202)', 'rgb(185, 109, 88)', 'rgb(116, 148, 118)', 'rgb(196, 163, 89)', 'rgb(212, 215, 202)', 'rgb(185, 109, 88)'].entries()) {
+    await page.locator(`#person-0 [data-marker-value="${value % 4}"]`).click();
+    assert.equal(await page.locator('#testimony-nav [data-person="0"]').evaluate(el => getComputedStyle(el).borderTopColor), color);
+  }
   await page.reload();
   await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('#memo-0').inputValue(), '<script>alert("memo")</script> メモ保存テスト');
   assert.equal(await page.locator('#person-0').getAttribute('data-marker'), '1');
+  assert.equal(await page.locator('#testimony-nav [data-person="0"]').evaluate(el => getComputedStyle(el).borderTopColor), 'rgb(185, 109, 88)');
   await openMenu(page);
   await page.locator('#help-button').click();
   assert.ok(await page.locator('#help-dialog').isVisible());
@@ -212,7 +216,10 @@ async function checkReadings(page: Page) {
       assert.ok(tones[0] < tones[1] && tones[1] < tones[2], 'correct answer plays ascending tones');
     }
   }
-  assert.equal(await page.locator('[data-portrait-state="liar"] .jail-bar').count(), solution.filter(Boolean).length * 4);
+  assert.equal(await page.locator('#suspects [data-portrait-state="liar"] .jail-bar').count(), solution.filter(Boolean).length * 4);
+  for (const [i, liar] of solution.entries()) {
+    assert.equal(await page.locator(`#testimony-nav [data-person="${i}"] .portrait`).getAttribute('data-portrait-state'), liar ? 'liar' : 'good');
+  }
   assert.ok(await page.locator('#result-dialog').isVisible());
   assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('事件解決'));
   await page.screenshot({ path: '/tmp/detective-result-dialog-desktop.png' });
@@ -243,6 +250,7 @@ async function checkReadings(page: Page) {
     const i = innocents[step];
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), 'sad');
+    assert.equal(await page.locator(`#testimony-nav [data-person="${i}"] .portrait`).getAttribute('data-portrait-state'), 'sad');
     assert.equal(await page.locator(`#person-${i} .jail-bar`).count(), 0);
     await page.waitForFunction(() => window.playedTones.length > 0);
     assert.equal(await page.locator('#trust-value').textContent(), String(Math.max(0, 3 - 2 * step)));
