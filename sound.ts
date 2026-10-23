@@ -1,11 +1,19 @@
-/* Short local tones for judgments and revealing testimony. */
+/* Local judgment recordings and synthesized testimony tones. */
 (function () {
   'use strict';
   let context: AudioContext;
   let generation = 0;
+  const recordings = {
+    correct: new Audio('assets/sounds/correct2.mp3'),
+    incorrect: new Audio('assets/sounds/incorrect2.mp3'),
+  };
   const active = new Set<{ oscillator: OscillatorNode; gain: GainNode }>();
   function stop() {
     generation++;
+    for (const audio of Object.values(recordings)) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
     for (const voice of active) {
       try { voice.oscillator.stop(); } catch { /* Already stopped. */ }
       voice.oscillator.disconnect();
@@ -13,7 +21,15 @@
     }
     active.clear();
   }
-  async function playTone(result: 'correct' | 'incorrect' | 'testimony') {
+  async function playRecording(correct: boolean) {
+    stop();
+    try {
+      await recordings[correct ? 'correct' : 'incorrect'].play();
+    } catch {
+      // Missing or blocked audio must never interrupt the game.
+    }
+  }
+  async function playTone() {
     stop();
     const request = generation;
     try {
@@ -22,15 +38,15 @@
       if (!context || context.state === 'closed') context = new AudioContext();
       if (context.state !== 'running') await context.resume();
       if (request !== generation || context.state !== 'running') return;
-      const notes = result === 'testimony' ? [440, 554.37] : result === 'correct' ? [523.25, 659.25, 783.99] : [220, 164.81];
-      const duration = result === 'testimony' ? .09 : result === 'correct' ? .13 : .19;
+      const notes = [440, 554.37];
+      const duration = .09;
       const start = context.currentTime;
       notes.forEach((frequency, index) => {
         const oscillator = context.createOscillator();
         const gain = context.createGain();
         const voice = { oscillator, gain };
         active.add(voice);
-        oscillator.type = result === 'incorrect' ? 'triangle' : 'sine';
+        oscillator.type = 'sine';
         oscillator.frequency.setValueAtTime(frequency, start + index * duration);
         gain.gain.setValueAtTime(0, start + index * duration);
         gain.gain.linearRampToValueAtTime(.06, start + index * duration + .015);
@@ -51,8 +67,8 @@
     }
   }
   window.judgmentSound = {
-    play: (correct: boolean) => playTone(correct ? 'correct' : 'incorrect'),
-    testimony: () => playTone('testimony'),
+    play: playRecording,
+    testimony: playTone,
     stop,
   };
 })();

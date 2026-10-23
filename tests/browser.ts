@@ -44,6 +44,12 @@ async function checkReadings(page: Page) {
   page.on('pageerror', e => errors.push(e.message));
   await page.addInitScript(() => {
     window.playedTones = [];
+    window.playedRecordings = [];
+    const nativePlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      window.playedRecordings.push(this.getAttribute('src') || '');
+      return nativePlay.call(this);
+    };
     const NativeAudioContext = window.AudioContext;
     window.AudioContext = class extends NativeAudioContext {
       createOscillator() {
@@ -59,6 +65,14 @@ async function checkReadings(page: Page) {
   });
   await page.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
   await page.locator('.suspect').last().waitFor();
+  const durations = await page.evaluate(() => Promise.all(
+    ['assets/sounds/correct2.mp3', 'assets/sounds/incorrect2.mp3'].map(src => new Promise<number>((resolve, reject) => {
+      const audio = new Audio(src);
+      audio.onloadedmetadata = () => resolve(audio.duration);
+      audio.onerror = () => reject(new Error(`Cannot load ${src}`));
+    }))
+  ));
+  assert.ok(durations.every(duration => Number.isFinite(duration) && duration > 0), 'bundled recordings are playable audio');
   assert.ok(await page.locator('#game-menu').isHidden(), 'menu starts collapsed');
   await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('#menu-toggle').getAttribute('aria-expanded'), 'true');
@@ -208,12 +222,10 @@ async function checkReadings(page: Page) {
     }
     if (step === 0) {
       assert.deepEqual(await page.evaluate(() => window.playedTones), []);
+      assert.deepEqual(await page.evaluate(() => window.playedRecordings), []);
       await setToggle(page.locator('#sound-toggle'), true);
     } else {
-      await page.waitForFunction(() => window.playedTones.length > 0);
-      const tones = await page.evaluate(() => window.playedTones.splice(0));
-      assert.equal(tones.length, 3);
-      assert.ok(tones[0] < tones[1] && tones[1] < tones[2], 'correct answer plays ascending tones');
+      assert.deepEqual(await page.evaluate(() => window.playedRecordings.splice(0)), ['assets/sounds/correct2.mp3']);
     }
   }
   assert.equal(await page.locator('#suspects [data-portrait-state="liar"] .jail-bar').count(), solution.filter(Boolean).length * 4);
@@ -256,12 +268,9 @@ async function checkReadings(page: Page) {
     assert.equal(await page.locator(`#testimony-nav [data-person="${i}"]`).evaluate(el => getComputedStyle(el).backgroundColor),
       await page.locator(`#person-${i} .portrait-box`).evaluate(el => getComputedStyle(el).backgroundColor));
     assert.equal(await page.locator(`#person-${i} .jail-bar`).count(), 0);
-    await page.waitForFunction(() => window.playedTones.length > 0);
     assert.equal(await page.locator('#trust-value').textContent(), String(Math.max(0, 3 - 2 * step)));
     assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り信用 ${Math.max(0, 3 - 2 * step)}`);
-    const tones = await page.evaluate(() => window.playedTones.splice(0));
-    assert.equal(tones.length, 2);
-    assert.ok(tones[0] > tones[1], 'incorrect answer plays descending tones');
+    assert.deepEqual(await page.evaluate(() => window.playedRecordings.splice(0)), ['assets/sounds/incorrect2.mp3']);
   }
   assert.ok(await page.locator('#result-dialog').isVisible());
   assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('信用がなくなりました'));
@@ -417,6 +426,7 @@ async function checkReadings(page: Page) {
   const silent = await browser.newPage();
   silent.on('pageerror', e => errors.push(e.message));
   await silent.addInitScript(() => {
+    HTMLMediaElement.prototype.play = () => Promise.reject(new Error('audio unavailable'));
     Object.defineProperty(window, 'AudioContext', { value: class { constructor() { throw new Error('audio unavailable'); } } });
   });
   await silent.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
