@@ -42,22 +42,23 @@ html{scroll-padding-top:calc(var(--summary-height,120px) + 12px)}
 
 #result-dialog .dialog-heading{justify-content:flex-end}
 
-.masthead{height:auto;min-height:94px;flex-wrap:wrap;gap:12px 24px;padding-top:12px;padding-bottom:12px}
-.header-right{display:flex;align-items:center;gap:8px}
-.header-right .quiet-button{min-height:44px;white-space:nowrap}
+/* Keep every game action in one pinned menu row. */
+.masthead{position:sticky;top:0;z-index:20;height:auto;min-height:94px;flex-wrap:wrap;gap:12px 24px;padding-top:12px;padding-bottom:12px}
+.workspace{display:block;max-width:1133px}
+.header-right{display:flex;align-items:stretch;gap:8px}
+.header-right .new-case{width:auto;margin:0;white-space:nowrap;padding:6px 14px}
+.header-right .quiet-button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:68px;min-height:64px;padding:6px 10px}
+.header-right .menu-icon{width:26px;height:26px;flex-shrink:0}
+.header-right .quiet-button .menu-label{display:block;width:auto;height:auto;border:0;border-radius:0;margin:0;font:11px/1.7 "Yu Gothic",Meiryo,sans-serif;white-space:nowrap}
+.case-status{top:var(--menu-height,94px)}
+html{scroll-padding-top:calc(var(--menu-height,94px) + var(--summary-height,120px) + 12px)}
 @media(max-width:760px){
-  .masthead{gap:12px;min-height:0}
-  .header-right{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;gap:6px}
-  .header-right button{min-width:0;padding:6px}
-}
-
-.header-right .quiet-button{display:inline-flex;align-items:center;justify-content:center;gap:5px}
-.header-right .menu-icon{width:18px;height:18px;flex-shrink:0}
-.header-right .quiet-button .menu-label{display:block;width:auto;height:auto;border:0;border-radius:0;margin:0;font:inherit}
-@media(max-width:760px){
-  .header-right{grid-template-columns:1.3fr 1.3fr 1fr 1fr}
-  .header-right .quiet-button{gap:4px}
-  .header-right .menu-icon{width:14px;height:14px}
+  .masthead{gap:8px;min-height:0;padding:8px 12px}
+  .header-right{display:grid;grid-template-columns:minmax(0,2.2fr) repeat(4,minmax(0,1fr));width:100%;gap:4px}
+  .header-right .quiet-button,.header-right .preference-button{min-width:0;min-height:60px;padding:4px 2px}
+  .header-right .new-case{white-space:normal;font-size:11px;line-height:1.6;padding:4px}
+  .header-right .new-case span{display:block;margin:0;line-height:1.2}
+  .header-right .quiet-button .menu-label,.preference-caption{font-size:10px}
 }
 
 #trust{display:flex;align-items:center;gap:6px;letter-spacing:0}

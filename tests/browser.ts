@@ -55,7 +55,7 @@ async function checkReadings(page: Page) {
   await page.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
   await page.locator('.suspect').last().waitFor();
   assert.deepEqual(await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => button.id)),
-    ['help-button', 'animals-button', 'sound-toggle', 'ruby-toggle']);
+    ['new-case', 'help-button', 'animals-button', 'sound-toggle', 'ruby-toggle']);
   assert.equal(await page.locator('.offline, .case-stamp, .preferences').count(), 0);
   await page.evaluate(() => {
     const probe = document.createElement('div');
@@ -252,19 +252,26 @@ async function checkReadings(page: Page) {
     if (width > 760) assert.ok(menu.x > brand.x + brand.width, 'desktop menu shares brand row');
     else assert.ok(menu.y >= brand.y + brand.height, 'mobile menu wraps below brand');
     const menuButtons = await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => { const box = button.getBoundingClientRect(); return box.top + box.height / 2; }));
-    assert.ok(menuButtons.every(top => Math.abs(top - menuButtons[0]) < 1), 'four menu controls share one center line');
+    assert.ok(menuButtons.every(top => Math.abs(top - menuButtons[0]) < 1), 'all five menu controls share one center line');
     const textButton = await page.locator('#help-button').boundingBox();
       assert.ok(textButton);
     const iconButton = await page.locator('#sound-toggle').boundingBox();
       assert.ok(iconButton);
-    assert.ok(textButton.height < iconButton.height, 'text buttons retain compact height');
+    assert.ok(Math.abs(textButton.height - iconButton.height) < 1, 'menu buttons share the same height');
+    for (const id of ['help-button', 'animals-button']) {
+      const icon = await page.locator('#' + id + ' svg').boundingBox();
+      const label = await page.locator('#' + id + ' .menu-label').boundingBox();
+      assert.ok(icon && label && label.y >= icon.y + icon.height, 'menu caption appears below icon');
+    }
     for (const rubyEnabled of [true, false]) {
       await setToggle(page.locator('#ruby-toggle'), rubyEnabled);
       await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
       await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
       const summary = await page.locator('.case-summary').boundingBox();
       assert.ok(summary);
-      assert.ok(summary.y >= 0 && summary.y < 2, `summary pinned at ${width}, ruby=${rubyEnabled}`);
+      const masthead = await page.locator('.masthead').boundingBox();
+      assert.ok(masthead && Math.abs(masthead.y) < 1, 'menu remains visible while scrolling');
+      assert.ok(Math.abs(summary.y - masthead.height) < 2, `summary pinned below menu at ${width}, ruby=${rubyEnabled}`);
       assert.ok(summary.y + summary.height < 844);
       const feedback = await page.locator('#feedback').boundingBox();
       assert.ok(feedback);

@@ -156,6 +156,10 @@
   new ResizeObserver(() => {
     document.documentElement.style.setProperty('--summary-height', `${summary.getBoundingClientRect().height}px`);
   }).observe(summary);
+  const menu = document.querySelector<HTMLElement>('.masthead')!;
+  new ResizeObserver(() => {
+    document.documentElement.style.setProperty('--menu-height', `${menu.getBoundingClientRect().height}px`);
+  }).observe(menu);
   state = restore() || fresh('normal');
   $<HTMLSelectElement>('difficulty').value = state.puzzle.level;
   render(state.status !== 'playing' ? '前回の捜査結果を開きました。新しい事件にも挑戦できます。' : undefined);
