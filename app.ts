@@ -257,6 +257,27 @@
       { boxShadow: '0 0 0 3px transparent', offset: 1 },
     ], { duration: 1500, easing: 'ease-out' });
   });
+  let feedbackHighlight: Animation | undefined;
+  function animateJudgment(trustChange: number) {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    feedbackHighlight?.cancel();
+    feedbackHighlight = $('feedback').animate([
+      { backgroundColor: '#e8dca7', boxShadow: '0 0 0 3px #b1945866' },
+      { backgroundColor: 'transparent', boxShadow: '0 0 0 0 transparent' },
+    ], { duration: reducedMotion ? 200 : 800, easing: 'ease-out' });
+    if (!trustChange) return;
+    const delta = document.createElement('span');
+    delta.className = `trust-delta ${trustChange > 0 ? 'positive' : 'negative'}`;
+    delta.textContent = `${trustChange > 0 ? '+' : ''}${trustChange}`;
+    delta.setAttribute('aria-hidden', 'true');
+    $('trust').append(delta);
+    const animation = delta.animate([
+      { opacity: 1, transform: 'translateY(0)' },
+      { opacity: 1, transform: reducedMotion ? 'none' : 'translateY(-8px)', offset: 0.6 },
+      { opacity: 0, transform: reducedMotion ? 'none' : 'translateY(-18px)' },
+    ], { duration: 1100, easing: 'ease-out', fill: 'forwards' });
+    animation.onfinish = () => delta.remove();
+  }
   $('suspects').addEventListener('click', event => {
     const reveal = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-reveal]');
     if (reveal) {
@@ -273,11 +294,13 @@
     if (judge) {
       const i = Number(judge.dataset.index);
       const reward = state.revealed[i] ? 0 : 1;
+      const previousTrust = state.trust;
       const correct = E.judge(state, i);
       if (correct === null) return;
       if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
       render(`${correct ? `✅ 正解です。${reward ? '信用 ＋1。' : '信用の増減はありません。'}` : '❌ 誤判定。信用 −2。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
+      animateJudgment(state.trust - previousTrust);
       if (state.status !== 'playing') {
         showResultDialog();
         return;
