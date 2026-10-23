@@ -32,6 +32,7 @@ test('3,000 generated cases have exactly one solution and obey every role', () =
         assert.ok(s.targets.every(t => t >= 0 && t < config.n));
         assert.equal(E.evaluate(s, p.answer), !p.answer[i]);
         assert.ok(E.statementText(s, p.people).endsWith('。'));
+        assert.doesNotMatch(E.statementText(s, p.people), /ない|なかった|ません|ぬ|ではなく/);
       });
     }
   }
@@ -113,4 +114,21 @@ test('incorrect arrest before testimony still loses two trust', () => {
   s.revealed.fill(false);
   assert.equal(E.judge(s, s.puzzle.answer.indexOf(false)), false);
   assert.equal(s.trust, 3);
+});
+
+test('affirmative wording preserves the meaning of complementary statements', () => {
+  const cases: { type: 'any' | 'both' | 'ordered'; text: string; truth: (a: boolean, b: boolean) => boolean }[] = [
+    { type: 'any', text: 'キツネとウサギは、両方とも善人だ。', truth: (a, b) => !a && !b },
+    { type: 'both', text: 'キツネとウサギのうち、少なくとも1匹は善人だ。', truth: (a, b) => !a || !b },
+    { type: 'ordered', text: '「キツネが善人」「ウサギが犯人」の少なくとも一方が当てはまる。', truth: (a, b) => !a || b }
+  ];
+  for (const { type, text, truth } of cases) {
+    const statement: Statement = { type, targets: [0, 1], value: false };
+    assert.equal(E.statementText(statement, E.roles), text);
+    for (const a of [false, true]) {
+      for (const b of [false, true]) {
+        assert.equal(E.evaluate(statement, [a, b]), truth(a, b), `${type}: ${a}, ${b}`);
+      }
+    }
+  }
 });

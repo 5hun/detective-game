@@ -74,10 +74,10 @@ var DetectiveEngine = (function () {
       case 'single': return `${a}は${s.value ? '犯人' : '善人'}だ。`;
       case 'same': return `${a}と${b}は、${s.value ? '同じ立場' : '違う立場'}だ。`;
       case 'count': return `${list}の3匹のうち、犯人はちょうど${s.value}匹だ。`;
-      case 'any': return s.value ? `${a}と${b}のうち、少なくとも1匹は犯人だ。` : `${a}と${b}の中に、犯人はいない。`;
-      case 'both': return s.value ? `${a}と${b}は、両方とも犯人だ。` : `${a}と${b}が、両方とも犯人ということはない。`;
+      case 'any': return s.value ? `${a}と${b}のうち、少なくとも1匹は犯人だ。` : `${a}と${b}は、両方とも善人だ。`;
+      case 'both': return s.value ? `${a}と${b}は、両方とも犯人だ。` : `${a}と${b}のうち、少なくとも1匹は善人だ。`;
       case 'parity': return `${list}の3匹のうち、犯人の数は${s.value ? '奇数（1匹か3匹）' : '偶数（0匹か2匹）'}だ。`;
-      case 'ordered': return s.value ? `${a}は犯人で、${b}は善人だ。` : `「${a}が犯人で、${b}が善人」という組み合わせではない。`;
+      case 'ordered': return s.value ? `${a}は犯人で、${b}は善人だ。` : `「${a}が善人」「${b}が犯人」の少なくとも一方が当てはまる。`;
       case 'majority': return `${list}の3匹のうち、犯人は${s.value ? '2匹以上' : '1匹以下'}だ。`;
     }
   }
