@@ -132,5 +132,5 @@ html{scroll-padding-top:calc(var(--menu-height,64px) + var(--summary-height,120p
 .brand-symbol img{display:block;width:100%;height:auto}
 .home-symbol img{display:block;width:80px;height:80px;margin:auto}
 
-.header-actions .new-case,.home-page .primary-button{background:#e8efdf;color:var(--green);border:1px solid #b5c3ae}
-.header-actions .new-case:hover,.home-page .primary-button:hover{background:#dfe7d5}
+.header-actions .new-case,.home-page .primary-button{background:#fff;color:var(--green);border:1px solid #b5c3ae}
+.header-actions .new-case:hover,.home-page .primary-button:hover{background:#fff}
