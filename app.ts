@@ -252,8 +252,8 @@
     card.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
     testimonyHighlight?.cancel();
     testimonyHighlight = card.animate([
-      { boxShadow: '0 0 0 3px var(--green)', offset: 0 },
-      { boxShadow: '0 0 0 3px var(--green)', offset: 0.65 },
+      { boxShadow: '0 0 0 3px #83c991', offset: 0 },
+      { boxShadow: '0 0 0 3px #83c991', offset: 0.65 },
       { boxShadow: '0 0 0 3px transparent', offset: 1 },
     ], { duration: 1500, easing: 'ease-out' });
   });
