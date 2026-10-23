@@ -321,11 +321,11 @@ async function checkReadings(page: Page) {
     assert.ok(headerButtons.every((box, i) => box.height >= 44 && (i === 0 || box.left >= headerButtons[i - 1].right)), 'header actions appear in order');
     assert.ok(headerButtons.every(box => box.top === headerButtons[0].top), 'header actions share a row');
     assert.equal(await page.locator('#game-menu #new-case, #game-menu #help-button').count(), 0);
-    assert.equal(await baseText(page.locator('#help-button')), '📖');
+    assert.equal(await baseText(page.locator('#help-button')), '📖遊び方');
     assert.deepEqual(await page.locator('.header-actions > button').evaluateAll(buttons => buttons.map(button => button.id)), ['new-case', 'help-button', 'menu-toggle']);
     assert.equal(await baseText(page.locator('#delete-save .menu-label')), 'データの消去');
     assert.equal(await page.locator('#delete-save svg').count(), 1);
-    assert.equal(await baseText(page.locator('#new-case')), '+最初から');
+    assert.equal(await baseText(page.locator('#new-case')), '最初から');
     for (const rubyEnabled of [true, false]) {
       await setToggle(page.locator('#ruby-toggle'), rubyEnabled);
       await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
