@@ -126,8 +126,15 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('.statement').count(), 0);
   await page.locator('[data-reveal="0"]').click();
   assert.equal(await page.locator('.statement').count(), 1);
+  await page.waitForFunction(() => window.playedTones.length > 0);
+  assert.deepEqual(await page.evaluate(() => window.playedTones.splice(0)), [440, 554.37], 'revealing testimony plays its own tones');
+  await setToggle(page.locator('#sound-toggle'), false);
+  await page.locator('[data-reveal="1"]').click();
+  assert.equal(await page.locator('.statement').count(), 2);
+  assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'muted testimony is silent');
+  await setToggle(page.locator('#sound-toggle'), true);
   await page.reload();
-  assert.equal(await page.locator('.statement').count(), 1);
+  assert.equal(await page.locator('.statement').count(), 2);
   await page.locator('#memo-0').fill('<script>alert("memo")</script> メモ保存テスト');
   await page.locator('#person-0 [data-marker-value="1"]').click();
   await page.reload();

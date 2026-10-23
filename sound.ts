@@ -1,4 +1,4 @@
-/* Short local tones. Audio is created only in response to a judgment. */
+/* Short local tones for judgments and revealing testimony. */
 (function () {
   'use strict';
   let context: AudioContext;
@@ -13,7 +13,7 @@
     }
     active.clear();
   }
-  async function play(correct: boolean) {
+  async function playTone(result: 'correct' | 'incorrect' | 'testimony') {
     stop();
     const request = generation;
     try {
@@ -22,15 +22,15 @@
       if (!context || context.state === 'closed') context = new AudioContext();
       if (context.state !== 'running') await context.resume();
       if (request !== generation || context.state !== 'running') return;
-      const notes = correct ? [523.25, 659.25, 783.99] : [220, 164.81];
-      const duration = correct ? .13 : .19;
+      const notes = result === 'testimony' ? [440, 554.37] : result === 'correct' ? [523.25, 659.25, 783.99] : [220, 164.81];
+      const duration = result === 'testimony' ? .09 : result === 'correct' ? .13 : .19;
       const start = context.currentTime;
       notes.forEach((frequency, index) => {
         const oscillator = context.createOscillator();
         const gain = context.createGain();
         const voice = { oscillator, gain };
         active.add(voice);
-        oscillator.type = correct ? 'sine' : 'triangle';
+        oscillator.type = result === 'incorrect' ? 'triangle' : 'sine';
         oscillator.frequency.setValueAtTime(frequency, start + index * duration);
         gain.gain.setValueAtTime(0, start + index * duration);
         gain.gain.linearRampToValueAtTime(.06, start + index * duration + .015);
@@ -50,5 +50,9 @@
       stop();
     }
   }
-  window.judgmentSound = { play, stop };
+  window.judgmentSound = {
+    play: (correct: boolean) => playTone(correct ? 'correct' : 'incorrect'),
+    testimony: () => playTone('testimony'),
+    stop,
+  };
 })();

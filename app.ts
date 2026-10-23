@@ -171,6 +171,7 @@
     const reveal = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-reveal]');
     if (reveal) {
       const i = Number(reveal.dataset.reveal);
+      if (preferences.sound) void judgmentSound.testimony();
       state.revealed[i] = true;
       render();
       const statement = $(`statement-${i}`);
