@@ -108,7 +108,14 @@
     const p = state.puzzle; const count = state.resolved.filter((r, i) => r !== null && p.answer[i]).length;
     const mistakes = state.resolved.filter(r => r && !r.correct).length;
     const story = E.caseStories[p.seed % E.caseStories.length];
-    $('campaign-progress').textContent = `捜査 ${p.round} / ${E.totalCases} · ${E.levels[p.level].label} · 動物 ${p.people.length}匹`;
+    $('campaign-progress').textContent = `捜査 ${p.round} / ${E.totalCases}`;
+    $('campaign-steps').innerHTML = Array.from({ length: E.totalCases }, (_, i) => {
+      const round = i + 1;
+      const completed = round < p.round || (round === p.round && state.status === 'won');
+      const current = round === p.round;
+      const label = completed ? '解決済み' : current ? '今回の捜査' : 'これから';
+      return `<li class="campaign-step${completed ? ' completed' : ''}${current ? ' current' : ''}"${current ? ' aria-current="step"' : ''} aria-label="捜査 ${round}：${label}"><span aria-hidden="true">${completed ? '✓' : current ? round : ''}</span></li>`;
+    }).join('');
     $('case-title').textContent = story.title;
     $('case-description').textContent = story.description;
     document.title = `${story.title} — どうぶつ探偵`;

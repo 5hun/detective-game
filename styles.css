@@ -134,3 +134,14 @@ html{scroll-padding-top:calc(var(--menu-height,64px) + var(--summary-height,120p
 
 .header-actions .new-case,.home-page .primary-button{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .header-actions .new-case:hover,.home-page .primary-button:hover{background:#e8efdf}
+
+/* Campaign progress: completed, current, and upcoming investigations. */
+.campaign-progress{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;margin:0 0 14px}
+.campaign-label{margin:0;color:var(--green);font-size:13px;font-weight:700;white-space:nowrap}
+.campaign-steps{display:flex;align-items:center;list-style:none;margin:0;padding:0}
+.campaign-step{display:flex;align-items:center}
+.campaign-step+ .campaign-step:before{content:"";width:16px;height:2px;background:var(--line)}
+.campaign-step.completed:before,.campaign-step.current:before{background:var(--green)}
+.campaign-step>span{display:grid;place-items:center;width:18px;height:18px;border:2px solid #a8afa3;border-radius:50%;background:var(--paper);color:var(--green);font:700 11px/1 sans-serif}
+.campaign-step.completed>span{border-color:var(--green);background:var(--green);color:#fff}
+.campaign-step.current>span{width:26px;height:26px;border-color:var(--green);outline:2px solid var(--green);outline-offset:3px}
