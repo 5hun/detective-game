@@ -270,7 +270,7 @@
     delta.className = `trust-delta ${trustChange > 0 ? 'positive' : 'negative'}`;
     delta.textContent = `${trustChange > 0 ? '+' : ''}${trustChange}`;
     delta.setAttribute('aria-hidden', 'true');
-    $('trust').append(delta);
+    $('trust-value').append(delta);
     const animation = delta.animate([
       { opacity: 1, transform: 'translateY(0)' },
       { opacity: 1, transform: reducedMotion ? 'none' : 'translateY(-8px)', offset: 0.6 },

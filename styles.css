@@ -34,7 +34,7 @@ ruby{ruby-align:center}rt{font-size:.55em;font-family:"Hiragino Kaku Gothic ProN
 html{scroll-padding-top:calc(var(--summary-height,120px) + 12px)}
 .case-status{position:sticky;top:0;z-index:10;background:var(--paper);box-shadow:0 5px 12px #283d3814}
 #trust{white-space:nowrap;position:relative}
-.trust-delta{position:absolute;left:100%;top:0;margin-left:8px;font:700 20px/1.3 Georgia,serif;letter-spacing:0;pointer-events:none}
+.trust-delta{position:absolute;left:100%;top:0;margin-left:4px;font:700 20px/1.3 Georgia,serif;letter-spacing:0;pointer-events:none}
 .trust-delta.positive{color:var(--green)}
 .trust-delta.negative{color:var(--red)}
 
@@ -78,10 +78,10 @@ html{scroll-padding-top:calc(var(--menu-height,64px) + var(--summary-height,120p
 }
 
 #trust{display:flex;align-items:center;gap:6px;letter-spacing:0}
-#trust-value{font:600 24px/1.3 Georgia,serif;color:var(--ink)}
+#trust-value{position:relative;font:600 24px/1.3 Georgia,serif;color:var(--ink)}
 .trust-icon{font-size:24px}
 
-.case-status .feedback{padding:12px 8px;background:var(--paper)}
+.case-status .feedback{padding:12px 8px;background:var(--paper);font-size:15px}
 .testimony-nav{display:flex;flex-wrap:wrap;gap:6px;padding:0 8px 10px}
 .testimony-link{display:grid;place-items:center;width:44px;height:40px;padding:1px;border:3px solid var(--marker-color,var(--line));border-radius:4px;background:#eae7d9;color:var(--ink)}
 .testimony-link:hover{filter:brightness(.97)}
@@ -106,7 +106,7 @@ html{scroll-padding-top:calc(var(--menu-height,64px) + var(--summary-height,120p
   .slash{margin:0 4px}
   .progress-summary strong,#trust-value{font-size:19px}
   .trust-icon{font-size:20px;line-height:1.3}
-  .case-status .feedback{min-height:30px;padding-top:3px;padding-bottom:3px}
+  .case-status .feedback{min-height:30px;padding-top:3px;padding-bottom:3px;font-size:14px}
   .testimony-nav{padding-bottom:6px}
 }
 
