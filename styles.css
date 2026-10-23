@@ -7,6 +7,10 @@
 
 .reveal-button{margin:12px 0;min-height:44px}
 
+/* Leave enough room for portraits, testimony, and notes in each column. */
+#suspects{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:14px;align-items:start}
+#suspects .suspect{min-width:0;margin:0}
+
 ruby{ruby-align:center}rt{font-size:.55em;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:normal;letter-spacing:0}
 .statement,dialog p,dialog li{line-height:2.3}.brand{line-height:2}.person-heading{row-gap:14px}
 @media(max-width:760px){.brand{font-size:18px}.case-summary{grid-template-columns:1.5fr .8fr .8fr}.population strong{display:inline-block}.slash{margin:0 3px}}

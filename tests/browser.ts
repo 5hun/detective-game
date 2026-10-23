@@ -266,7 +266,13 @@ async function checkReadings(page: Page) {
   await page.locator('#confirm-new').click();
   assert.equal(await page.locator('.suspect').count(), 4);
   for (const width of [1440, 390, 320]) {
-    await page.setViewportSize({ width, height: 844 });
+    // Two columns shorten the desktop page; use a shorter viewport to exercise sticky scrolling.
+    await page.setViewportSize({ width, height: width === 1440 ? 440 : 844 });
+    const cards = await page.locator('.suspect').evaluateAll(elements => elements.slice(0, 2).map(element => {
+      const rect = element.getBoundingClientRect();
+      return { top: rect.top, left: rect.left };
+    }));
+    assert.equal(cards[0].top === cards[1].top, width === 1440, `testimony columns at ${width}`);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `overflow at ${width}`);
     await openMenu(page);
     const menu = await page.locator('.header-right').boundingBox();
