@@ -108,7 +108,8 @@ html{scroll-padding-top:calc(var(--menu-height,64px) + var(--summary-height,120p
 }
 
 .header-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
-.header-actions .new-case{display:flex;align-items:center;justify-content:center;gap:4px;width:auto;min-height:44px;margin:0;padding:6px 10px;white-space:nowrap}
+.header-actions .new-case{background:#e8efdf;color:var(--green);border-color:#b5c3ae;display:flex;align-items:center;justify-content:center;gap:4px;width:auto;min-height:44px;margin:0;padding:6px 10px;white-space:nowrap}
+.header-actions .new-case:hover{background:#dfe7d5}
 .action-icon{width:18px;height:18px;flex-shrink:0}
 .help-icon{font:22px/1 sans-serif}
 .help-button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:54px;min-height:44px;padding:4px 6px;flex-shrink:0;border:1px solid var(--line);border-radius:5px;background:transparent;color:var(--ink);font:11px/1.5 "Yu Gothic",Meiryo,sans-serif}
