@@ -192,7 +192,8 @@ async function checkReadings(page) {
   for (let step = 0; step < 3; step++) {
     const i = innocents[step];
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
-    assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), hard[i] ? 'liar' : 'good');
+    assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), 'sad');
+    assert.equal(await page.locator(`#person-${i} .jail-bar`).count(), 0);
     await page.waitForFunction(() => window.playedTones.length > 0);
     assert.equal(await page.locator('#trust-value').textContent(), String(Math.max(0, 3 - 2 * step)));
     assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り信用 ${Math.max(0, 3 - 2 * step)}`);

@@ -20,7 +20,7 @@
   root.portrait = function (id, extra = '', state = 'neutral') {
     const [fur, inner, muzzle] = colors[id];
     const palette = { a: fur, b: inner, c: '#182c30', d: muzzle, e: '#354044', f: '#293b3e' };
-    const changed = state === 'good' || state === 'liar';
+    const changed = state === 'good' || state === 'liar' || state === 'sad';
     const eyes = [];
     const rows = faces[id].map((row, y) => [...row].map((ch, x) => {
       if (!changed) return ch;
