@@ -252,9 +252,9 @@
     card.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
     testimonyHighlight?.cancel();
     testimonyHighlight = card.animate([
-      { backgroundColor: '#fff0bd', boxShadow: 'inset 0 0 0 2px #b19458', offset: 0 },
-      { backgroundColor: '#fff0bd', boxShadow: 'inset 0 0 0 2px #b19458', offset: 0.65 },
-      { backgroundColor: getComputedStyle(card).backgroundColor, boxShadow: 'inset 0 0 0 2px transparent', offset: 1 },
+      { boxShadow: '0 0 0 3px #b19458', offset: 0 },
+      { boxShadow: '0 0 0 3px #b19458', offset: 0.65 },
+      { boxShadow: '0 0 0 3px transparent', offset: 1 },
     ], { duration: 1500, easing: 'ease-out' });
   });
   $('suspects').addEventListener('click', event => {
