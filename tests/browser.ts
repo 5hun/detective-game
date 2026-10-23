@@ -188,12 +188,12 @@ async function checkReadings(page: Page) {
   for (const [step, i] of criminals.entries()) {
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
-    assert.equal(await page.locator('#trust-value').textContent(), String(6 + step));
+    assert.equal(await page.locator('#trust-value').textContent(), String(5 + criminals.slice(0, step + 1).reduce((sum, index) => sum + (index < 2 ? 1 : 2), 0)));
     if (step < criminals.length - 1) {
       const feedback = await page.locator('#feedback').boundingBox();
       assert.ok(feedback);
       assert.ok(feedback.y >= 0 && feedback.y + feedback.height <= 1100, 'judgment message stays in viewport');
-      assert.ok((await baseText(page.locator('#feedback'))).includes('正解です。信用 ＋1。'));
+      assert.ok((await baseText(page.locator('#feedback'))).includes(`正解です。信用 ＋${i < 2 ? 1 : 2}。`));
     }
     if (step === 0) {
       assert.deepEqual(await page.evaluate(() => window.playedTones), []);
@@ -219,7 +219,7 @@ async function checkReadings(page: Page) {
   await page.reload();
   await page.locator('#menu-toggle').click();
   assert.ok(await page.locator('#result').isVisible());
-  assert.equal(await page.locator('#trust-value').textContent(), '7');
+  assert.equal(await page.locator('#trust-value').textContent(), String(5 + criminals.reduce((sum, index) => sum + (index < 2 ? 1 : 2), 0)));
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', true);
   assert.equal(await page.locator('#person-0 .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');

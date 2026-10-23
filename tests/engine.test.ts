@@ -43,7 +43,7 @@ test('same seed reproduces the case, different seeds vary it', () => {
     assert.ok(cases.size > 90);
   }
 });
-function state(level: Level = 'normal'): JudgmentState { const puzzle = E.generate(333, level); return { puzzle, resolved: puzzle.people.map(() => null), trust: E.initialTrust, status: 'playing' }; }
+function state(level: Level = 'normal'): JudgmentState { const puzzle = E.generate(333, level); return { puzzle, revealed: puzzle.people.map(() => true), resolved: puzzle.people.map(() => null), trust: E.initialTrust, status: 'playing' }; }
 test('only criminals need judgment at every difficulty', () => {
   for (const level of Object.keys(E.levels) as Level[]) {
     const s = state(level);
@@ -95,4 +95,22 @@ test('all statement polarities and count boundaries are evaluated correctly', ()
   assert.equal(E.evaluate({ type:'both', targets:[0,1], value:false }, [true,false]), true);
   assert.equal(E.evaluate({ type:'parity', targets:[0,1,2], value:false }, [false,false,false]), true);
   assert.throws(() => E.generate(0, 'unknown' as Level));
+});
+
+test('correct arrest before hearing that testimony earns two trust', () => {
+  const s = state('hard');
+  const criminals = s.puzzle.answer.flatMap((liar, i) => liar ? [i] : []);
+  s.revealed[criminals[0]] = false;
+  assert.equal(E.judge(s, criminals[0]), true);
+  assert.equal(s.trust, 7);
+  assert.equal(E.judge(s, criminals[0]), null);
+  assert.equal(s.trust, 7);
+  assert.equal(E.judge(s, criminals[1]), true);
+  assert.equal(s.trust, 8);
+});
+test('incorrect arrest before testimony still loses two trust', () => {
+  const s = state();
+  s.revealed.fill(false);
+  assert.equal(E.judge(s, s.puzzle.answer.indexOf(false)), false);
+  assert.equal(s.trust, 3);
 });

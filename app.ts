@@ -67,9 +67,9 @@
       if (!notes.every((v: unknown): v is string => typeof v === 'string' && v.length <= 1000) ||
           !markers.every((v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 3)) return null;
       if (!resolved.every((r: unknown, i): r is Resolution | null => r === null ||
-          (typeof r === 'object' && 'guess' in r && 'correct' in r && r.guess === true && r.correct === puzzle.answer[i]))) return null;
-      const mistakes = resolved.filter(r => r && !r.correct).length;
-      const trust = Math.max(0, E.initialTrust + resolved.filter(r => r?.correct).length - 2 * mistakes);
+          (typeof r === 'object' && 'guess' in r && 'correct' in r && r.guess === true && r.correct === puzzle.answer[i] &&
+            (!('reward' in r) || (r.correct ? r.reward === 1 || r.reward === 2 : r.reward === -2))))) return null;
+      const trust = Math.max(0, E.initialTrust + resolved.reduce((sum, r) => sum + (r ? r.reward ?? (r.correct ? 1 : -2) : 0), 0));
       if (trust < 0 || saved.trust !== trust) return null;
       const status = trust === 0 ? 'lost' : puzzle.answer.every((liar, i) => !liar || resolved[i] !== null) ? 'won' : 'playing';
       if (saved.status !== status) return null;
@@ -198,11 +198,13 @@
     }
     const judge = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-judge]');
     if (judge) {
-      const i = Number(judge.dataset.index); const correct = E.judge(state, i);
+      const i = Number(judge.dataset.index);
+      const reward = state.revealed[i] ? 1 : 2;
+      const correct = E.judge(state, i);
       if (correct === null) return;
       if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
-      render(`${correct ? '✓ 正解です。信用 ＋1。' : '× 誤判定。信用 −2。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
+      render(`${correct ? `✓ 正解です。信用 ＋${reward}。` : '× 誤判定。信用 −2。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
       if (state.status !== 'playing') {
         showResultDialog();
         return;
