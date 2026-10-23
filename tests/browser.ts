@@ -219,6 +219,8 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('#suspects [data-portrait-state="liar"] .jail-bar').count(), solution.filter(Boolean).length * 4);
   for (const [i, liar] of solution.entries()) {
     assert.equal(await page.locator(`#testimony-nav [data-person="${i}"] .portrait`).getAttribute('data-portrait-state'), liar ? 'liar' : 'good');
+    assert.equal(await page.locator(`#testimony-nav [data-person="${i}"]`).evaluate(el => getComputedStyle(el).backgroundColor),
+      await page.locator(`#person-${i} .portrait-box`).evaluate(el => getComputedStyle(el).backgroundColor));
   }
   assert.ok(await page.locator('#result-dialog').isVisible());
   assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('事件解決'));
@@ -251,6 +253,8 @@ async function checkReadings(page: Page) {
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), 'sad');
     assert.equal(await page.locator(`#testimony-nav [data-person="${i}"] .portrait`).getAttribute('data-portrait-state'), 'sad');
+    assert.equal(await page.locator(`#testimony-nav [data-person="${i}"]`).evaluate(el => getComputedStyle(el).backgroundColor),
+      await page.locator(`#person-${i} .portrait-box`).evaluate(el => getComputedStyle(el).backgroundColor));
     assert.equal(await page.locator(`#person-${i} .jail-bar`).count(), 0);
     await page.waitForFunction(() => window.playedTones.length > 0);
     assert.equal(await page.locator('#trust-value').textContent(), String(Math.max(0, 3 - 2 * step)));
