@@ -105,6 +105,14 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('ruby rt').first().isVisible(), false);
   await setToggle(page.locator('#ruby-toggle'), true);
   assert.ok(await page.locator('ruby rt').first().isVisible());
+  assert.equal(await page.locator('#testimony-nav button').count(), 5);
+  await page.locator('#testimony-nav [data-person="4"]').click();
+  await page.waitForFunction(() => {
+    const card = document.getElementById('person-4')!.getBoundingClientRect();
+    const nav = document.getElementById('testimony-nav')!.getBoundingClientRect();
+    return card.top >= nav.bottom && card.top < window.innerHeight;
+  });
+  assert.equal(await page.locator('#person-4').evaluate(card => card === document.activeElement), true);
   assert.equal(await page.locator('.suspect').count(), 5);
   assert.deepEqual(await page.locator('#person-0 .judge-icon').allTextContents(), ['😈']);
   assert.equal(await page.locator('.detective-scene, .detective-name, .mobile-detective').count(), 0);
@@ -200,7 +208,7 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('.suspect').count(), 7);
   assert.equal(await page.locator('.statement').count(), 0);
   const hard = await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.answer);
-  assert.equal(await page.locator('[data-portrait-state="neutral"]').count(), 15);
+  assert.equal(await page.locator('#suspects [data-portrait-state="neutral"], #animals-list [data-portrait-state="neutral"]').count(), 15);
   const innocents = hard.flatMap((liar, i) => liar ? [] : [i]);
   for (let step = 0; step < 3; step++) {
     const i = innocents[step];

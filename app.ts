@@ -107,6 +107,7 @@
     $('trust-value').textContent = String(state.trust);
     $('trust').setAttribute('aria-label', `残り信用 ${state.trust}`);
     $('suspects').innerHTML = p.people.map(renderCard).join('');
+    $('testimony-nav').innerHTML = p.people.map((person, i) => `<button type="button" class="testimony-link" data-person="${i}" aria-label="${person.name}の証言へ移動" title="${person.name}">${portrait(person.id)}</button>`).join('');
     state.notes.forEach((v, i) => { $<HTMLTextAreaElement>(`memo-${i}`).value = v; });
     $('feedback').textContent = message || '「証言を聞く」をタップして、証言を読み比べましょう。';
     const result = $('result'); result.hidden = state.status === 'playing';
@@ -158,6 +159,14 @@
   state = restore() || fresh('normal');
   $<HTMLSelectElement>('difficulty').value = state.puzzle.level;
   render(state.status !== 'playing' ? '前回の捜査結果を開きました。新しい事件にも挑戦できます。' : undefined);
+  $('testimony-nav').addEventListener('click', event => {
+    const button = (event.target as Element).closest<HTMLButtonElement>('[data-person]');
+    if (!button) return;
+    const card = $(`person-${button.dataset.person}`);
+    card.tabIndex = -1;
+    card.focus({ preventScroll: true });
+    card.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+  });
   $('suspects').addEventListener('click', event => {
     const reveal = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-reveal]');
     if (reveal) {

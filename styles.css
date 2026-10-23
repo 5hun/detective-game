@@ -65,6 +65,11 @@ html{scroll-padding-top:calc(var(--summary-height,120px) + 12px)}
 .trust-icon{font-size:24px}
 
 .case-status .feedback{padding:12px 8px;background:var(--paper)}
+.testimony-nav{display:flex;flex-wrap:wrap;gap:6px;padding:0 8px 10px}
+.testimony-link{display:grid;place-items:center;width:44px;height:40px;padding:3px;border:1px solid var(--line);border-radius:4px;background:#fcfaf4;color:var(--ink)}
+.testimony-link:hover{background:#e2ead9;border-color:#8e9c84}
+.testimony-link .portrait{width:36px;height:27px}
+@media(max-width:360px){.testimony-nav{gap:4px;padding-left:0;padding-right:0}.testimony-link{width:38px}}
 
 .judge{display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .judge-icon{font-size:18px;line-height:1;flex-shrink:0}
