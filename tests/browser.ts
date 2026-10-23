@@ -326,6 +326,18 @@ async function checkReadings(page: Page) {
     assert.equal(await baseText(page.locator('#delete-save .menu-label')), 'データの消去');
     assert.equal(await page.locator('#delete-save svg').count(), 1);
     assert.equal(await baseText(page.locator('#new-case')), '最初から');
+    const newCaseLayout = await page.locator('#new-case').evaluate(button => {
+      const icon = button.querySelector('svg')!.getBoundingClientRect();
+      const box = button.getBoundingClientRect();
+      const textRange = document.createRange();
+      textRange.setStartAfter(button.querySelector('svg')!);
+      textRange.setEndAfter(button.lastChild!);
+      const text = textRange.getBoundingClientRect();
+      return { horizontal: getComputedStyle(button).flexDirection === 'row' && text.left >= icon.right,
+        fits: text.top >= box.top && text.bottom <= box.bottom && button.scrollWidth <= button.clientWidth };
+    });
+    assert.ok(newCaseLayout.horizontal && newCaseLayout.fits, `new case icon and text fit horizontally at ${width}`);
+
     for (const rubyEnabled of [true, false]) {
       await setToggle(page.locator('#ruby-toggle'), rubyEnabled);
       await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));

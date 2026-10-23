@@ -116,6 +116,6 @@ html{scroll-padding-top:calc(var(--menu-height,64px) + var(--summary-height,120p
 .header-right .danger-button{color:var(--red);min-height:44px}
 #confirm-delete-save{background:var(--red)}
 #delete-save-error{color:var(--red)}
-@media(max-width:400px){.masthead{column-gap:6px}.brand{gap:4px;font-size:16px;letter-spacing:0}.brand-symbol{width:26px;font-size:20px}.header-actions{gap:4px}.header-actions .new-case{flex-direction:column;gap:2px;padding:4px 6px;font-size:11px}}
+@media(max-width:400px){.masthead{column-gap:6px}.brand{gap:4px;font-size:16px;letter-spacing:0}.brand-symbol{width:26px;font-size:20px}.header-actions{gap:4px}.header-actions .new-case{gap:4px;padding:4px 6px;font-size:11px}}
 
 .header-actions > button{height:52px;min-height:52px}
