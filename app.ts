@@ -7,7 +7,7 @@
     return element as T;
   }
   const key = 'beast-detective-v1';
-  const saveVersion = 6;
+  const saveVersion = 7;
   const markers = [ { name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' } ];
   const preferencesKey = 'animal-detective-preferences-v1';
   const preferences = { ruby: true, sound: true };
@@ -71,13 +71,13 @@
           !markers.every((v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 3)) return null;
       if (!resolved.every((r: unknown, i): r is Resolution | null => r === null ||
           (typeof r === 'object' && 'guess' in r && 'correct' in r && r.guess === true && r.correct === puzzle.answer[i] &&
-            (!('reward' in r) || (r.correct ? r.reward === 1 || r.reward === 2 : r.reward === -2))))) return null;
-      const trust = Math.max(0, (saved.startingTrust as number) + resolved.reduce((sum, r) => sum + (r ? r.reward ?? (r.correct ? 1 : -2) : 0), 0));
-      if (trust < 0 || saved.trust !== trust) return null;
+            ('reward' in r && (r.correct ? r.reward === 0 || r.reward === 1 : r.reward === -2))))) return null;
+      const trust = Math.max(0, (saved.startingTrust as number) + resolved.reduce((sum, r) => sum + (r ? r.reward! : 0), 0));
       const status = trust === 0 ? 'lost' : puzzle.answer.every((liar, i) => !liar || resolved[i] !== null) ? 'won' : 'playing';
-      if (saved.status !== status) return null;
+      const finalTrust = trust + (status === 'won' ? 1 : 0);
+      if (saved.trust !== finalTrust || saved.status !== status) return null;
       if (!Array.isArray(revealed) || revealed.length !== n || !revealed.every(v => typeof v === 'boolean')) return null;
-      return { version: saveVersion, puzzle, startingTrust: saved.startingTrust as number, trust, status, resolved, notes, markers, revealed };
+      return { version: saveVersion, puzzle, startingTrust: saved.startingTrust as number, trust: finalTrust, status, resolved, notes, markers, revealed };
     } catch { return null; }
   }
   function save() {
@@ -124,7 +124,7 @@
       const nextLabel = won && !cleared ? '次の事件へ →' : 'もう一度挑戦 →';
       $('dialog-next-case').textContent = nextLabel;
       result.className = `result ${won ? '' : 'lost'}`;
-      result.innerHTML = `<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${cleared ? '全5回の捜査完了！ ゲームクリア！' : won ? `捜査 ${p.round} / ${E.totalCases} 事件解決！` : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>${won && !cleared ? '次の捜査へ進みましょう。' : cleared ? `信用 ${state.trust}を残して、すべての事件を解決しました。` : `${p.round - 1} / ${E.totalCases}の事件を解決しました。最初から挑戦できます。`}</p><p>各カードの「真相と証言の照合」で振り返れます。</p><button class="primary-button" id="next-case">${nextLabel}</button>`;
+      result.innerHTML = `<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${cleared ? '全5回の捜査完了！ ゲームクリア！' : won ? `捜査 ${p.round} / ${E.totalCases} 事件解決！` : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。信用 ＋1。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '信用がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>${won && !cleared ? '次の捜査へ進みましょう。' : cleared ? `信用 ${state.trust}を残して、すべての事件を解決しました。` : `${p.round - 1} / ${E.totalCases}の事件を解決しました。最初から挑戦できます。`}</p><p>各カードの「真相と証言の照合」で振り返れます。</p><button class="primary-button" id="next-case">${nextLabel}</button>`;
       $('next-case').addEventListener('click', nextCase);
     }
     save();
@@ -221,12 +221,12 @@
     const judge = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-judge]');
     if (judge) {
       const i = Number(judge.dataset.index);
-      const reward = state.revealed[i] ? 1 : 2;
+      const reward = state.revealed[i] ? 0 : 1;
       const correct = E.judge(state, i);
       if (correct === null) return;
       if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
-      render(`${correct ? `✓ 正解です。信用 ＋${reward}。` : '× 誤判定。信用 −2。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
+      render(`${correct ? `✓ 正解です。${reward ? '信用 ＋1。' : '信用の増減はありません。'}` : '× 誤判定。信用 −2。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
       if (state.status !== 'playing') {
         showResultDialog();
         return;

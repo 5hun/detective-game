@@ -55,7 +55,7 @@ test('only criminals need judgment at every difficulty', () => {
     const criminals = s.puzzle.answer.flatMap((liar, i) => liar ? [i] : []);
     criminals.forEach((index, j) => {
       assert.equal(E.judge(s, index), true);
-      assert.equal(s.trust, 6 + j);
+      assert.equal(s.trust, j === criminals.length - 1 ? 6 : 5);
       assert.equal(s.status, j === criminals.length - 1 ? 'won' : 'playing');
       assert.equal(E.judge(s, index), null);
     });
@@ -74,13 +74,13 @@ test('three incorrect accusations lose and cannot be repeated', () => {
   });
   assert.equal(E.judge(s, s.puzzle.answer.indexOf(true)), null);
 });
-test('correct accusation recovers trust and a later mistake exhausts it exactly', () => {
+test('correct accusation after testimony does not recover trust', () => {
   const s = state('hard');
   const innocents = s.puzzle.answer.flatMap((liar, i) => liar ? [] : [i]);
   E.judge(s, innocents[0]);
   E.judge(s, innocents[1]);
   E.judge(s, s.puzzle.answer.indexOf(true));
-  assert.equal(s.trust, 2);
+  assert.equal(s.trust, 1);
   E.judge(s, innocents[2]);
   assert.equal(s.status, 'lost');
   assert.equal(s.trust, 0);
@@ -90,7 +90,7 @@ test('finding all criminals wins after an incorrect accusation', () => {
   E.judge(s, s.puzzle.answer.indexOf(false));
   s.puzzle.answer.forEach((liar, i) => { if (liar) E.judge(s, i); });
   assert.equal(s.status, 'won');
-  assert.equal(s.trust, 3 + s.puzzle.k);
+  assert.equal(s.trust, 4);
 });
 test('all statement polarities and count boundaries are evaluated correctly', () => {
   assert.equal(E.evaluate({ type:'count', targets:[0,1,2], value:0 }, [false,false,false]), true);
@@ -102,16 +102,16 @@ test('all statement polarities and count boundaries are evaluated correctly', ()
   assert.throws(() => E.generate(0, 'unknown' as Level));
 });
 
-test('correct arrest before hearing that testimony earns two trust', () => {
+test('correct arrest before hearing that testimony earns one trust', () => {
   const s = state('hard');
   const criminals = s.puzzle.answer.flatMap((liar, i) => liar ? [i] : []);
   s.revealed[criminals[0]] = false;
   assert.equal(E.judge(s, criminals[0]), true);
-  assert.equal(s.trust, 7);
+  assert.equal(s.trust, 6);
   assert.equal(E.judge(s, criminals[0]), null);
-  assert.equal(s.trust, 7);
+  assert.equal(s.trust, 6);
   assert.equal(E.judge(s, criminals[1]), true);
-  assert.equal(s.trust, 8);
+  assert.equal(s.trust, 6);
 });
 test('incorrect arrest before testimony still loses two trust', () => {
   const s = state();
