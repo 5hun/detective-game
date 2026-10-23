@@ -93,7 +93,7 @@
     const resolved = state.resolved[i]; const ended = state.status !== 'playing'; const liar = state.puzzle.answer[i];
     const portraitState = portraitStateFor(i);
     let actions;
-    if (resolved) actions = `<span class="resolved-tag ${resolved.correct ? '' : 'wrong'}">${resolved.correct ? '✓ 正解' : '× 誤判定'} · ${person.name}は${liar ? '犯人' : '善人'}</span>`;
+    if (resolved) actions = `<span class="resolved-tag ${resolved.correct ? '' : 'wrong'}">${resolved.correct ? '✅ 正解' : '❌ 誤判定'} · ${person.name}は${liar ? '犯人' : '善人'}</span>`;
     else if (state.status === 'won') actions = `<span class="resolved-tag revealed">✓ 善人と確定 · ${person.name}は善人</span>`;
     else if (ended) actions = `<span class="resolved-tag revealed">未判定 · 真相：${liar ? '犯人' : '善人'}</span>`;
     else actions = `<button class="judge liar" data-judge="liar" data-index="${i}" aria-label="${person.name}を犯人と判定"><span class="judge-icon" aria-hidden="true">😈</span><span>犯人と判定</span></button>`;
@@ -227,7 +227,7 @@
       if (correct === null) return;
       if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
-      render(`${correct ? `✓ 正解です。${reward ? '信用 ＋1。' : '信用の増減はありません。'}` : '× 誤判定。信用 −2。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
+      render(`${correct ? `✅ 正解です。${reward ? '信用 ＋1。' : '信用の増減はありません。'}` : '❌ 誤判定。信用 −2。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
       if (state.status !== 'playing') {
         showResultDialog();
         return;
