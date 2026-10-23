@@ -82,3 +82,20 @@ html{scroll-padding-top:calc(var(--menu-height,64px) + var(--summary-height,120p
 .judge-icon{font-size:18px;line-height:1;flex-shrink:0}
 
 @media(max-width:760px){.sidebar .new-case{grid-column:1/-1}.dialog-actions{flex-wrap:wrap}}
+
+/* Keep the pinned case information compact so testimony stays in view. */
+.case-summary{padding-top:9px;padding-bottom:9px}
+.summary-label{margin-bottom:2px}
+.case-status .feedback{min-height:36px;padding-top:6px;padding-bottom:6px}
+@media(orientation:landscape) and (max-height:540px){
+  .case-summary{grid-template-columns:1.5fr 1fr 1fr;gap:12px;padding:7px 12px}
+  .case-summary>div{display:flex;align-items:center;gap:10px;min-width:0}
+  .case-summary .summary-label{flex-shrink:0;margin:0;font-size:10px}
+  .progress-summary,.trust-summary{padding-left:12px}
+  .population strong{font-size:13px}
+  .slash{margin:0 4px}
+  .progress-summary strong,#trust-value{font-size:19px}
+  .trust-icon{font-size:20px;line-height:1.3}
+  .case-status .feedback{min-height:30px;padding-top:3px;padding-bottom:3px}
+  .testimony-nav{padding-bottom:6px}
+}
