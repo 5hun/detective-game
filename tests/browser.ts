@@ -5,6 +5,8 @@ import { pathToFileURL } from 'node:url';
 import path = require('node:path');
 import assert = require('node:assert/strict');
 async function setToggle(locator: Locator, enabled: boolean) {
+  const page = locator.page();
+  if (await page.locator('#game-menu').isHidden()) await page.locator('#menu-toggle').click();
   if ((await locator.getAttribute('aria-pressed')) !== String(enabled)) await locator.click();
 }
 async function baseText(locator: Locator) {
@@ -54,6 +56,13 @@ async function checkReadings(page: Page) {
   });
   await page.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
   await page.locator('.suspect').last().waitFor();
+  assert.ok(await page.locator('#game-menu').isHidden(), 'menu starts collapsed');
+  await page.locator('#menu-toggle').click();
+  assert.equal(await page.locator('#menu-toggle').getAttribute('aria-expanded'), 'true');
+  await page.keyboard.press('Escape');
+  assert.ok(await page.locator('#game-menu').isHidden(), 'Escape closes menu');
+  assert.ok(await page.locator('#menu-toggle').evaluate(button => button === document.activeElement));
+  await page.locator('#menu-toggle').click();
   assert.deepEqual(await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => button.id)),
     ['new-case', 'help-button', 'animals-button', 'sound-toggle', 'ruby-toggle']);
   assert.equal(await page.locator('.offline, .case-stamp, .preferences').count(), 0);
@@ -101,6 +110,7 @@ async function checkReadings(page: Page) {
   await setToggle(page.locator('#ruby-toggle'), false);
   assert.equal(await page.locator('ruby rt').first().isVisible(), false);
   await page.reload();
+  await page.locator('#menu-toggle').click();
   assert.equal((await page.locator('#ruby-toggle').getAttribute('aria-pressed')) === 'true', false);
   assert.equal(await page.locator('ruby rt').first().isVisible(), false);
   await setToggle(page.locator('#ruby-toggle'), true);
@@ -134,10 +144,12 @@ async function checkReadings(page: Page) {
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'muted testimony is silent');
   await setToggle(page.locator('#sound-toggle'), true);
   await page.reload();
+  await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('.statement').count(), 2);
   await page.locator('#memo-0').fill('<script>alert("memo")</script> メモ保存テスト');
   await page.locator('#person-0 [data-marker-value="1"]').click();
   await page.reload();
+  await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('#memo-0').inputValue(), '<script>alert("memo")</script> メモ保存テスト');
   assert.equal(await page.locator('#person-0').getAttribute('data-marker'), '1');
   await page.locator('#help-button').click();
@@ -167,6 +179,7 @@ async function checkReadings(page: Page) {
   assert.deepEqual(await page.evaluate(() => window.playedTones), []);
   await setToggle(page.locator('#sound-toggle'), false);
   await page.reload();
+  await page.locator('#menu-toggle').click();
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', false);
   assert.equal(await baseText(page.locator('#case-title')), storyTitle);
   assert.equal(await baseText(page.locator('#case-description')), storyDescription);
@@ -204,6 +217,7 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('.truth-detail').count(), 5);
   await checkReadings(page);
   await page.reload();
+  await page.locator('#menu-toggle').click();
   assert.ok(await page.locator('#result').isVisible());
   assert.equal(await page.locator('#trust-value').textContent(), '7');
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
@@ -236,6 +250,7 @@ async function checkReadings(page: Page) {
   assert.ok((await baseText(page.locator('#result'))).includes('信用がなくなりました'));
   assert.equal(await page.locator('[data-judge]').count(), 0);
   await page.reload();
+  await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('#trust-value').textContent(), '0');
   assert.ok(await page.locator('#result').isVisible());
   await page.locator('#next-case').click();
@@ -249,8 +264,7 @@ async function checkReadings(page: Page) {
       assert.ok(menu);
     const brand = await page.locator('.brand').boundingBox();
       assert.ok(brand);
-    if (width > 760) assert.ok(menu.x > brand.x + brand.width, 'desktop menu shares brand row');
-    else assert.ok(menu.y >= brand.y + brand.height, 'mobile menu wraps below brand');
+    assert.ok(menu.y >= brand.y + brand.height, 'expanded menu appears below brand');
     const menuButtons = await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => { const box = button.getBoundingClientRect(); return box.top + box.height / 2; }));
     assert.ok(menuButtons.every(top => Math.abs(top - menuButtons[0]) < 1), 'all five menu controls share one center line');
     const textButton = await page.locator('#help-button').boundingBox();
@@ -314,6 +328,7 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('.suspect').count(), 4);
   await page.evaluate(() => localStorage.setItem('beast-detective-v1', '{bad json'));
   await page.reload();
+  await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('.suspect').count(), 5);
   const invalidSave = await browser.newPage();
   await invalidSave.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);

@@ -157,6 +157,19 @@
     document.documentElement.style.setProperty('--summary-height', `${summary.getBoundingClientRect().height}px`);
   }).observe(summary);
   const menu = document.querySelector<HTMLElement>('.masthead')!;
+  const menuToggle = $('menu-toggle');
+  const gameMenu = $('game-menu');
+  function setMenuOpen(open: boolean) {
+    menuToggle.setAttribute('aria-expanded', String(open));
+    gameMenu.hidden = !open;
+  }
+  menuToggle.addEventListener('click', () => setMenuOpen(gameMenu.hidden));
+  menu.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !gameMenu.hidden) {
+      setMenuOpen(false);
+      menuToggle.focus({ preventScroll: true });
+    }
+  });
   new ResizeObserver(() => {
     document.documentElement.style.setProperty('--menu-height', `${menu.getBoundingClientRect().height}px`);
   }).observe(menu);
