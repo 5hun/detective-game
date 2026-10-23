@@ -4,6 +4,9 @@ const { chromium }: typeof import('playwright') = require(process.env.PLAYWRIGHT
 import { pathToFileURL } from 'node:url';
 import path = require('node:path');
 import assert = require('node:assert/strict');
+async function openMenu(page: Page) {
+  if (await page.locator('#game-menu').isHidden()) await page.locator('#menu-toggle').click();
+}
 async function setToggle(locator: Locator, enabled: boolean) {
   const page = locator.page();
   if (await page.locator('#game-menu').isHidden()) await page.locator('#menu-toggle').click();
@@ -126,6 +129,7 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('.suspect').count(), 5);
   assert.deepEqual(await page.locator('#person-0 .judge-icon').allTextContents(), ['😈']);
   assert.equal(await page.locator('.detective-scene, .detective-name, .mobile-detective').count(), 0);
+  await openMenu(page);
   await page.locator('#animals-button').click();
   assert.equal(await page.locator('.animal-entry').count(), 8);
   assert.ok(await page.locator('.portrait').evaluateAll(portraits =>
@@ -152,14 +156,17 @@ async function checkReadings(page: Page) {
   await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('#memo-0').inputValue(), '<script>alert("memo")</script> メモ保存テスト');
   assert.equal(await page.locator('#person-0').getAttribute('data-marker'), '1');
+  await openMenu(page);
   await page.locator('#help-button').click();
   assert.ok(await page.locator('#help-dialog').isVisible());
   await page.keyboard.press('Escape');
+  await openMenu(page);
   await page.locator('#new-case').click();
   assert.ok(await page.locator('#new-dialog').isVisible());
   assert.equal(await page.locator('#difficulty').inputValue(), 'normal');
   await page.locator('#difficulty').selectOption('hard');
   await page.locator('[data-close="new-dialog"]').click();
+  await openMenu(page);
   await page.locator('#new-case').click();
   assert.equal(await page.locator('#difficulty').inputValue(), 'normal');
   await page.keyboard.press('Escape');
@@ -223,6 +230,7 @@ async function checkReadings(page: Page) {
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', true);
   assert.equal(await page.locator('#person-0 .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');
+  await openMenu(page);
   await page.locator('#new-case').click();
   await page.locator('#difficulty').selectOption('hard');
   await page.locator('#confirm-new').click();
@@ -260,13 +268,23 @@ async function checkReadings(page: Page) {
   for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `overflow at ${width}`);
+    await openMenu(page);
     const menu = await page.locator('.header-right').boundingBox();
       assert.ok(menu);
     const brand = await page.locator('.brand').boundingBox();
       assert.ok(brand);
     assert.ok(menu.y >= brand.y + brand.height, 'expanded menu appears below brand');
-    const menuButtons = await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => { const box = button.getBoundingClientRect(); return box.top + box.height / 2; }));
-    assert.ok(menuButtons.every(top => Math.abs(top - menuButtons[0]) < 1), 'all five menu controls share one center line');
+    const menuButtons = await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => { const box = button.getBoundingClientRect(); return { top: box.top, bottom: box.bottom, left: box.left, width: box.width }; }));
+    assert.ok(menuButtons.every((box, i) => i === 0 || box.top >= menuButtons[i - 1].bottom), 'each menu button occupies its own row');
+    assert.ok(menuButtons.every(box => Math.abs(box.left - menuButtons[0].left) < 1 && Math.abs(box.width - menuButtons[0].width) < 1), 'menu buttons share column width');
+    const expandedHeader = await page.locator('.masthead').boundingBox();
+    const expandedContent = await page.locator('.title-row').boundingBox();
+    await page.locator('#menu-toggle').click();
+    const collapsedHeader = await page.locator('.masthead').boundingBox();
+    const collapsedContent = await page.locator('.title-row').boundingBox();
+    assert.equal(expandedHeader?.height, collapsedHeader?.height, 'overlay does not expand header');
+    assert.equal(expandedContent?.y, collapsedContent?.y, 'overlay does not push page content down');
+    await page.locator('#menu-toggle').click();
     const textButton = await page.locator('#help-button').boundingBox();
       assert.ok(textButton);
     const iconButton = await page.locator('#sound-toggle').boundingBox();
@@ -303,7 +321,8 @@ async function checkReadings(page: Page) {
       if (width === 390 && rubyEnabled) await page.screenshot({ path: '/tmp/detective-sticky-summary.png' });
     }
     await setToggle(page.locator('#ruby-toggle'), true);
-    await page.locator('#help-button').click();
+    await openMenu(page);
+  await page.locator('#help-button').click();
     assert.ok(await page.locator('#help-dialog').isVisible());
     await page.keyboard.press('Escape');
   }

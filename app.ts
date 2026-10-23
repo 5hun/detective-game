@@ -164,6 +164,9 @@
     gameMenu.hidden = !open;
   }
   menuToggle.addEventListener('click', () => setMenuOpen(gameMenu.hidden));
+  document.addEventListener('click', event => {
+    if (!menu.contains(event.target as Node)) setMenuOpen(false);
+  });
   menu.addEventListener('keydown', event => {
     if (event.key === 'Escape' && !gameMenu.hidden) {
       setMenuOpen(false);
