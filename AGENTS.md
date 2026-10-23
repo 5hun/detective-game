@@ -1,1 +1,2 @@
 - Run `git commit` after editing files.
+- Build the project after editing files.
