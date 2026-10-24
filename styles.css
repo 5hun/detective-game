@@ -175,3 +175,16 @@ html{scroll-padding-top:calc(var(--menu-height,64px) + var(--summary-height,120p
 .resolved-tag.unjudged{background:#ecece1;color:#75816c}
 .resolved-tag .identity-good{color:#56804a;font-weight:700}
 .resolved-tag .identity-liar{color:#a03e32;font-weight:700}
+
+/* Keep the forest faint and anchored to the bottom of the viewport. */
+body{min-height:100vh;isolation:isolate}
+body::before{
+  content:"";
+  position:fixed;
+  inset:auto 0 0;
+  height:min(70vh,720px);
+  z-index:-1;
+  background:url("assets/forest-background.png") center bottom / cover no-repeat;
+  opacity:.18;
+  pointer-events:none;
+}
