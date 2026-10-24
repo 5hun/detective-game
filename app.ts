@@ -149,6 +149,9 @@
     const content = $('result-dialog-content');
     const resultCopy = $('result').cloneNode(true) as HTMLElement;
     resultCopy.querySelector('#next-case')!.remove();
+    const eyebrow = resultCopy.querySelector('.eyebrow')!;
+    $('result-dialog-eyebrow').textContent = eyebrow.textContent;
+    eyebrow.remove();
     resultCopy.querySelector('h2')!.id = 'result-dialog-title';
     content.replaceChildren(...resultCopy.childNodes);
     $('result-dialog').classList.toggle('lost', state.status === 'lost');

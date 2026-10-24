@@ -50,7 +50,8 @@ html{scroll-padding-top:calc(var(--summary-height,120px) + 12px)}
 #result-dialog.lost{border-color:#cbb5a2;background:#f8eee6}
 #result-dialog .dialog-actions{flex-wrap:wrap}
 
-#result-dialog .dialog-heading{justify-content:flex-end}
+#result-dialog .dialog-heading{gap:12px}
+#result-dialog .close-button{flex-shrink:0}
 
 /* Pin the header and show game actions in an overlay below it. */
 .masthead{position:sticky;top:0;z-index:20;height:auto;min-height:64px;flex-wrap:wrap;gap:8px 24px;padding-top:6px;padding-bottom:6px}
