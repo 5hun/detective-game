@@ -84,7 +84,8 @@
   function save() {
     try { localStorage.setItem(key, JSON.stringify(state)); storageAvailable = true; }
     catch { storageAvailable = false; }
-    $('save-status').textContent = storageAvailable ? '捜査状況は自動保存されます' : 'この環境では保存できません（現在の画面では遊べます）';
+    $('save-status').hidden = storageAvailable;
+    $('save-status').textContent = storageAvailable ? '' : 'この環境では保存できません（現在の画面では遊べます）';
     addReadings();
   }
   function portraitStateFor(i: number) {
