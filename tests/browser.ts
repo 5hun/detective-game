@@ -227,9 +227,9 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('#difficulty').inputValue(), 'normal');
   await page.keyboard.press('Escape');
   assert.ok((await page.locator('#memo-0').inputValue()).includes('メモ保存テスト'));
-  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 5');
+  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り捜査資金 5');
   assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), '5');
-  assert.equal(await page.locator('.trust-icon').textContent(), '☆');
+  assert.equal(await page.locator('.trust-icon').textContent(), '🪙');
   const storyTitle = await baseText(page.locator('#case-title'));
   const storyDescription = await baseText(page.locator('#case-description'));
   const expectedStory = await page.evaluate(() => {
@@ -256,7 +256,7 @@ async function checkReadings(page: Page) {
       const feedback = await page.locator('#feedback').boundingBox();
       assert.ok(feedback);
       assert.ok(feedback.y >= 0 && feedback.y + feedback.height <= 1100, 'judgment message stays in viewport');
-      assert.ok((await baseText(page.locator('#feedback'))).includes(`正解です。${i < 2 ? '信用の増減はありません。' : '信用 ＋1。'}`));
+      assert.ok((await baseText(page.locator('#feedback'))).includes(`正解です。${i < 2 ? '捜査資金の増減はありません。' : '捜査資金 ＋1。'}`));
     }
     if (step === 0) {
       assert.deepEqual(await page.evaluate(() => window.playedTones), []);
@@ -307,14 +307,14 @@ async function checkReadings(page: Page) {
       await page.locator(`#person-${i} .portrait-box`).evaluate(el => getComputedStyle(el).backgroundColor));
     assert.equal(await page.locator(`#person-${i} .jail-bar`).count(), 0);
     assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(Math.max(0, 3 - 2 * step)));
-    assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り信用 ${Math.max(0, 3 - 2 * step)}`);
+    assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り捜査資金 ${Math.max(0, 3 - 2 * step)}`);
     assert.deepEqual(await page.evaluate(() => window.playedRecordings.splice(0)), ['assets/sounds/incorrect2.mp3']);
   }
   assert.ok(await page.locator('#result-dialog').isVisible());
-  assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('信用がなくなりました'));
+  assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('捜査資金がなくなりました'));
   await page.keyboard.press('Escape');
   assert.equal(await page.locator('#result-dialog').isVisible(), false);
-  assert.ok((await baseText(page.locator('#result'))).includes('信用がなくなりました'));
+  assert.ok((await baseText(page.locator('#result'))).includes('捜査資金がなくなりました'));
   assert.equal(await page.locator('[data-judge]').count(), 0);
   await page.reload();
   await page.locator('#menu-toggle').click();
@@ -510,15 +510,15 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('.testimony-targets').count(), 8);
   await checkReadings(page);
   await page.locator(`[data-reveal="${paidIndices[0]}"]`).click();
-  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 1');
+  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り捜査資金 1');
   assert.ok(await page.locator(`[data-reveal="${paidIndices[1]}"]`).isDisabled());
   await page.reload();
   assert.ok(await page.locator(`#statement-${paidIndices[0]} .statement`).isVisible());
-  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 1');
+  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り捜査資金 1');
   assert.ok(await page.locator(`[data-reveal="${paidIndices[1]}"]`).isDisabled());
   const freeIndex = await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.testimonyCosts.indexOf(0));
   await page.locator(`[data-reveal="${freeIndex}"]`).click();
-  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 1');
+  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り捜査資金 1');
   const blocked = await browser.newPage();
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
   await blocked.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
