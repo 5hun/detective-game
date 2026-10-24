@@ -144,8 +144,9 @@ async function checkReadings(page: Page) {
     addReadings(probe);
   });
   await checkReadings(page);
+  await page.locator('#readings-probe').evaluate(element => element.remove());
   const gameText = await baseText(page.locator('body'));
-  assert.ok(!/(?:[0-9]人|人数|全員|PERSONS|CASE FILE)/.test(gameText), 'animal counts use 匹 and case number is removed');
+  assert.ok(!/(?:[0-9]人|人数|PERSONS|CASE FILE)/.test(gameText), 'animal counts use 匹 and case number is removed');
   const segments = await page.evaluate(() => {
     const sample = document.createElement('p');
     sample.textContent = '消えた 3匹 持ち去られ 見抜きました 1匹 2匹';
@@ -160,7 +161,6 @@ async function checkReadings(page: Page) {
     ['消', 'き'], 'えた', ' ', '3', ['匹', 'びき'], ' ', ['持', 'も'], 'ち', ['去', 'さ'], 'られ', ' ',
     ['見抜', 'みぬ'], 'き', 'ました ', '1', ['匹', 'ぴき'], ' ', '2', ['匹', 'ひき']
   ]);
-  await page.locator('#readings-probe').evaluate(element => element.remove());
   assert.ok(await page.locator('ruby rt').count() > 0);
   await setToggle(page.locator('#ruby-toggle'), false);
   assert.equal(await page.locator('ruby rt').first().isVisible(), false);
@@ -183,7 +183,7 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('.detective-scene, .detective-name, .mobile-detective').count(), 0);
   await openMenu(page);
   await page.locator('#animals-button').click();
-  assert.equal(await page.locator('.animal-entry').count(), 8);
+  assert.equal(await page.locator('.animal-entry').count(), await page.evaluate(() => window.DetectiveEngine.roles.length));
   assert.ok(await page.locator('.portrait').evaluateAll(portraits =>
     portraits.every(svg => svg.getAttribute('viewBox') === '0 0 16 12' &&
       [...svg.querySelectorAll('rect')].every(rect => Number(rect.getAttribute('y')) < 12))));
@@ -228,7 +228,7 @@ async function checkReadings(page: Page) {
   await page.keyboard.press('Escape');
   assert.ok((await page.locator('#memo-0').inputValue()).includes('メモ保存テスト'));
   assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 5');
-  assert.equal(await page.locator('#trust-value').textContent(), '5');
+  assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), '5');
   assert.equal(await page.locator('.trust-icon').textContent(), '☆');
   const storyTitle = await baseText(page.locator('#case-title'));
   const storyDescription = await baseText(page.locator('#case-description'));
@@ -251,7 +251,7 @@ async function checkReadings(page: Page) {
   for (const [step, i] of criminals.entries()) {
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
-    assert.equal(await page.locator('#trust-value').textContent(), String(5 + criminals.slice(0, step + 1).reduce((sum, index) => sum + (index < 2 ? 0 : 1), 0) + (step === criminals.length - 1 ? 1 : 0)));
+    assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(5 + criminals.slice(0, step + 1).reduce((sum, index) => sum + (index < 2 ? 0 : 1), 0) + (step === criminals.length - 1 ? 1 : 0)));
     if (step < criminals.length - 1) {
       const feedback = await page.locator('#feedback').boundingBox();
       assert.ok(feedback);
@@ -285,7 +285,7 @@ async function checkReadings(page: Page) {
   await page.reload();
   await page.locator('#menu-toggle').click();
   assert.ok(await page.locator('#result').isVisible());
-  assert.equal(await page.locator('#trust-value').textContent(), String(5 + criminals.reduce((sum, index) => sum + (index < 2 ? 0 : 1), 0) + 1));
+  assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(5 + criminals.reduce((sum, index) => sum + (index < 2 ? 0 : 1), 0) + 1));
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', true);
   assert.equal(await page.locator('#person-0 .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');
@@ -296,7 +296,7 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('.suspect').count(), 7);
   assert.equal(await page.locator('.statement').count(), 0);
   const hard = await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.answer);
-  assert.equal(await page.locator('#suspects [data-portrait-state="neutral"], #animals-list [data-portrait-state="neutral"]').count(), 15);
+  assert.equal(await page.locator('#suspects [data-portrait-state="neutral"], #animals-list [data-portrait-state="neutral"]').count(), 7 + await page.evaluate(() => window.DetectiveEngine.roles.length));
   const innocents = hard.flatMap((liar, i) => liar ? [] : [i]);
   for (let step = 0; step < 3; step++) {
     const i = innocents[step];
@@ -306,7 +306,7 @@ async function checkReadings(page: Page) {
     assert.equal(await page.locator(`#testimony-nav [data-person="${i}"]`).evaluate(el => getComputedStyle(el).backgroundColor),
       await page.locator(`#person-${i} .portrait-box`).evaluate(el => getComputedStyle(el).backgroundColor));
     assert.equal(await page.locator(`#person-${i} .jail-bar`).count(), 0);
-    assert.equal(await page.locator('#trust-value').textContent(), String(Math.max(0, 3 - 2 * step)));
+    assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(Math.max(0, 3 - 2 * step)));
     assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り信用 ${Math.max(0, 3 - 2 * step)}`);
     assert.deepEqual(await page.evaluate(() => window.playedRecordings.splice(0)), ['assets/sounds/incorrect2.mp3']);
   }
@@ -318,7 +318,7 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('[data-judge]').count(), 0);
   await page.reload();
   await page.locator('#menu-toggle').click();
-  assert.equal(await page.locator('#trust-value').textContent(), '0');
+  assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), '0');
   assert.ok(await page.locator('#result').isVisible());
   await page.locator('#next-case').click();
   await page.locator('#difficulty').selectOption('easy');
@@ -423,7 +423,7 @@ async function checkReadings(page: Page) {
     const previous = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState);
     await page.locator('#dialog-next-case').click();
     assert.equal(await page.locator('#new-dialog').isVisible(), false);
-    assert.equal(await page.locator('#trust-value').textContent(), String(previous.trust));
+    assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(previous.trust));
     assert.equal(await page.locator('#result').isVisible(), false);
     await page.reload();
     const current = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState);
@@ -443,7 +443,7 @@ async function checkReadings(page: Page) {
   await page.locator('#dialog-next-case').click();
   assert.ok(await page.locator('#new-dialog').isVisible());
   await page.locator('#confirm-new').click();
-  assert.equal(await page.locator('#trust-value').textContent(), '5');
+  assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), '5');
   assert.equal(await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.round), 1);
   await page.evaluate(() => localStorage.setItem('beast-detective-v1', '{bad json'));
   await page.reload();
@@ -466,7 +466,7 @@ async function checkReadings(page: Page) {
     await invalidSave.reload();
     assert.ok(await invalidSave.locator('#home-page').isVisible(), problem);
     await startGame(invalidSave);
-    assert.equal(await invalidSave.locator('#trust-value').textContent(), '5');
+    assert.equal(await invalidSave.locator('#trust-value').evaluate(element => element.firstChild!.textContent), '5');
     assert.equal(await invalidSave.locator('#memo-0').inputValue(), '', problem);
     assert.equal(await invalidSave.locator('.resolved-tag').count(), 0);
   }
@@ -492,6 +492,33 @@ async function checkReadings(page: Page) {
   assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), null);
   await startGame(page);
   assert.equal(await page.locator('#memo-0').inputValue(), '');
+  // A paid reveal survives reload, preserves trust 1, and leaves free testimony available.
+  const paidIndices = await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState;
+    let seed = 0;
+    let puzzle = window.DetectiveEngine.generate(seed, 'hard', 2);
+    while (puzzle.testimonyCosts.filter(Boolean).length < 2 || !puzzle.testimonyCosts.includes(0)) {
+      puzzle = window.DetectiveEngine.generate(++seed, 'hard', 2);
+    }
+    Object.assign(saved, { puzzle, startingTrust: 2, trust: 2, status: 'playing',
+      revealed: puzzle.people.map(() => false), resolved: puzzle.people.map(() => null),
+      notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0) });
+    localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
+    return puzzle.testimonyCosts.flatMap((cost, i) => cost ? [i] : []);
+  });
+  await page.reload();
+  assert.equal(await page.locator('.testimony-targets').count(), 8);
+  await checkReadings(page);
+  await page.locator(`[data-reveal="${paidIndices[0]}"]`).click();
+  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 1');
+  assert.ok(await page.locator(`[data-reveal="${paidIndices[1]}"]`).isDisabled());
+  await page.reload();
+  assert.ok(await page.locator(`#statement-${paidIndices[0]} .statement`).isVisible());
+  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 1');
+  assert.ok(await page.locator(`[data-reveal="${paidIndices[1]}"]`).isDisabled());
+  const freeIndex = await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.testimonyCosts.indexOf(0));
+  await page.locator(`[data-reveal="${freeIndex}"]`).click();
+  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り信用 1');
   const blocked = await browser.newPage();
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
   await blocked.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);

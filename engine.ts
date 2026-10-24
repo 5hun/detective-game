@@ -74,7 +74,8 @@ var DetectiveEngine = (function () {
       if (!valid.length) throw new Error('No valid statement for this role');
       return valid[Math.floor(rng() * valid.length)];
     });
-    return { seed: seed >>> 0, level, round, k, people, statements, answer };
+    const testimonyCosts = people.map(() => n >= 7 && rng() < 0.25 ? 1 : 0);
+    return { seed: seed >>> 0, level, round, k, people, statements, testimonyCosts, answer };
   }
   function statementText(s: Statement, people: Person[]) {
     const names = s.targets.map(i => people[i].name); const [a, b] = names; const list = names.join('、');
@@ -91,6 +92,14 @@ var DetectiveEngine = (function () {
       case 'majority': return `${list}の3匹のうち、犯人は${s.value ? '2匹以上' : '1匹以下'}だ。`;
     }
   }
+  function reveal(state: JudgmentState, index: number) {
+    if (state.status !== 'playing' || !Number.isInteger(index) || index < 0 || index >= state.puzzle.people.length || state.revealed[index]) return false;
+    const cost = state.puzzle.testimonyCosts[index];
+    if (state.trust <= cost) return false;
+    state.trust -= cost;
+    state.revealed[index] = true;
+    return true;
+  }
   const initialTrust = 5;
   function judge(state: JudgmentState, index: number) {
     if (state.status !== 'playing' || state.resolved[index] !== null) return null;
@@ -105,7 +114,7 @@ var DetectiveEngine = (function () {
     }
     return correct;
   }
-  const api = { totalCases, caseConfig, initialTrust, roles, caseStories, levels, generate, solve, evaluate, statementText, assignments, judge };
+  const api = { totalCases, caseConfig, initialTrust, roles, caseStories, levels, generate, solve, evaluate, statementText, assignments, judge, reveal };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   return api;
 })();

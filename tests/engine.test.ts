@@ -178,3 +178,42 @@ test('five-case campaigns grow in size and preserve valid testimony at every sta
   }
   for (const round of [0, 6, 1.5, NaN]) assert.throws(() => E.generate(1, 'normal', round));
 });
+
+
+test('testimony costs apply randomly to all roles only from seven animals onward', () => {
+  const paidRoles = new Set<string>();
+  for (const level of ['easy', 'normal', 'hard'] as Level[]) {
+    for (let round = 1; round <= E.totalCases; round++) {
+      for (let seed = 0; seed < 100; seed++) {
+        const p = E.generate(seed, level, round);
+        assert.equal(p.testimonyCosts.length, p.people.length);
+        p.testimonyCosts.forEach((cost, i) => {
+          assert.ok(cost === 0 || cost === 1);
+          if (p.people.length < 7) assert.equal(cost, 0);
+          if (cost) paidRoles.add(p.people[i].id);
+        });
+      }
+    }
+  }
+  assert.equal(paidRoles.size, E.roles.length);
+});
+
+test('paid testimony preserves the last trust point and charges only once', () => {
+  const s = state('hard');
+  s.revealed.fill(false);
+  s.puzzle.testimonyCosts[0] = 1;
+  s.puzzle.testimonyCosts[1] = 0;
+  s.trust = 1;
+  assert.equal(E.reveal(s, 0), false);
+  assert.equal(s.revealed[0], false);
+  assert.equal(E.reveal(s, 1), true);
+  assert.equal(s.trust, 1);
+  s.trust = 2;
+  assert.equal(E.reveal(s, 0), true);
+  assert.equal(s.trust, 1);
+  assert.equal(E.reveal(s, 0), false);
+  assert.equal(s.trust, 1);
+  s.status = 'won';
+  assert.equal(E.reveal(s, 2), false);
+  assert.equal(E.reveal(s, -1), false);
+});
