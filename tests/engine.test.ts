@@ -70,7 +70,7 @@ test('three incorrect accusations lose and cannot be repeated', () => {
   const innocents = s.puzzle.answer.flatMap((liar, i) => liar ? [] : [i]);
   innocents.slice(0, 3).forEach((index, j) => {
     assert.equal(E.judge(s, index), false);
-    assert.equal(s.trust, [3, 1, 0][j]);
+    assert.equal(s.trust, [3, 1, -1][j]);
     assert.equal(s.status, j === 2 ? 'lost' : 'playing');
     assert.equal(E.judge(s, index), null);
   });
@@ -85,7 +85,7 @@ test('correct accusation after testimony does not recover trust', () => {
   assert.equal(s.trust, 1);
   E.judge(s, innocents[2]);
   assert.equal(s.status, 'lost');
-  assert.equal(s.trust, 0);
+  assert.equal(s.trust, -1);
 });
 test('finding all criminals wins after an incorrect accusation', () => {
   const s = state();
@@ -203,34 +203,45 @@ test('paid testimony appears only in later hard cases with bounded costs', () =>
   assert.equal(paidRoles.size, E.roles.length);
 });
 
-test('paid testimony preserves the last trust point and charges only once', () => {
-  const s = state('hard');
-  s.revealed.fill(false);
-  s.puzzle.testimonyCosts[0] = 1;
-  s.puzzle.testimonyCosts[1] = 0;
-  s.trust = 1;
-  assert.equal(E.reveal(s, 0), false);
-  assert.equal(s.revealed[0], false);
-  assert.equal(E.reveal(s, 1), true);
-  assert.equal(s.trust, 1);
-  s.trust = 2;
-  assert.equal(E.reveal(s, 0), true);
-  assert.equal(s.trust, 1);
-  assert.equal(E.reveal(s, 0), false);
-  assert.equal(s.trust, 1);
-  s.status = 'won';
-  assert.equal(E.reveal(s, 2), false);
-  assert.equal(E.reveal(s, -1), false);
+test('paid testimony allows zero funds, rejects insufficient funds, and charges once', () => {
+  for (const cost of [1, 2]) {
+    const s = state('hard');
+    s.revealed.fill(false);
+    s.puzzle.testimonyCosts[0] = cost;
+    s.puzzle.testimonyCosts[1] = 0;
+    s.puzzle.testimonyCosts[2] = 1;
+    s.trust = cost - 1;
+    assert.equal(E.reveal(s, 0), false);
+    assert.equal(s.revealed[0], false);
+    s.trust = cost;
+    assert.equal(E.reveal(s, 0), true);
+    assert.equal(s.trust, 0);
+    assert.equal(s.status, 'playing');
+    assert.equal(E.reveal(s, 0), false);
+    assert.equal(E.reveal(s, 2), false);
+    assert.equal(E.reveal(s, 1), true);
+    assert.equal(s.trust, 0);
+    s.status = 'won';
+    assert.equal(E.reveal(s, 3), false);
+    assert.equal(E.reveal(s, -1), false);
+  }
 });
 
-test('two-cost testimony requires three funds and charges once', () => {
+test('zero funds allow continued investigation and case completion', () => {
   const s = state('hard');
-  s.revealed.fill(false);
-  s.puzzle.testimonyCosts[0] = 2;
   s.trust = 2;
-  assert.equal(E.reveal(s, 0), false);
-  s.trust = 3;
-  assert.equal(E.reveal(s, 0), true);
+  E.judge(s, s.puzzle.answer.indexOf(false));
+  assert.equal(s.trust, 0);
+  assert.equal(s.status, 'playing');
+  s.puzzle.answer.forEach((liar, i) => { if (liar) E.judge(s, i); });
+  assert.equal(s.status, 'won');
   assert.equal(s.trust, 1);
-  assert.equal(E.reveal(s, 0), false);
+});
+
+test('an incorrect accusation at zero funds ends the investigation', () => {
+  const s = state();
+  s.trust = 0;
+  E.judge(s, s.puzzle.answer.indexOf(false));
+  assert.equal(s.trust, -2);
+  assert.equal(s.status, 'lost');
 });

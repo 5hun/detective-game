@@ -115,7 +115,7 @@ var DetectiveEngine = (function () {
   function reveal(state: JudgmentState, index: number) {
     if (state.status !== 'playing' || !Number.isInteger(index) || index < 0 || index >= state.puzzle.people.length || state.revealed[index]) return false;
     const cost = state.puzzle.testimonyCosts[index];
-    if (state.trust <= cost) return false;
+    if (state.trust < cost) return false;
     state.trust -= cost;
     state.revealed[index] = true;
     return true;
@@ -126,8 +126,8 @@ var DetectiveEngine = (function () {
     const correct = state.puzzle.answer[index] === true;
     const reward = correct ? (state.revealed[index] ? 0 : 1) : -2;
     state.resolved[index] = { correct, guess: true, reward };
-    state.trust = Math.max(0, state.trust + reward);
-    if (state.trust === 0) state.status = 'lost';
+    state.trust += reward;
+    if (state.trust < 0) state.status = 'lost';
     else if (state.puzzle.answer.every((liar, i) => !liar || state.resolved[i] !== null)) {
       state.status = 'won';
       state.trust += 1;
