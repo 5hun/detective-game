@@ -8,7 +8,7 @@ var DetectiveEngine = (function () {
     { id: 'cat', name: 'ネコ', job: '情報屋', rule: '指定した2匹に少なくとも1匹、犯人がいるかを証言する。', type: 'any' },
     { id: 'wolf', name: 'オオカミ', job: '見張り', rule: '指定した2匹が両方とも犯人かを証言する。', type: 'both' },
     { id: 'bear', name: 'クマ', job: '帳簿係', rule: '指定した3匹の犯人の数が奇数か偶数かを証言する。', type: 'parity' },
-    { id: 'raccoon', name: 'アライグマ', job: '仲介人', rule: '「Aが犯人で、Bが善人」という組み合わせかを証言する。', type: 'ordered' },
+    { id: 'pig', name: 'ブタ', job: '仲介人', rule: '「Aが犯人で、Bが善人」という組み合わせかを証言する。', type: 'ordered' },
     { id: 'frog', name: 'カエル', job: '調査員', rule: '指定した3匹の中に犯人が2匹以上いるかを証言する。', type: 'majority' },
     { id: 'dog', name: 'イヌ', job: '比較係', rule: '自分より小さい番号と大きい番号で、犯人が多い側か同数かを証言する。自分は数に含めない。', type: 'balance' },
     { id: 'deer', name: 'シカ', job: '観察係', rule: '指定した3匹が全員同じ立場か、犯人と善人が混ざっているかを証言する。', type: 'allSame' }

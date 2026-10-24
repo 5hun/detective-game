@@ -9,7 +9,7 @@
     cat: ['..aa........aa..','..aba......aba..','..abba....abba..','..aaaaaaaaaaaa..','..aaaaaaaaaaaa..','..aacaaaaaacaa..','..aacaaaaaacaa..','...aaaddeaaa....','..ddaddffddadd..','....adddddda....','.....aaaaaa.....','......aaaa......'],
     wolf: ['..aaa......aaa..','..abaa....aaba..','..abaaa..aaaba..','..aaaaaaaaaaaa..','...aaaaaaaaaa...','..aacaaaaaacaa..','..aacaaaaaacaa..','...aaddddaa a...'.replace(' ',''),'...adddeeddda...','....dddffddd....','.....dddddd.....','......aaaa......'],
     bear: ['...aaa....aaa...','..abbaa..aabba..','..abaaaaaaaa ba..'.replace(' ',''),'...aaaaaaaaaa...','..aaaaaaaaaaaa..','..aacaaaaaacaa..','..aacaaaaaacaa..','..aaadddddaaaa..','...adddeeddda...','...adddffddda...','....aaaaaaaa....','.....aaaaaa.....'],
-    raccoon: ['...aa......aa...','..abba....abba..','..abbaaaaaabba..','...aaaaaaaaaa...','..aaaaaaaaaaaa..','..affaaaaaaffa..','..affcaaacaffa..','..affcaaacaffa..','...adddeeddda...','....dddffddd....','.....aaaaaa.....','......aaaa......'],
+    pig: ['..aa........aa..','..abaa....aaba..','..abbaaaaaabba..','...aaaaaaaaaa...','..aaaaaaaaaaaa..','..aacaaaaaacaa..','..aacaaaaaacaa..','..aaaddddddaaa..','..aaadeddedaaa..','...aaddddddaa...','....aaaffaaa....','.....aaaaaa.....'],
     frog: ['................','...aaaa..aaaa...','..adddaaadddaa..','..adccaaaccdaa..','..adccaaaccdaa..','..aaaaaaaaaaaa..','.aaaaaaaaaaaaaa.','.aaaaaaaaaaaaaa.','..aaaffffffaaa..','...aaddddddaa...','....aaaaaaaa....','.....aaaaaa.....'],
     gorilla: ['.....aaaaaa.....','....aaaaaaaa....','...aaaaaaaaaa...','..aaaaaaaaaaaa..','..aaddddddddaa..','.aaddddddddddaa.','.aadccddddccdaa.','.aadccddddccdaa.','.aadddeeeedddaa.','..aaddddddddaa..','..aaddffffddaa..','...aaddddddaa...']
   };
@@ -17,7 +17,7 @@
     dog: ['#e3caa0','#cda878','#f3e5cd'], deer: ['#b88b57','#e0bb89','#f1ddba'],
     fox: ['#c87c43','#f1b67a','#f4dfaf'], rabbit: ['#dac7aa','#c9958b','#f1e4d2'], owl: ['#92765a','#b59872','#e6d6b1'],
     cat: ['#c5a46b','#d48c80','#e8d6ad'], wolf: ['#82979c','#b8c7c6','#dce3d9'], bear: ['#987055','#c69878','#ccb48c'],
-    raccoon: ['#9a9d92','#beb8a3','#d5d4bc'], frog: ['#86a175','#abc286','#c4d39f'], gorilla: ['#4c5658','#74807e','#a2aba3']
+    pig: ['#efbdba','#d9949a','#d98d98'], frog: ['#86a175','#abc286','#c4d39f'], gorilla: ['#4c5658','#74807e','#a2aba3']
   };
   let portraitSequence = 0;
   root.portrait = function (id, extra = '', state = 'neutral') {
@@ -29,7 +29,7 @@
       if (!changed) return ch;
       if (ch === 'c') {
         eyes.push({ x, y });
-        return id === 'raccoon' ? 'f' : ['owl', 'frog', 'gorilla'].includes(id) ? 'd' : 'a';
+        return ['owl', 'frog', 'gorilla'].includes(id) ? 'd' : 'a';
       }
       return ch === 'f' && y >= 8 ? 'd' : ch;
     }).join(''));
@@ -41,7 +41,7 @@
         const bend = state === 'good' ? -.7 : .6;
         expression += `<path d="M${x - 1} ${y} l1 ${bend} 1 ${-bend}" fill="none" stroke="#182c30" stroke-width=".65"/>`;
       }
-      const mouthY = id === 'rabbit' ? 10 : ['owl', 'cat', 'frog'].includes(id) ? 8.5 : 9.5;
+      const mouthY = id === 'rabbit' ? 10 : id === 'pig' ? 10.5 : ['owl', 'cat', 'frog'].includes(id) ? 8.5 : 9.5;
       expression += `<path d="M6.5 ${mouthY} q1.5 ${state === 'good' ? 2 : -1.8} 3 0" fill="none" stroke="#293b3e" stroke-width=".65"/>`;
       if (state === 'liar') {
         const gradientId = `jail-bar-${++portraitSequence}`;
