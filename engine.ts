@@ -2,7 +2,7 @@
 var DetectiveEngine = (function () {
   'use strict';
   const roles: Person[] = [
-    { id: 'fox', name: 'キツネ', job: '目撃者', rule: 'ほかの1匹が犯人か善人かを証言する。', type: 'single' },
+    { id: 'elephant', name: 'ゾウ', job: '目撃者', rule: 'ほかの1匹が犯人か善人かを証言する。', type: 'single' },
     { id: 'rabbit', name: 'ウサギ', job: '比較屋', rule: 'ほかの2匹が同じ立場か、違う立場かを証言する。', type: 'same' },
     { id: 'owl', name: 'フクロウ', job: '記録係', rule: '指定した3匹の中にいる犯人の数を証言する。', type: 'count' },
     { id: 'cat', name: 'ネコ', job: '情報屋', rule: '指定した2匹に少なくとも1匹、犯人がいるかを証言する。', type: 'any' },

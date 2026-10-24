@@ -3,7 +3,7 @@
   const faces: Record<string, string[]> = {
     dog: ['................','.....aaaaaa.....','...aaaaaaaaaa...','..bbbaaaaaabbb..','.bbbbaaaaaabbbb.','.bbbcaaaaaacbbb.','.bbbcaaaaaacbbb.','.bbbddddddddbbb.','..bbdddeedddbb..','....dddffddd....','.....dddddd.....','......aaaa......'],
     deer: ['.a..a......a..a.','.aaaa......aaaa.','...a........a...','...aaaaaaaaaa...','..abbaaaaaabba..','..aacaaaaaacaa..','..aacaaaaaacaa..','...aaaaaaaaaa...','....addeedda....','....dddffddd....','.....dddddd.....','......aaaa......'],
-    fox: ['..aa........aa..','..aba......aba..','..abba....abba..','...aaaaaaaaaa...','..aaaaaaaaaaaa..','..aacaaaaaacaa..','..aaccaaaaccaa..','...addaaaadda...','...adddeeddda...','....dddffddd....','.....dddddd.....','......aaaa......'],
+    elephant: ['.....aaaaaa.....','....aaaaaaaa....','.aaaaaaaaaaaaaa.','abbbbaaaaaabbbba','abbbbaaaaaabbbba','abbbacaaaacabbba','abbbaaaaaaaabbba','.abbaaddddaabba.','..aaaaddddaaaa..','......adda......','......adda.aa...','.......aaaaaa...'],
     rabbit: ['....aa....aa....','...abba..abba...','...abba..abba...','...abba..abba...','...abba..abba...','....aaaaaaaa....','...aaaaaaaaaa...','...aacaaaacaa...','...aacaaaacaa...','...adddeeddda...','....dddffddd....','.....aaaaaa.....'],
     owl: ['..aa........aa..','..aaaaaaaaaaaa..','...aaaaaaaaaa...','..aaddaaaaddaa..','..addddaddddaa..','..adccdaddccda..','..adccdaddccda..','...ddddeedddd...','...aaaaffa aaa...'.replace(' ',''),'....aaaaaaaa....','.....aaaaaa.....','......aaaa......'],
     cat: ['..aa........aa..','..aba......aba..','..abba....abba..','..aaaaaaaaaaaa..','..aaaaaaaaaaaa..','..aacaaaaaacaa..','..aacaaaaaacaa..','...aaaddeaaa....','..ddaddffddadd..','....adddddda....','.....aaaaaa.....','......aaaa......'],
@@ -15,7 +15,7 @@
   };
   const colors: Record<string, string[]> = {
     dog: ['#e3caa0','#cda878','#f3e5cd'], deer: ['#b88b57','#e0bb89','#f1ddba'],
-    fox: ['#c87c43','#f1b67a','#f4dfaf'], rabbit: ['#dac7aa','#c9958b','#f1e4d2'], owl: ['#92765a','#b59872','#e6d6b1'],
+    elephant: ['#9eafb7','#c0cdd1','#b8c8ce'], rabbit: ['#dac7aa','#c9958b','#f1e4d2'], owl: ['#92765a','#b59872','#e6d6b1'],
     cat: ['#c5a46b','#d48c80','#e8d6ad'], wolf: ['#82979c','#b8c7c6','#dce3d9'], bear: ['#987055','#c69878','#ccb48c'],
     pig: ['#efbdba','#d9949a','#d98d98'], frog: ['#86a175','#abc286','#c4d39f'], gorilla: ['#4c5658','#74807e','#a2aba3']
   };
@@ -41,7 +41,7 @@
         const bend = state === 'good' ? -.7 : .6;
         expression += `<path d="M${x - 1} ${y} l1 ${bend} 1 ${-bend}" fill="none" stroke="#182c30" stroke-width=".65"/>`;
       }
-      const mouthY = id === 'rabbit' ? 10 : id === 'pig' ? 10.5 : ['owl', 'cat', 'frog'].includes(id) ? 8.5 : 9.5;
+      const mouthY = id === 'rabbit' ? 10 : id === 'pig' ? 10.5 : id === 'elephant' ? 7.5 : ['owl', 'cat', 'frog'].includes(id) ? 8.5 : 9.5;
       expression += `<path d="M6.5 ${mouthY} q1.5 ${state === 'good' ? 2 : -1.8} 3 0" fill="none" stroke="#293b3e" stroke-width=".65"/>`;
       if (state === 'liar') {
         const gradientId = `jail-bar-${++portraitSequence}`;

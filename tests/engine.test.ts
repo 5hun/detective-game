@@ -124,9 +124,9 @@ test('incorrect arrest before testimony still loses two trust', () => {
 
 test('affirmative wording preserves the meaning of complementary statements', () => {
   const cases: { type: 'any' | 'both' | 'ordered'; text: string; truth: (a: boolean, b: boolean) => boolean }[] = [
-    { type: 'any', text: 'キツネとウサギは、両方とも善人だ。', truth: (a, b) => !a && !b },
-    { type: 'both', text: 'キツネとウサギのうち、少なくとも1匹は善人だ。', truth: (a, b) => !a || !b },
-    { type: 'ordered', text: '「キツネが善人」「ウサギが犯人」の少なくとも一方が当てはまる。', truth: (a, b) => !a || b }
+    { type: 'any', text: 'ゾウとウサギは、両方とも善人だ。', truth: (a, b) => !a && !b },
+    { type: 'both', text: 'ゾウとウサギのうち、少なくとも1匹は善人だ。', truth: (a, b) => !a || !b },
+    { type: 'ordered', text: '「ゾウが善人」「ウサギが犯人」の少なくとも一方が当てはまる。', truth: (a, b) => !a || b }
   ];
   for (const { type, text, truth } of cases) {
     const statement: Statement = { type, targets: [0, 1], value: false };
