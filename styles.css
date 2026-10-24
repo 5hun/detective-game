@@ -53,6 +53,24 @@ html{scroll-padding-top:calc(var(--summary-height,120px) + 12px)}
 #result-dialog .dialog-heading{gap:12px}
 #result-dialog .close-button{flex-shrink:0}
 
+.result,#result-dialog{position:relative;isolation:isolate}
+.result{overflow:hidden}
+#result-dialog{overflow-x:hidden;overflow-y:auto}
+#result-dialog .dialog-actions .quiet-button{background:#f1f5e9}
+#result-dialog.lost .dialog-actions .quiet-button{background:#f8eee6}
+#result-dialog .dialog-actions .quiet-button:hover{background:#eae9de}
+.case-closed-stamp-layer{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none;border-radius:inherit}
+.case-closed-stamp{position:absolute;top:-30px;right:-35px;width:clamp(280px,65%,380px);height:auto;opacity:.1;pointer-events:none;user-select:none}
+#result-dialog[open] .case-closed-stamp{animation:case-closed-press .45s .55s both}
+@keyframes case-closed-press{
+  0%{opacity:0;transform:scale(1.65) rotate(-14deg)}
+  55%{opacity:.1;transform:scale(.94) rotate(2deg)}
+  78%{transform:scale(1.04) rotate(-1deg)}
+  100%{opacity:.1;transform:scale(1) rotate(0)}
+}
+@media(max-width:760px){.case-closed-stamp{width:300px;top:-20px;right:-22px}}
+@media(prefers-reduced-motion:reduce){#result-dialog[open] .case-closed-stamp{animation:none}}
+
 /* Pin the header and show game actions in an overlay below it. */
 .masthead{position:sticky;top:0;z-index:20;height:auto;min-height:64px;flex-wrap:wrap;gap:8px 24px;padding-top:6px;padding-bottom:6px}
 .brand{line-height:1.5}

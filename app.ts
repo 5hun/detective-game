@@ -139,7 +139,8 @@
       const nextLabel = won && !cleared ? '次の事件へ' : 'もう一度挑戦';
       $('dialog-next-case').textContent = nextLabel;
       result.className = `result ${won ? '' : 'lost'}`;
-      result.innerHTML = `<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${cleared ? '全5回の捜査完了！ ゲームクリア！' : won ? `事件解決！ (${p.round} / ${E.totalCases})` : '今回の捜査は、ここまで'}</h2><p>${won ? `事件解決。捜査資金 ＋1。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '捜査資金がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>${won && !cleared ? '次の捜査へ進みましょう。' : cleared ? `捜査資金 ${state.trust}を残して、すべての事件を解決しました。` : `${p.round - 1} / ${E.totalCases}の事件を解決しました。最初から挑戦できます。`}</p><p>各カードの「真相と証言の照合」で振り返れます。</p><button class="primary-button" id="next-case">${nextLabel}</button>`;
+      const stamp = won ? '<span class="case-closed-stamp-layer" aria-hidden="true"><img class="case-closed-stamp" src="assets/case-closed.png" alt="" width="1280" height="1280"></span>' : '';
+      result.innerHTML = `${stamp}<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${cleared ? '全5回の捜査完了！ ゲームクリア！' : won ? `事件解決！ (${p.round} / ${E.totalCases})` : '今回の捜査は、ここまで'}</h2><p>${won ? `事件解決。捜査資金 ＋1。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '捜査資金がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>${won && !cleared ? '次の捜査へ進みましょう。' : cleared ? `捜査資金 ${state.trust}を残して、すべての事件を解決しました。` : `${p.round - 1} / ${E.totalCases}の事件を解決しました。最初から挑戦できます。`}</p><p>各カードの「真相と証言の照合」で振り返れます。</p><button class="primary-button" id="next-case">${nextLabel}</button>`;
       $('next-case').addEventListener('click', nextCase);
     }
     if (persist) save();
