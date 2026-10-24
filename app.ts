@@ -146,6 +146,7 @@
     if (persist) save();
     else addReadings();
   }
+  let resultDialogTimer: ReturnType<typeof setTimeout> | undefined;
   let stampSoundTimer: ReturnType<typeof setTimeout> | undefined;
   function showResultDialog() {
     clearTimeout(stampSoundTimer);
@@ -174,6 +175,7 @@
     }
   }
   function nextCase() {
+    clearTimeout(resultDialogTimer);
     if (state.status !== 'won' || state.puzzle.round === E.totalCases(state.puzzle.level)) { openNewCaseDialog(); return; }
     $<HTMLDialogElement>('result-dialog').close();
     judgmentSound.stop();
@@ -191,12 +193,14 @@
     }
   });
   function openNewCaseDialog() {
+    clearTimeout(resultDialogTimer);
     $<HTMLSelectElement>('difficulty').value = hasGame ? state.puzzle.level : 'normal';
     $('replace-case-note').hidden = !hasGame;
     $<HTMLDialogElement>('result-dialog').close();
     $<HTMLDialogElement>('new-dialog').showModal();
   }
   function startCase() {
+    clearTimeout(resultDialogTimer);
     try {
       $<HTMLDialogElement>('result-dialog').close();
       judgmentSound.stop();
@@ -329,7 +333,11 @@
       render(`${correct ? `✅ 正解です。${reward ? '捜査資金 ＋1。' : '捜査資金の増減はありません。'}` : '❌ 誤判定。捜査資金 −2。'}${state.puzzle.people[i].name}は${state.puzzle.answer[i] ? '犯人' : '善人'}でした。`);
       animateJudgment(state.trust - previousTrust);
       if (state.status !== 'playing') {
-        showResultDialog();
+        const completedState = state;
+        clearTimeout(resultDialogTimer);
+        resultDialogTimer = setTimeout(() => {
+          if (hasGame && state === completedState && !$('game-page').hidden) showResultDialog();
+        }, 1500);
         return;
       }
       // Restore keyboard focus after replacing the card list.

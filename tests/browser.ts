@@ -274,7 +274,8 @@ async function checkReadings(page: Page) {
     assert.equal(await page.locator(`#testimony-nav [data-person="${i}"]`).evaluate(el => getComputedStyle(el).backgroundColor),
       await page.locator(`#person-${i} .portrait-box`).evaluate(el => getComputedStyle(el).backgroundColor));
   }
-  assert.ok(await page.locator('#result-dialog').isVisible());
+  assert.equal(await page.locator('#result-dialog').isVisible(), false, 'judgment feedback appears before the result dialog');
+  await page.locator('#result-dialog').waitFor({ state: 'visible' });
   assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('事件解決'));
   await page.waitForFunction(() => window.playedRecordings.includes('assets/sounds/stamp.wav'));
   assert.deepEqual(await page.evaluate(() => window.playedRecordings.splice(0)), ['assets/sounds/stamp.wav']);
@@ -315,7 +316,8 @@ async function checkReadings(page: Page) {
     assert.equal(await page.locator('#trust').getAttribute('aria-label'), `残り捜査資金 ${3 - 2 * step}`);
     assert.deepEqual(await page.evaluate(() => window.playedRecordings.splice(0)), ['assets/sounds/incorrect2.mp3']);
   }
-  assert.ok(await page.locator('#result-dialog').isVisible());
+  assert.equal(await page.locator('#result-dialog').isVisible(), false, 'judgment feedback appears before the result dialog');
+  await page.locator('#result-dialog').waitFor({ state: 'visible' });
   assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('捜査資金がマイナスになりました'));
   await page.keyboard.press('Escape');
   assert.equal(await page.locator('#result-dialog').isVisible(), false);
@@ -419,6 +421,7 @@ async function checkReadings(page: Page) {
     if (!easyAnswer[i]) continue;
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
   }
+  await page.locator('#result-dialog').waitFor({ state: 'visible' });
   const modal = await page.locator('#result-dialog').boundingBox();
       assert.ok(modal);
   assert.ok(modal.y >= 0 && modal.y + modal.height <= 844, 'result dialog fits mobile viewport');
@@ -441,6 +444,7 @@ async function checkReadings(page: Page) {
     for (let i = 0; i < current.puzzle.answer.length; i++) {
       if (current.puzzle.answer[i]) await page.locator(`#person-${i} [data-judge="liar"]`).click();
     }
+    await page.locator('#result-dialog').waitFor({ state: 'visible' });
     const result = await baseText(page.locator('#result-dialog-content'));
     assert.equal(result!.includes('ゲームクリア'), round === 3);
     await checkReadings(page);
