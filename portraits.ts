@@ -41,8 +41,11 @@
         const bend = state === 'good' ? -.7 : .6;
         expression += `<path d="M${x - 1} ${y} l1 ${bend} 1 ${-bend}" fill="none" stroke="#182c30" stroke-width=".65"/>`;
       }
-      const mouthY = id === 'rabbit' ? 10 : id === 'pig' ? 10.5 : id === 'elephant' ? 7.5 : ['owl', 'cat', 'frog'].includes(id) ? 8.5 : 9.5;
-      expression += `<path d="M6.5 ${mouthY} q1.5 ${state === 'good' ? 2 : -1.8} 3 0" fill="none" stroke="#293b3e" stroke-width=".65"/>`;
+      // The elephant's mouth is hidden behind its trunk in this front view.
+      if (id !== 'elephant') {
+        const mouthY = id === 'rabbit' ? 10 : id === 'pig' ? 10.5 : ['owl', 'cat', 'frog'].includes(id) ? 8.5 : 9.5;
+        expression += `<path d="M6.5 ${mouthY} q1.5 ${state === 'good' ? 2 : -1.8} 3 0" fill="none" stroke="#293b3e" stroke-width=".65"/>`;
+      }
       if (state === 'liar') {
         const gradientId = `jail-bar-${++portraitSequence}`;
         expression += `<defs><linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#c0c8ca"/><stop offset="50%" stop-color="#26343c"/><stop offset="100%" stop-color="#c0c8ca"/></linearGradient></defs><path d="M13 5 l-1 2 q1 2 2 0Z" fill="#75b8d1"/>`;
