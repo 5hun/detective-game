@@ -184,10 +184,14 @@ body{min-height:100vh;isolation:isolate}
 body::before{
   content:"";
   position:fixed;
-  inset:auto 0 0;
-  height:min(70vh,720px);
+  inset:0;
   z-index:-1;
-  background:url("assets/forest-background.png") center bottom / cover no-repeat;
+  background:url("assets/forest-background.png") center bottom / auto max(150vh,66.667vw) no-repeat;
   opacity:.18;
   pointer-events:none;
 }
+
+/* Let the forest show through the pinned investigation information, too. */
+.case-status{background:transparent}
+.case-status .feedback{background:transparent}
+.case-summary{background:rgb(235 238 222 / .7)}
