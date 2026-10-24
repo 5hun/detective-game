@@ -10,7 +10,7 @@
     wolf: ['..aaa......aaa..','..abaa....aaba..','..abaaa..aaaba..','..aaaaaaaaaaaa..','...aaaaaaaaaa...','..aacaaaaaacaa..','..aacaaaaaacaa..','...aaddddaa a...'.replace(' ',''),'...adddeeddda...','....dddffddd....','.....dddddd.....','......aaaa......'],
     bear: ['...aaa....aaa...','..abbaa..aabba..','..abaaaaaaaa ba..'.replace(' ',''),'...aaaaaaaaaa...','..aaaaaaaaaaaa..','..aacaaaaaacaa..','..aacaaaaaacaa..','..aaadddddaaaa..','...adddeeddda...','...adddffddda...','....aaaaaaaa....','.....aaaaaa.....'],
     pig: ['..aa........aa..','..abaa....aaba..','..abbaaaaaabba..','...aaaaaaaaaa...','..aaaaaaaaaaaa..','..aacaaaaaacaa..','..aacaaaaaacaa..','..aaaddddddaaa..','..aaadeddedaaa..','...aaddddddaa...','....aaaffaaa....','.....aaaaaa.....'],
-    frog: ['................','...aaaa..aaaa...','..adddaaadddaa..','..adccaaaccdaa..','..adccaaaccdaa..','..aaaaaaaaaaaa..','.aaaaaaaaaaaaaa.','.aaaaaaaaaaaaaa.','..aaaffffffaaa..','...aaddddddaa...','....aaaaaaaa....','.....aaaaaa.....'],
+    frog: ['................','...aaaa..aaaa...','..adddaaadddaa..','..adccaaaccdaa..','..adccaaaccdaa..','..aaaaaaaaaaaa..','.aaaaaaaaaaaaaa.','.aaaaaaaaaaaaaa.','..aaaffffffaaa..','...aaaaaaaaaa...','....aaaaaaaa....','.....aaaaaa.....'],
     gorilla: ['.....aaaaaa.....','....aaaaaaaa....','...aaaaaaaaaa...','..aaaaaaaaaaaa..','..aaddddddddaa..','.aaddddddddddaa.','.aadccddddccdaa.','.aadccddddccdaa.','.aadddeeeedddaa.','..aaddddddddaa..','..aaddffffddaa..','...aaddddddaa...']
   };
   const colors: Record<string, string[]> = {
