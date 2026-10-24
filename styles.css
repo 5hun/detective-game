@@ -184,10 +184,11 @@ body{min-height:100vh;isolation:isolate}
 body::before{
   content:"";
   position:fixed;
-  inset:0;
+  inset:auto 0 0;
+  height:70vh;
   z-index:-1;
-  background:url("assets/forest-background.png") center bottom / auto max(150vh,66.667vw) no-repeat;
-  opacity:.1;
+  background:url("assets/forest-background.png") center bottom / auto 100% repeat-x;
+  opacity:.15;
   pointer-events:none;
 }
 
