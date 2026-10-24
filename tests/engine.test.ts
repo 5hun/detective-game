@@ -158,10 +158,10 @@ test('ambiguous cases judge the fixed truth even when an alternative fits testim
 });
 
 
-test('five-case campaigns grow in size and preserve valid testimony at every starting level', () => {
+test('difficulty-specific campaigns grow in size and preserve valid testimony at every starting level', () => {
   for (const level of Object.keys(E.levels) as Level[]) {
     let previous = E.caseConfig(level, 1);
-    for (let round = 1; round <= E.totalCases; round++) {
+    for (let round = 1; round <= E.totalCases(level); round++) {
       const config = E.caseConfig(level, round);
       assert.ok(config.n >= previous.n && config.k >= previous.k);
       assert.ok(config.k < config.n);
@@ -180,16 +180,21 @@ test('five-case campaigns grow in size and preserve valid testimony at every sta
 });
 
 
-test('testimony costs apply randomly to all roles only from seven animals onward', () => {
+test('paid testimony appears only in later hard cases with bounded costs', () => {
   const paidRoles = new Set<string>();
   for (const level of ['easy', 'normal', 'hard'] as Level[]) {
-    for (let round = 1; round <= E.totalCases; round++) {
+    for (let round = 1; round <= E.totalCases(level); round++) {
       for (let seed = 0; seed < 100; seed++) {
         const p = E.generate(seed, level, round);
         assert.equal(p.testimonyCosts.length, p.people.length);
+        if (level === 'hard' && round >= 4) {
+          assert.ok(p.testimonyCosts.filter(Boolean).length >= 1);
+          assert.ok(p.testimonyCosts.filter(Boolean).length <= 4);
+          assert.ok(p.testimonyCosts.filter(c => c === 2).length <= (round === 4 ? 0 : round === 5 ? 1 : 2));
+        }
         p.testimonyCosts.forEach((cost, i) => {
-          assert.ok(cost === 0 || cost === 1);
-          if (p.people.length < 7) assert.equal(cost, 0);
+          assert.ok(cost === 0 || cost === 1 || cost === 2);
+          if (level !== 'hard' || round < 4) assert.equal(cost, 0);
           if (cost) paidRoles.add(p.people[i].id);
         });
       }
@@ -216,4 +221,16 @@ test('paid testimony preserves the last trust point and charges only once', () =
   s.status = 'won';
   assert.equal(E.reveal(s, 2), false);
   assert.equal(E.reveal(s, -1), false);
+});
+
+test('two-cost testimony requires three funds and charges once', () => {
+  const s = state('hard');
+  s.revealed.fill(false);
+  s.puzzle.testimonyCosts[0] = 2;
+  s.trust = 2;
+  assert.equal(E.reveal(s, 0), false);
+  s.trust = 3;
+  assert.equal(E.reveal(s, 0), true);
+  assert.equal(s.trust, 1);
+  assert.equal(E.reveal(s, 0), false);
 });

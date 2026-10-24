@@ -424,7 +424,7 @@ async function checkReadings(page: Page) {
   assert.ok(modal.y >= 0 && modal.y + modal.height <= 844, 'result dialog fits mobile viewport');
   assert.ok(Math.abs(modal.y + modal.height / 2 - 422) < 2, 'result dialog centered after scrolling');
   await page.screenshot({ path: '/tmp/detective-result-dialog-mobile.png' });
-  for (let round = 2; round <= 5; round++) {
+  for (let round = 2; round <= 3; round++) {
     const previous = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState);
     await page.locator('#dialog-next-case').click();
     assert.equal(await page.locator('#new-dialog').isVisible(), false);
@@ -442,7 +442,7 @@ async function checkReadings(page: Page) {
       if (current.puzzle.answer[i]) await page.locator(`#person-${i} [data-judge="liar"]`).click();
     }
     const result = await baseText(page.locator('#result-dialog-content'));
-    assert.equal(result!.includes('ゲームクリア'), round === 5);
+    assert.equal(result!.includes('ゲームクリア'), round === 3);
     await checkReadings(page);
   }
   await page.locator('#dialog-next-case').click();
@@ -501,9 +501,9 @@ async function checkReadings(page: Page) {
   const paidIndices = await page.evaluate(() => {
     const saved = JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState;
     let seed = 0;
-    let puzzle = window.DetectiveEngine.generate(seed, 'hard', 2);
+    let puzzle = window.DetectiveEngine.generate(seed, 'hard', 4);
     while (puzzle.testimonyCosts.filter(Boolean).length < 2 || !puzzle.testimonyCosts.includes(0)) {
-      puzzle = window.DetectiveEngine.generate(++seed, 'hard', 2);
+      puzzle = window.DetectiveEngine.generate(++seed, 'hard', 4);
     }
     Object.assign(saved, { puzzle, startingTrust: 2, trust: 2, status: 'playing',
       revealed: puzzle.people.map(() => false), resolved: puzzle.people.map(() => null),
@@ -512,7 +512,7 @@ async function checkReadings(page: Page) {
     return puzzle.testimonyCosts.flatMap((cost, i) => cost ? [i] : []);
   });
   await page.reload();
-  assert.equal(await page.locator('.testimony-targets').count(), 8);
+  assert.equal(await page.locator('.testimony-targets').count(), 9);
   await checkReadings(page);
   await page.locator(`[data-reveal="${paidIndices[0]}"]`).click();
   assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り捜査資金 1');

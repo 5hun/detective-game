@@ -57,11 +57,16 @@ var DetectiveEngine = (function () {
     return groups.flatMap(targets => [false, true].map(value => ({ type, targets, value })));
   }
   function solve(puzzle: Puzzle) { return assignments(puzzle.people.length, puzzle.k).filter(a => puzzle.statements.every((s, i) => evaluate(s, a) === !a[i])); }
-  const totalCases = 5;
+  const campaigns = {
+    easy: [[4, 1], [5, 1], [6, 2]],
+    normal: [[5, 2], [6, 2], [7, 3], [8, 3], [9, 4]],
+    hard: [[7, 3], [8, 3], [9, 4], [9, 4], [10, 4], [10, 4], [10, 5]]
+  };
+  function totalCases(level: Level) { return campaigns[level].length; }
   function caseConfig(level: Level, round: number) {
-    if (!Number.isInteger(round) || round < 1 || round > totalCases) throw new Error('Invalid round');
-    const base = levels[level];
-    return { n: Math.min(10, base.n + round - 1), k: Math.min(4, base.k + Math.floor((round - 1) / 2)) };
+    if (!Number.isInteger(round) || round < 1 || round > totalCases(level)) throw new Error('Invalid round');
+    const [n, k] = campaigns[level][round - 1];
+    return { n, k };
   }
   function generate(seed: number, level: Level = 'normal', round = 1): Puzzle {
     if (!levels[level]) throw new Error('Invalid difficulty');
@@ -74,7 +79,22 @@ var DetectiveEngine = (function () {
       if (!valid.length) throw new Error('No valid statement for this role');
       return valid[Math.floor(rng() * valid.length)];
     });
-    const testimonyCosts = people.map(() => n >= 7 && rng() < 0.25 ? 1 : 0);
+    const testimonyCosts: number[] = people.map(() => 0);
+    if (level === 'hard' && round >= 4) {
+      const twoRate = (round - 4) * 0.05;
+      let paid = 0;
+      let twos = 0;
+      for (const i of shuffle(people.map((_, i) => i), rng)) {
+        const roll = rng();
+        let cost = roll < twoRate ? 2 : roll < twoRate + 0.2 ? 1 : 0;
+        if (cost === 2 && twos >= (round === 5 ? 1 : 2)) cost = 1;
+        if (paid >= 4) cost = 0;
+        testimonyCosts[i] = cost;
+        if (cost) paid++;
+        if (cost === 2) twos++;
+      }
+      if (!paid) testimonyCosts[Math.floor(rng() * n)] = 1;
+    }
     return { seed: seed >>> 0, level, round, k, people, statements, testimonyCosts, answer };
   }
   function statementText(s: Statement, people: Person[]) {
