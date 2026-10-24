@@ -14,7 +14,7 @@
     gorilla: ['.....aaaaaa.....','....aaaaaaaa....','...aaaaaaaaaa...','..aaaaaaaaaaaa..','..aaddddddddaa..','.aaddddddddddaa.','.aadccddddccdaa.','.aadccddddccdaa.','.aadddeeeedddaa.','..aaddddddddaa..','..aaddffffddaa..','...aaddddddaa...']
   };
   const colors: Record<string, string[]> = {
-    dog: ['#b59168','#79543b','#ecdbc1'], deer: ['#b88b57','#e0bb89','#f1ddba'],
+    dog: ['#e3caa0','#cda878','#f3e5cd'], deer: ['#b88b57','#e0bb89','#f1ddba'],
     fox: ['#c87c43','#f1b67a','#f4dfaf'], rabbit: ['#dac7aa','#c9958b','#f1e4d2'], owl: ['#92765a','#b59872','#e6d6b1'],
     cat: ['#c5a46b','#d48c80','#e8d6ad'], wolf: ['#82979c','#b8c7c6','#dce3d9'], bear: ['#987055','#c69878','#ccb48c'],
     raccoon: ['#9a9d92','#beb8a3','#d5d4bc'], frog: ['#86a175','#abc286','#c4d39f'], gorilla: ['#4c5658','#74807e','#a2aba3']
