@@ -276,6 +276,8 @@ async function checkReadings(page: Page) {
   }
   assert.ok(await page.locator('#result-dialog').isVisible());
   assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('事件解決'));
+  await page.waitForFunction(() => window.playedRecordings.includes('assets/sounds/stamp.wav'));
+  assert.deepEqual(await page.evaluate(() => window.playedRecordings.splice(0)), ['assets/sounds/stamp.wav']);
   await page.screenshot({ path: '/tmp/detective-result-dialog-desktop.png' });
   await page.locator('#result-dialog .close-button').click();
   assert.equal(await page.locator('#result-dialog').isVisible(), false);
@@ -289,6 +291,7 @@ async function checkReadings(page: Page) {
   assert.ok(await page.locator('#result').isVisible());
   assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(5 + criminals.reduce((sum, index) => sum + (index < 2 ? 0 : 1), 0) + 1));
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
+  assert.deepEqual(await page.evaluate(() => window.playedRecordings), [], 'restoring a solved case does not play the stamp');
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', true);
   assert.equal(await page.locator('#person-0 .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');
   await openMenu(page);

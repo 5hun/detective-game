@@ -6,6 +6,7 @@
   const recordings = {
     correct: new Audio('assets/sounds/correct2.mp3'),
     incorrect: new Audio('assets/sounds/incorrect2.mp3'),
+    stamp: new Audio('assets/sounds/stamp.wav'),
   };
   const active = new Set<{ oscillator: OscillatorNode; gain: GainNode }>();
   function stop() {
@@ -25,6 +26,14 @@
     stop();
     try {
       await recordings[correct ? 'correct' : 'incorrect'].play();
+    } catch {
+      // Missing or blocked audio must never interrupt the game.
+    }
+  }
+  async function playStamp() {
+    try {
+      recordings.stamp.currentTime = 0;
+      await recordings.stamp.play();
     } catch {
       // Missing or blocked audio must never interrupt the game.
     }
@@ -69,6 +78,7 @@
   window.judgmentSound = {
     play: playRecording,
     testimony: playTone,
+    stamp: playStamp,
     stop,
   };
 })();

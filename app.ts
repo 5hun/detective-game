@@ -146,7 +146,9 @@
     if (persist) save();
     else addReadings();
   }
+  let stampSoundTimer: ReturnType<typeof setTimeout> | undefined;
   function showResultDialog() {
+    clearTimeout(stampSoundTimer);
     const content = $('result-dialog-content');
     const resultCopy = $('result').cloneNode(true) as HTMLElement;
     resultCopy.querySelector('#next-case')!.remove();
@@ -157,6 +159,19 @@
     content.replaceChildren(...resultCopy.childNodes);
     $('result-dialog').classList.toggle('lost', state.status === 'lost');
     $<HTMLDialogElement>('result-dialog').showModal();
+    const stamp = content.querySelector<HTMLElement>('.case-closed-stamp');
+    if (stamp) {
+      const playStamp = () => {
+        if (preferences.sound && $<HTMLDialogElement>('result-dialog').open) void judgmentSound.stamp();
+      };
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) playStamp();
+      else stamp.addEventListener('animationstart', event => {
+        if (event.animationName !== 'case-closed-press') return;
+        // The stamp first hits the paper at 55% of its pressing animation.
+        const duration = parseFloat(getComputedStyle(stamp).animationDuration) * 1000;
+        stampSoundTimer = setTimeout(playStamp, duration * .55);
+      }, { once: true });
+    }
   }
   function nextCase() {
     if (state.status !== 'won' || state.puzzle.round === E.totalCases) { openNewCaseDialog(); return; }
@@ -169,6 +184,7 @@
   }
   $('dialog-next-case').addEventListener('click', nextCase);
   $('result-dialog').addEventListener('close', () => {
+    clearTimeout(stampSoundTimer);
     if (hasGame && !$('game-page').hidden && state.status !== 'playing' && !$<HTMLDialogElement>('new-dialog').open) {
       $('result').scrollIntoView({ block: 'start', behavior: 'instant' });
       $('next-case').focus({ preventScroll: true });
