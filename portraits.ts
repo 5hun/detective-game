@@ -6,7 +6,7 @@
     elephant: ['.....aaaaaa.....','....aaaaaaaa....','.aaaaaaaaaaaaaa.','abbbbaaaaaabbbba','abbbbaaaaaabbbba','abbbacaaaacabbba','abbbaaaaaaaabbba','.abbaaddddaabba.','..aaaaddddaaaa..','......adda......','......adda.aa...','.......aaaaaa...'],
     rabbit: ['....aa....aa....','...abba..abba...','...abba..abba...','...abba..abba...','...abba..abba...','....aaaaaaaa....','...aaaaaaaaaa...','...aacaaaacaa...','...aacaaaacaa...','...adddeeddda...','....dddffddd....','.....aaaaaa.....'],
     owl: ['..aa........aa..','..aaaaaaaaaaaa..','...aaaaaaaaaa...','..aaddaaaaddaa..','..addddaddddaa..','..adccdaddccda..','..adccdaddccda..','...ddddeedddd...','...aaaaffa aaa...'.replace(' ',''),'....aaaaaaaa....','.....aaaaaa.....','......aaaa......'],
-    cat: ['..a..........a..','..aa........aa..','..aba......aba..','..abbaaaaaabba..','..aaaagaagaaaa..','..aacagaagacaa..','.aaacaaaaaacaaa.','.aaaaaddddaaaaa.','..aaaddddddaaa..','...aaddddddaa...','....aaaaaaaa....','.....aaaaaa.....'],
+    cat: ['..a..........a..','..aa........aa..','..aba......aba..','..abbaaaaaabba..','..aaaaaaaaaaaa..','..aacaaaaaacaa..','.aaacaaaaaacaaa.','.aaaaaddddaaaaa.','..aaaddddddaaa..','...aaddddddaa...','....aaaaaaaa....','.....aaaaaa.....'],
     wolf: ['..aaa......aaa..','..abaa....aaba..','..abaaa..aaaba..','..aaaaaaaaaaaa..','...aaaaaaaaaa...','..aacaaaaaacaa..','..aacaaaaaacaa..','...aaddddaa a...'.replace(' ',''),'...adddeeddda...','....dddffddd....','.....dddddd.....','......aaaa......'],
     bear: ['...aaa....aaa...','..abbaa..aabba..','..abaaaaaaaa ba..'.replace(' ',''),'...aaaaaaaaaa...','..aaaaaaaaaaaa..','..aacaaaaaacaa..','..aacaaaaaacaa..','..aaadddddaaaa..','...adddeeddda...','...adddffddda...','....aaaaaaaa....','.....aaaaaa.....'],
     pig: ['..aa........aa..','..abaa....aaba..','..abbaaaaaabba..','...aaaaaaaaaa...','..aaaaaaaaaaaa..','..aacaaaaaacaa..','..aacaaaaaacaa..','..aaaddddddaaa..','..aaadeddedaaa..','...aaddddddaa...','....aaaffaaa....','.....aaaaaa.....'],
@@ -22,7 +22,7 @@
   let portraitSequence = 0;
   root.portrait = function (id, extra = '', state = 'neutral') {
     const [fur, inner, muzzle] = colors[id];
-    const palette: Record<string, string> = { a: fur, b: inner, c: '#182c30', d: muzzle, e: '#354044', f: '#293b3e', g: '#b67a42' };
+    const palette: Record<string, string> = { a: fur, b: inner, c: '#182c30', d: muzzle, e: '#354044', f: '#293b3e' };
     const changed = state === 'good' || state === 'liar' || state === 'sad';
     const eyes: { x: number; y: number }[] = [];
     const rows = faces[id].map((row, y) => [...row].map((ch, x) => {
