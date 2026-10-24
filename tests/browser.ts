@@ -20,7 +20,7 @@ async function baseText(locator: Locator) {
   return locator.evaluate(element => {
     const copy = element.cloneNode(true) as HTMLElement;
     copy.querySelectorAll('rt').forEach(rt => rt.remove());
-    return copy.textContent;
+    return copy.textContent?.trim() ?? '';
   });
 }
 async function checkReadings(page: Page) {
@@ -149,7 +149,7 @@ async function checkReadings(page: Page) {
   assert.ok(!/(?:[0-9]人|人数|PERSONS|CASE FILE)/.test(gameText), 'animal counts use 匹 and case number is removed');
   const segments = await page.evaluate(() => {
     const sample = document.createElement('p');
-    sample.textContent = '消えた 3匹 持ち去られ 見抜きました 1匹 2匹';
+    sample.textContent = '消えた 3匹 持ち去られ 見抜きました 1匹 2匹 増減 使用';
     addReadings(sample);
     const once = sample.innerHTML;
     addReadings(sample);
@@ -159,7 +159,8 @@ async function checkReadings(page: Page) {
   });
   assert.deepEqual(segments, [
     ['消', 'き'], 'えた', ' ', '3', ['匹', 'びき'], ' ', ['持', 'も'], 'ち', ['去', 'さ'], 'られ', ' ',
-    ['見抜', 'みぬ'], 'き', 'ました ', '1', ['匹', 'ぴき'], ' ', '2', ['匹', 'ひき']
+    ['見抜', 'みぬ'], 'き', 'ました ', '1', ['匹', 'ぴき'], ' ', '2', ['匹', 'ひき'], ' ',
+    ['増減', 'ぞうげん'], ' ', ['使用', 'しよう']
   ]);
   assert.ok(await page.locator('ruby rt').count() > 0);
   await setToggle(page.locator('#ruby-toggle'), false);
@@ -257,6 +258,7 @@ async function checkReadings(page: Page) {
       assert.ok(feedback);
       assert.ok(feedback.y >= 0 && feedback.y + feedback.height <= 1100, 'judgment message stays in viewport');
       assert.ok((await baseText(page.locator('#feedback'))).includes(`正解です。${i < 2 ? '捜査資金の増減はありません。' : '捜査資金 ＋1。'}`));
+      await checkReadings(page);
     }
     if (step === 0) {
       assert.deepEqual(await page.evaluate(() => window.playedTones), []);
