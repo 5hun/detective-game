@@ -191,7 +191,7 @@ body::before{
   pointer-events:none;
 }
 
-/* Let the forest show through the pinned investigation information, too. */
-.case-status{background:transparent}
-.case-status .feedback{background:transparent}
-.case-summary{background:rgb(235 238 222 / .7)}
+/* Keep pinned investigation information readable over scrolling content. */
+.case-status{background:var(--paper)}
+.case-status .feedback{background:var(--paper)}
+.case-summary{background:#ebeede}
