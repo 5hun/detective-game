@@ -98,7 +98,7 @@ var DetectiveEngine = (function () {
     return { seed: seed >>> 0, level, round, k, people, statements, testimonyCosts, answer };
   }
   function statementText(s: Statement, people: Person[]) {
-    const names = s.targets.map(i => people[i].name); const [a, b] = names; const list = names.join('、');
+    const names = [...s.targets].sort((a, b) => a - b).map(i => people[i].name); const [a, b] = names; const list = names.join('、');
     switch (s.type) {
       case 'balance': return s.value === 0 ? '私より小さい番号と大きい番号では、犯人の数が同じだ。' : `私より${s.value === 1 ? '小さい' : '大きい'}番号のほうが、犯人が多い。`;
       case 'allSame': return s.value ? `${list}の3匹は、全員同じ立場だ。` : `${list}の3匹には、犯人と善人が混ざっている。`;
@@ -108,7 +108,13 @@ var DetectiveEngine = (function () {
       case 'any': return s.value ? `${a}と${b}のうち、少なくとも1匹は犯人だ。` : `${a}と${b}は、両方とも善人だ。`;
       case 'both': return s.value ? `${a}と${b}は、両方とも犯人だ。` : `${a}と${b}のうち、少なくとも1匹は善人だ。`;
       case 'parity': return `${list}の3匹のうち、犯人の数は${s.value ? '奇数（1匹か3匹）' : '偶数（0匹か2匹）'}だ。`;
-      case 'ordered': return s.value ? `${a}は犯人で、${b}は善人だ。` : `「${a}が善人」「${b}が犯人」の少なくとも一方が当てはまる。`;
+      case 'ordered': {
+        // Keep each animal's role attached while ordering the clauses by number.
+        const clauses = s.targets.map((target, i) => ({ target, name: people[target].name, role: (i === 0) === s.value ? '犯人' : '善人' }))
+          .sort((a, b) => a.target - b.target);
+        return s.value ? `${clauses[0].name}は${clauses[0].role}で、${clauses[1].name}は${clauses[1].role}だ。`
+          : `${clauses.map(c => `「${c.name}が${c.role}」`).join('')}の少なくとも一方が当てはまる。`;
+      }
       case 'majority': return `${list}の3匹のうち、犯人は${s.value ? '2匹以上' : '1匹以下'}だ。`;
     }
   }

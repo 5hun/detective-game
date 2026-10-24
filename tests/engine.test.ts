@@ -122,6 +122,29 @@ test('incorrect arrest before testimony still loses two trust', () => {
   assert.equal(s.trust, 3);
 });
 
+test('testimony mentions animals in number order while preserving ordered roles', () => {
+  const statement: Statement = { type: 'ordered', targets: [1, 0], value: true };
+  assert.equal(E.statementText(statement, E.roles), 'ゾウは善人で、ウサギは犯人だ。');
+  assert.equal(E.evaluate(statement, [false, true]), true);
+  assert.equal(E.evaluate(statement, [true, false]), false);
+  statement.value = false;
+  assert.equal(E.statementText(statement, E.roles), '「ゾウが犯人」「ウサギが善人」の少なくとも一方が当てはまる。');
+  assert.equal(E.evaluate(statement, [false, true]), false);
+  assert.equal(E.evaluate(statement, [true, false]), true);
+  assert.deepEqual(statement.targets, [1, 0]);
+
+  for (const person of E.roles.filter(p => p.type !== 'balance')) {
+    const targets = ['count', 'parity', 'majority', 'allSame'].includes(person.type) ? [2, 1, 0] : person.type === 'single' ? [0] : [1, 0];
+    for (const value of [false, true]) {
+      if (person.type === 'balance') continue;
+      const sample: Statement = person.type === 'count' ? { type: 'count', targets, value: 1 } : { type: person.type, targets, value };
+      const text = E.statementText(sample, E.roles);
+      const positions = [...targets].sort((a, b) => a - b).map(t => text.indexOf(E.roles[t].name));
+      assert.ok(positions.every((position, i) => position >= 0 && (i === 0 || position > positions[i - 1])), text);
+    }
+  }
+});
+
 test('affirmative wording preserves the meaning of complementary statements', () => {
   const cases: { type: 'any' | 'both' | 'ordered'; text: string; truth: (a: boolean, b: boolean) => boolean }[] = [
     { type: 'any', text: 'ゾウとウサギは、両方とも善人だ。', truth: (a, b) => !a && !b },
