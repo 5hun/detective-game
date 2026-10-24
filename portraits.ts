@@ -27,6 +27,8 @@
     const eyes: { x: number; y: number }[] = [];
     const rows = faces[id].map((row, y) => [...row].map((ch, x) => {
       if (!changed) return ch;
+      // The frog's mouth sits directly on its green face, without a muzzle.
+      if (id === 'frog' && y >= 8 && (ch === 'f' || ch === 'd')) return 'a';
       if (ch === 'c') {
         eyes.push({ x, y });
         return ['owl', 'frog', 'gorilla'].includes(id) ? 'd' : 'a';
@@ -44,7 +46,9 @@
     }
     if (changed) {
       for (const side of [eyes.filter(p => p.x < 8), eyes.filter(p => p.x >= 8)]) {
-        const x = side.reduce((sum, p) => sum + p.x + .5, 0) / side.length;
+        const pupilX = side.reduce((sum, p) => sum + p.x + .5, 0) / side.length;
+        // Frog pupils are offset inside the pale eye sockets in the pixel art.
+        const x = id === 'frog' ? pupilX + (pupilX < 8 ? -.5 : .5) : pupilX;
         const y = side.reduce((sum, p) => sum + p.y + .5, 0) / side.length;
         const bend = state === 'good' ? -.7 : .6;
         expression += `<path d="M${x - 1} ${y} l1 ${bend} 1 ${-bend}" fill="none" stroke="#182c30" stroke-width=".65"/>`;
