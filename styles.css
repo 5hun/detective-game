@@ -172,5 +172,6 @@ html{scroll-padding-top:calc(var(--menu-height,64px) + var(--summary-height,120p
 
 .testimony-targets,.testimony-cost-note{font-size:12px;overflow-wrap:anywhere;margin:8px 0;color:var(--ink)}.reveal-button:disabled{opacity:.55}
 
-.resolved-tag.truth-liar{background:#f6e8df;color:var(--red)}
-.resolved-tag.truth-good{background:#e9efdf;color:#56734c}
+.resolved-tag.unjudged{background:#e8e8e8;color:#626262}
+.resolved-tag .identity-good{color:#356345;font-weight:700}
+.resolved-tag .identity-liar{color:#a03e32;font-weight:700}
