@@ -8,7 +8,7 @@
   }
   const key = 'beast-detective-v1';
   const saveVersion = 9;
-  const markers = [ { name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' } ];
+  const markers = [{ name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' }];
   const preferencesKey = 'animal-detective-preferences-v1';
   const preferences = { ruby: true, sound: true };
   try {
@@ -57,21 +57,21 @@
       const saved = raw as Record<string, unknown>;
       const storedPuzzle = saved.puzzle as Partial<Puzzle> | undefined;
       if (saved.version !== saveVersion || !storedPuzzle ||
-          !Object.hasOwnProperty.call(E.levels, storedPuzzle.level || '') ||
-          !Number.isInteger(storedPuzzle.seed) ||
-          !Number.isInteger(storedPuzzle.round) || storedPuzzle.round! < 1 || storedPuzzle.round! > E.totalCases ||
-          !Number.isInteger(saved.startingTrust) || (saved.startingTrust as number) < 1 ||
-          (storedPuzzle.round === 1 && saved.startingTrust !== E.initialTrust)) return null;
+        !Object.hasOwnProperty.call(E.levels, storedPuzzle.level || '') ||
+        !Number.isInteger(storedPuzzle.seed) ||
+        !Number.isInteger(storedPuzzle.round) || storedPuzzle.round! < 1 || storedPuzzle.round! > E.totalCases ||
+        !Number.isInteger(saved.startingTrust) || (saved.startingTrust as number) < 1 ||
+        (storedPuzzle.round === 1 && saved.startingTrust !== E.initialTrust)) return null;
       const puzzle = E.generate(storedPuzzle.seed!, storedPuzzle.level!, storedPuzzle.round!);
       const n = puzzle.people.length;
       const { resolved, notes, markers, revealed } = saved;
       if (!Array.isArray(resolved) || !Array.isArray(notes) || !Array.isArray(markers) ||
-          ![resolved, notes, markers].every(a => a.length === n)) return null;
+        ![resolved, notes, markers].every(a => a.length === n)) return null;
       if (!notes.every((v: unknown): v is string => typeof v === 'string' && v.length <= 1000) ||
-          !markers.every((v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 3)) return null;
+        !markers.every((v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 3)) return null;
       if (!resolved.every((r: unknown, i): r is Resolution | null => r === null ||
-          (typeof r === 'object' && 'guess' in r && 'correct' in r && r.guess === true && r.correct === puzzle.answer[i] &&
-            ('reward' in r && (r.correct ? r.reward === 0 || r.reward === 1 : r.reward === -2))))) return null;
+        (typeof r === 'object' && 'guess' in r && 'correct' in r && r.guess === true && r.correct === puzzle.answer[i] &&
+          ('reward' in r && (r.correct ? r.reward === 0 || r.reward === 1 : r.reward === -2))))) return null;
       if (!Array.isArray(revealed) || revealed.length !== n || !revealed.every(v => typeof v === 'boolean')) return null;
       const testimonySpent = revealed.reduce((sum, heard, i) => sum + (heard ? puzzle.testimonyCosts[i] : 0), 0);
       const trust = Math.max(0, (saved.startingTrust as number) + resolved.reduce((sum, r) => sum + (r ? r.reward! : 0), 0) - testimonySpent);
@@ -136,7 +136,7 @@
     if (!result.hidden) {
       const won = state.status === 'won';
       const cleared = won && p.round === E.totalCases;
-      const nextLabel = won && !cleared ? '次の事件へ →' : 'もう一度挑戦 →';
+      const nextLabel = won && !cleared ? '次の事件へ' : 'もう一度挑戦';
       $('dialog-next-case').textContent = nextLabel;
       result.className = `result ${won ? '' : 'lost'}`;
       result.innerHTML = `<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${cleared ? '全5回の捜査完了！ ゲームクリア！' : won ? `捜査 ${p.round} / ${E.totalCases} 事件解決！` : '今回の捜査は、ここまで。'}</h2><p>${won ? `事件解決。捜査資金 ＋1。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '捜査資金がなくなりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p><p>${won && !cleared ? '次の捜査へ進みましょう。' : cleared ? `捜査資金 ${state.trust}を残して、すべての事件を解決しました。` : `${p.round - 1} / ${E.totalCases}の事件を解決しました。最初から挑戦できます。`}</p><p>各カードの「真相と証言の照合」で振り返れます。</p><button class="primary-button" id="next-case">${nextLabel}</button>`;
