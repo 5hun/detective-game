@@ -120,7 +120,7 @@
     const p = state.puzzle; const count = state.resolved.filter((r, i) => r !== null && p.answer[i]).length;
     const mistakes = state.resolved.filter(r => r && !r.correct).length;
     const story = E.caseStories[state.storyHistory[state.storyHistory.length - 1]];
-    $('campaign-progress').textContent = `捜査 ${p.round} / ${E.totalCases(p.level)}`;
+    $('campaign-progress').textContent = `事件 ${p.round}/${E.totalCases(p.level)}`;
     $('campaign-steps').innerHTML = Array.from({ length: E.totalCases(p.level) }, (_, i) => {
       const round = i + 1;
       const completed = round < p.round || (round === p.round && state.status === 'won');
