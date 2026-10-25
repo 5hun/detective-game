@@ -14,7 +14,7 @@ async function checkEnglishText(page: Page) {
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     while (walker.nextNode()) {
       const node = walker.currentNode;
-      if (node.parentElement?.closest('svg, script, style, textarea, #language-select, #ruby-toggle, noscript')) continue;
+      if (node.parentElement?.closest('svg, script, style, textarea, #language-select, .language-label, #ruby-toggle, noscript')) continue;
       if (/[\u3040-\u9fff]/u.test(node.textContent || '')) found.push(node.textContent || '');
     }
     for (const element of document.querySelectorAll('[aria-label], [title], [placeholder]')) {
@@ -29,7 +29,19 @@ async function checkEnglishText(page: Page) {
   assert.deepEqual(untranslated, [], 'English UI and accessibility text should be translated');
 }
 export async function checkEnglish(browser: Browser) {
-  const page = await browser.newPage({ reducedMotion: 'reduce' });
+  for (const [locale, expected] of [['en-US', 'en'], ['ja-JP', 'ja'], ['fr-FR', 'ja']] as const) {
+    const initial = await browser.newPage({ locale, viewport: { width: 320, height: 844 } });
+    await initial.goto(url);
+    assert.equal(await initial.locator('html').getAttribute('lang'), expected, `initial language for ${locale}`);
+    assert.ok(await initial.locator('#game-menu').isHidden());
+    assert.ok(await initial.locator('#language-select').isVisible());
+    await initial.locator('#language-select').selectOption(expected === 'en' ? 'ja' : 'en');
+    await initial.reload();
+    assert.equal(await initial.locator('html').getAttribute('lang'), expected === 'en' ? 'ja' : 'en', 'saved choice overrides browser language');
+    assert.ok(await initial.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `initial header fits at 320px for ${locale}`);
+    await initial.close();
+  }
+  const page = await browser.newPage({ locale: 'en-US', reducedMotion: 'reduce' });
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(url);
@@ -86,6 +98,7 @@ export async function checkEnglish(browser: Browser) {
   await checkEnglishText(page);
   await page.locator('[data-close="result-dialog"]').first().click();
   // Complete a campaign in English, including mistaken innocents and paid testimony.
+  if (await page.locator('#game-menu').isHidden()) await page.locator('#menu-toggle').click();
   await page.locator('#new-case').click();
   await page.locator('#difficulty').selectOption('hard');
   await page.locator('#confirm-new').click();

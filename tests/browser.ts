@@ -32,7 +32,7 @@ async function checkReadings(page: Page) {
     const missing: string[] = [];
     while (walker.nextNode()) {
       const node = walker.currentNode;
-      if (!node.parentElement?.closest('ruby, svg, script, style, textarea, select, noscript') && /[一-龯々]/.test(node.textContent || '')) missing.push(node.textContent || '');
+      if (!node.parentElement?.closest('ruby, svg, script, style, textarea, select, .language-label, noscript') && /[一-龯々]/.test(node.textContent || '')) missing.push(node.textContent || '');
     }
     return missing;
   });
@@ -46,7 +46,7 @@ async function checkReadings(page: Page) {
 }
 (async () => {
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+  const page = await browser.newPage({ locale: 'ja-JP', viewport: { width: 1440, height: 1100 } });
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.addInitScript(() => {
@@ -131,7 +131,7 @@ async function checkReadings(page: Page) {
   assert.ok(await page.locator('#menu-toggle').evaluate(button => button === document.activeElement));
   await page.locator('#menu-toggle').click();
   assert.deepEqual(await page.locator('.header-right > button').evaluateAll(buttons => buttons.map(button => button.id)),
-    ['animals-button', 'sound-toggle', 'ruby-toggle', 'delete-save']);
+    ['animals-button', 'new-case', 'sound-toggle', 'ruby-toggle', 'delete-save']);
   assert.equal(await page.locator('.offline, .case-stamp, .preferences').count(), 0);
   await page.evaluate(() => {
     const probe = document.createElement('div');
@@ -232,11 +232,13 @@ async function checkReadings(page: Page) {
   assert.ok(await page.locator('#help-dialog').isVisible());
   await page.keyboard.press('Escape');
   await openMenu(page);
+  await openMenu(page);
   await page.locator('#new-case').click();
   assert.ok(await page.locator('#new-dialog').isVisible());
   assert.equal(await page.locator('#difficulty').inputValue(), 'normal');
   await page.locator('#difficulty').selectOption('hard');
   await page.locator('[data-close="new-dialog"]').click();
+  await openMenu(page);
   await openMenu(page);
   await page.locator('#new-case').click();
   assert.equal(await page.locator('#difficulty').inputValue(), 'normal');
@@ -314,6 +316,7 @@ async function checkReadings(page: Page) {
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', true);
   assert.equal(await page.locator('#person-0 .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');
   await openMenu(page);
+  await openMenu(page);
   await page.locator('#new-case').click();
   await page.locator('#difficulty').selectOption('hard');
   await page.locator('#confirm-new').click();
@@ -350,7 +353,7 @@ async function checkReadings(page: Page) {
   await page.locator('#difficulty').selectOption('easy');
   await page.locator('#confirm-new').click();
   assert.equal(await page.locator('.suspect').count(), 4);
-  for (const width of [1440, 390, 320]) {
+  for (const width of [1440, 600, 414, 401, 390, 375, 360, 340, 320]) {
     // Two columns shorten the desktop page; use a shorter viewport to exercise sticky scrolling.
     await page.setViewportSize({ width, height: width === 1440 ? 440 : 844 });
     const cards = await page.locator('.suspect').evaluateAll(elements => elements.slice(0, 2).map(element => {
@@ -359,6 +362,21 @@ async function checkReadings(page: Page) {
     }));
     assert.equal(cards[0].top === cards[1].top, width === 1440, `testimony columns at ${width}`);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `overflow at ${width}`);
+    const titleLines = await page.locator('.brand-text').evaluate(element => {
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      const boxes: { top: number; bottom: number }[] = [];
+      while (walker.nextNode()) {
+        if (walker.currentNode.parentElement?.closest('rt')) continue;
+        const range = document.createRange();
+        range.selectNodeContents(walker.currentNode);
+        boxes.push(...Array.from(range.getClientRects(), rect => ({ top: rect.top, bottom: rect.bottom })));
+      }
+      return boxes;
+    });
+    assert.ok(Math.max(...titleLines.map(box => box.top)) < Math.min(...titleLines.map(box => box.bottom)), `entire Japanese title stays on one line at ${width}`);
+    const titleBox = await page.locator('.brand').boundingBox();
+    const actionsBox = await page.locator('.header-actions').boundingBox();
+    assert.ok(titleBox && actionsBox && titleBox.x + titleBox.width <= actionsBox.x, `title and actions do not overlap at ${width}`);
     await openMenu(page);
     const menu = await page.locator('.header-right').boundingBox();
       assert.ok(menu);
@@ -381,26 +399,19 @@ async function checkReadings(page: Page) {
       const box = button.getBoundingClientRect();
       return { left: box.left, right: box.right, top: box.top, height: box.height };
     }));
-    assert.equal(headerButtons.length, 3);
+    assert.equal(headerButtons.length, 2);
     assert.ok(headerButtons.every((box, i) => box.height >= 44 && (i === 0 || box.left >= headerButtons[i - 1].right)), 'header actions appear in order');
     assert.ok(headerButtons.every(box => box.top === headerButtons[0].top), 'header actions share a row');
-    assert.equal(await page.locator('#game-menu #new-case, #game-menu #help-button').count(), 0);
+    assert.equal(await page.locator('#game-menu #help-button, #game-menu #language-select').count(), 0);
     assert.equal(await baseText(page.locator('#help-button')), '📖遊び方');
-    assert.deepEqual(await page.locator('.header-actions > button').evaluateAll(buttons => buttons.map(button => button.id)), ['new-case', 'help-button', 'menu-toggle']);
+    assert.deepEqual(await page.locator('.header-actions > button').evaluateAll(buttons => buttons.map(button => button.id)), ['help-button', 'menu-toggle']);
     assert.equal(await baseText(page.locator('#delete-save .menu-label')), 'データの消去');
     assert.equal(await page.locator('#delete-save svg').count(), 1);
     assert.equal(await baseText(page.locator('#new-case')), '最初から');
-    const newCaseLayout = await page.locator('#new-case').evaluate(button => {
-      const icon = button.querySelector('svg')!.getBoundingClientRect();
-      const box = button.getBoundingClientRect();
-      const textRange = document.createRange();
-      textRange.setStartAfter(button.querySelector('svg')!);
-      textRange.setEndAfter(button.lastChild!);
-      const text = textRange.getBoundingClientRect();
-      return { horizontal: getComputedStyle(button).flexDirection === 'row' && text.left >= icon.right,
-        fits: text.top >= box.top && text.bottom <= box.bottom && button.scrollWidth <= button.clientWidth };
-    });
-    assert.ok(newCaseLayout.horizontal && newCaseLayout.fits, `new case icon and text fit horizontally at ${width}`);
+    const languageControl = await page.locator('.language-control').boundingBox();
+    assert.ok(languageControl && languageControl.x >= headerButtons[0].right && languageControl.x + languageControl.width <= headerButtons[1].left, 'language selection is between help and menu');
+    await page.locator('#menu-toggle').click();
+    assert.ok(await page.locator('#language-select').isVisible(), 'language selection remains visible with menu closed');
 
     for (const rubyEnabled of [true, false]) {
       await setToggle(page.locator('#ruby-toggle'), rubyEnabled);
@@ -498,7 +509,7 @@ async function checkReadings(page: Page) {
   await page.reload();
   assert.ok(await page.locator('#home-page').isVisible());
   await startGame(page);
-  const invalidSave = await browser.newPage();
+  const invalidSave = await browser.newPage({ locale: 'ja-JP' });
   await invalidSave.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
   await startGame(invalidSave);
   for (const problem of ['old-version', 'previous-rules', 'missing-revealed', 'wrong-trust', 'wrong-status']) {
@@ -600,7 +611,7 @@ async function checkReadings(page: Page) {
   assert.ok((await baseText(page.locator('#result'))).includes('事件解決'));
   await checkReadings(page);
   // Count mistakes across cases and reloads, including a mistake in the final case.
-  const campaign = await browser.newPage({ reducedMotion: 'reduce' });
+  const campaign = await browser.newPage({ locale: 'ja-JP', reducedMotion: 'reduce' });
   await campaign.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
   await campaign.evaluate(() => localStorage.removeItem('beast-detective-v1'));
   await campaign.reload();
@@ -629,7 +640,7 @@ async function checkReadings(page: Page) {
   await campaign.locator('#confirm-new').click();
   assert.equal(await campaign.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).previousMistakes), 0);
   await campaign.close();
-  const blocked = await browser.newPage();
+  const blocked = await browser.newPage({ locale: 'ja-JP' });
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
   await blocked.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
   assert.ok(await blocked.locator('#home-page').isVisible());
@@ -640,7 +651,7 @@ async function checkReadings(page: Page) {
   assert.ok((await baseText(blocked.locator('#save-status'))).includes('保存できません'));
   await setToggle(blocked.locator('#sound-toggle'), false);
   assert.equal((await blocked.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', false);
-  const silent = await browser.newPage();
+  const silent = await browser.newPage({ locale: 'ja-JP' });
   silent.on('pageerror', e => errors.push(e.message));
   await silent.addInitScript(() => {
     HTMLMediaElement.prototype.play = () => Promise.reject(new Error('audio unavailable'));

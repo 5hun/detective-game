@@ -246,3 +246,30 @@ html[lang="en"] .summary-label{letter-spacing:0}
   .header-actions .action-icon{width:14px}
   .help-button{min-width:44px}
 }
+
+/* Keep language selection available before opening the game menu. */
+.language-control{display:flex;flex-direction:column;justify-content:center;width:112px;height:52px;flex-shrink:0}
+.language-control .language-label{font-size:10px;line-height:1.6;text-align:center;white-space:nowrap}
+.language-control select{min-height:34px;padding:4px 8px;font-size:12px}
+.menu-separator{width:100%;margin:4px 0;border:0;border-top:1px solid var(--line);flex-shrink:0}
+@media(max-width:600px){
+  .masthead{gap:6px;padding:4px 12px}
+  .brand{gap:4px}
+  .brand-text{display:block;width:min-content;white-space:normal;line-height:1.3}
+  html[lang="ja"] .brand{flex-shrink:0;font-size:clamp(14px,3.6vw,20px);letter-spacing:0}
+  html[lang="ja"] .brand-text{width:auto;white-space:nowrap}
+  .header-actions{flex-shrink:0;gap:4px}
+  .help-button{min-width:44px}
+  .language-control{width:106px}
+}
+@media(max-width:400px){
+  .language-control{width:90px}
+  .language-control .language-label{font-size:9px}
+  html[lang="en"] .brand{font-size:14px}
+  html[lang="en"] .brand-symbol{width:26px}
+}
+
+@media(max-width:340px){
+  html[lang="ja"] .brand{font-size:12px}
+  html[lang="ja"] .brand-symbol{width:20px}
+}

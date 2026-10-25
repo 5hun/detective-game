@@ -11,7 +11,9 @@
   const saveVersion = 13;
   const markers = [{ get name() { return tr('未設定'); }, color: '#d4d7ca' }, { get name() { return tr('犯人候補'); }, color: '#b96d58' }, { get name() { return tr('善人候補'); }, color: '#749476' }, { get name() { return tr('要検討'); }, color: '#c4a359' }, { get name() { return tr('勘違い候補'); }, color: '#9481bb' }];
   const preferencesKey = 'animal-detective-preferences-v1';
-  const preferences: { ruby: boolean; sound: boolean; language: 'ja' | 'en' } = { ruby: true, sound: true, language: 'ja' };
+  const browserLanguage = navigator.languages.map(language => language.toLowerCase().split('-')[0])
+    .find(language => language === 'ja' || language === 'en');
+  const preferences: { ruby: boolean; sound: boolean; language: 'ja' | 'en' } = { ruby: true, sound: true, language: browserLanguage === 'en' ? 'en' : 'ja' };
   try {
     const saved: unknown = JSON.parse(localStorage.getItem(preferencesKey) || 'null');
     if (!saved || typeof saved !== 'object') throw new Error('Invalid preferences');

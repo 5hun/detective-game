@@ -79,7 +79,7 @@
     if (document.documentElement.lang === 'en') return;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
-        return node.parentElement?.closest('ruby, svg, script, style, textarea, select, option, noscript')
+        return node.parentElement?.closest('ruby, svg, script, style, textarea, select, option, .language-label, noscript')
           ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
       }
     });
