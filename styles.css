@@ -230,4 +230,19 @@ html[lang="en"] .brand{letter-spacing:0;font-size:22px}
 html[lang="en"] .header-actions .new-case span{font-size:inherit;margin:0}
 html[lang="en"] .case-summary{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr)}
 html[lang="en"] .summary-label{letter-spacing:0}
-@media(max-width:600px){html[lang="en"] .masthead{flex-wrap:wrap;height:auto;min-height:75px;gap:8px;padding:10px 12px}html[lang="en"] .brand{font-size:18px}html[lang="en"] .case-summary{padding:10px;gap:6px}html[lang="en"] .population strong{font-size:12px}html[lang="en"] .progress-summary,html[lang="en"] .trust-summary{padding-left:7px}}
+@media(max-width:600px){
+  html[lang="en"] .masthead{flex-wrap:nowrap;gap:8px;padding:4px 12px}
+  html[lang="en"] .brand{font-size:18px;flex-shrink:0}
+  html[lang="en"] .brand-text{display:block;width:min-content;white-space:normal;line-height:1.15}
+  html[lang="en"] .header-actions{flex-shrink:0}
+  html[lang="en"] .case-summary{padding:10px;gap:6px}
+  html[lang="en"] .population strong{font-size:12px}
+  html[lang="en"] .progress-summary,html[lang="en"] .trust-summary{padding-left:7px}
+}
+@media(max-width:360px){
+  .masthead{flex-wrap:nowrap}
+  html[lang="ja"] .brand{font-size:14px}
+  .header-actions .new-case{padding-left:4px;padding-right:4px}
+  .header-actions .action-icon{width:14px}
+  .help-button{min-width:44px}
+}
