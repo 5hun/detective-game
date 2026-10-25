@@ -12,4 +12,4 @@ interface GameState extends JudgmentState { version: number; startingTrust: numb
 interface Window { DetectiveEngine: typeof DetectiveEngine; portrait: typeof portrait; addReadings: typeof addReadings; judgmentSound: typeof judgmentSound; webkitAudioContext?: typeof AudioContext; playedTones: number[]; playedRecordings: string[] }
 declare var portrait: (id: string, extra?: string, state?: 'neutral' | 'good' | 'liar' | 'sad') => string;
 declare var addReadings: (root?: HTMLElement) => void;
-declare var judgmentSound: { play(correct: boolean): Promise<void>; testimony(): Promise<void>; stamp(celebrate?: boolean): Promise<void>; title(): Promise<void>; stop(): void };
+declare var judgmentSound: { play(correct: boolean): Promise<void>; testimony(): Promise<void>; stamp(celebrate?: boolean): Promise<void>; stop(): void };

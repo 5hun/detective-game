@@ -1,4 +1,4 @@
-/* Local effect recordings and synthesized testimony tones. */
+/* Local judgment recordings and synthesized testimony tones. */
 (function () {
   'use strict';
   let context: AudioContext;
@@ -7,7 +7,6 @@
     correct: new Audio('assets/sounds/correct2.mp3'),
     incorrect: new Audio('assets/sounds/incorrect2.mp3'),
     stamp: new Audio('assets/sounds/stamp.wav'),
-    title: new Audio('assets/sounds/title1.mp3'),
     applause: new Audio('assets/sounds/people-performance-cheer1.mp3'),
   };
   const active = new Set<{ oscillator: OscillatorNode; gain: GainNode }>();
@@ -53,14 +52,6 @@
       // Missing or blocked audio must never interrupt the game.
     }
   }
-  async function playTitle() {
-    stop();
-    try {
-      await recordings.title.play();
-    } catch {
-      // Missing or blocked audio must never interrupt the game.
-    }
-  }
   async function playTone() {
     stop();
     const request = generation;
@@ -102,7 +93,6 @@
     play: playRecording,
     testimony: playTone,
     stamp: playStamp,
-    title: playTitle,
     stop,
   };
 })();
