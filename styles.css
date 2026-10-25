@@ -199,3 +199,5 @@ body::before{
 
 .suspect[data-marker="4"]{border-left-color:#9481bb}
 #mistaken-count{display:block;font-size:11px}
+
+#mistaken-count .mistaken-emphasis,.mistaken-emphasis{color:#b88a00;font-weight:700;font-size:inherit}

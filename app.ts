@@ -104,7 +104,7 @@
     const sortedTargets = [...state.puzzle.statements[i].targets].sort((a, b) => a - b);
     const targets = sortedTargets.map(t => `${t + 1}. ${state.puzzle.people[t].name}`).join('、');
     let actions;
-    const identity = `<strong class="identity-${liar ? 'liar' : 'good'}">${E.identity(state.puzzle, i)}</strong>`;
+    const identity = `<strong class="identity-${liar ? 'liar' : 'good'}">${E.identity(state.puzzle, i).replace('勘違い', '<span class="mistaken-emphasis">勘違い</span>')}</strong>`;
     if (resolved) actions = `<span class="resolved-tag ${resolved.correct ? '' : 'wrong'}">${resolved.correct ? '✅ 正解' : '❌ 誤判定'} · ${person.name}は${identity}</span>`;
     else if (state.status === 'won') actions = `<span class="resolved-tag revealed">✓ ${identity}と確定 · ${person.name}は${identity}</span>`;
     else if (ended) actions = `<span class="resolved-tag unjudged">未判定 · 真相：${identity}</span>`;
@@ -133,9 +133,9 @@
     document.title = `${story.title} — どうぶつ探偵`;
     $('liar-count').textContent = `犯人 ${p.k}匹`;
     $('good-count').textContent = `善人 ${p.people.length - p.k}匹`;
-    $('mistaken-count').textContent = `（うち勘違い ${p.mistakenCount}匹）`;
+    $('mistaken-count').innerHTML = `（うち<strong class="mistaken-emphasis">勘違い</strong> ${p.mistakenCount}匹）`;
     $('mistaken-rule').hidden = p.mistakenCount === 0;
-    $('mistaken-rule').textContent = 'この事件には、勘違いしている善人が1匹います。証言は必ず間違っていますが、犯人ではありません。「同じ立場」や犯人の数では善人として扱います。' + (p.round === 4 ? ' 初登場の今回は、すべての証言を無料で聞けます。' : '');
+    $('mistaken-rule').textContent = 'この事件には、勘違いしている善人が1匹います。証言は必ず間違っていますが、犯人ではありません。「同じ立場」や犯人の数では善人として扱います。';
     $('progress-count').textContent = `${count} / ${p.k}`;
     $('trust-value').textContent = String(state.trust);
     $('trust').setAttribute('aria-label', `残り捜査資金 ${state.trust}`);
