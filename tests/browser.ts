@@ -234,8 +234,8 @@ async function checkReadings(page: Page) {
   const storyTitle = await baseText(page.locator('#case-title'));
   const storyDescription = await baseText(page.locator('#case-description'));
   const expectedStory = await page.evaluate(() => {
-    const seed = (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.seed;
-    return DetectiveEngine.caseStories[seed % DetectiveEngine.caseStories.length];
+    const saved = JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState;
+    return DetectiveEngine.caseStories[saved.storyHistory[saved.storyHistory.length - 1]];
   });
   assert.equal(storyTitle, expectedStory.title);
   assert.equal(storyDescription, expectedStory.description);
@@ -436,6 +436,8 @@ async function checkReadings(page: Page) {
     await page.reload();
     const current = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState);
     assert.equal(current.puzzle.round, round);
+    assert.deepEqual(current.storyHistory.slice(0, -1), previous.storyHistory);
+    assert.equal(new Set(current.storyHistory).size, round);
     assert.equal(current.trust, previous.trust);
     assert.ok(current.puzzle.people.length >= previous.puzzle.people.length);
     assert.ok(current.puzzle.k >= previous.puzzle.k);

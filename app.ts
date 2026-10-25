@@ -45,10 +45,11 @@
     savePreferences();
   });
   let state: GameState; let hasGame = false; let storageAvailable = true;
-  function fresh(level: Level, round = 1, trust = E.initialTrust): GameState {
+  function fresh(level: Level, round = 1, trust = E.initialTrust, previousStories: readonly number[] = []): GameState {
     const seed = window.crypto ? crypto.getRandomValues(new Uint32Array(1))[0] : Date.now() >>> 0;
     const puzzle = E.generate(seed, level, round);
-    return { version: saveVersion, puzzle, startingTrust: trust, trust, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0), revealed: puzzle.people.map(() => false) };
+    const storyHistory = [...previousStories, E.selectStory(seed, previousStories)];
+    return { version: saveVersion, puzzle, storyHistory, startingTrust: trust, trust, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0), revealed: puzzle.people.map(() => false) };
   }
   function restore(): GameState | null {
     try {
@@ -63,6 +64,11 @@
         !Number.isInteger(saved.startingTrust) || (saved.startingTrust as number) < 1 ||
         (storedPuzzle.round === 1 && saved.startingTrust !== E.initialTrust)) return null;
       const puzzle = E.generate(storedPuzzle.seed!, storedPuzzle.level!, storedPuzzle.round!);
+      // Older saves only retain the current story; preserve it when upgrading.
+      const storyHistory = saved.storyHistory ?? [puzzle.seed % E.caseStories.length];
+      if (!Array.isArray(storyHistory) || storyHistory.length < 1 || storyHistory.length > puzzle.round ||
+        !storyHistory.every((id: unknown) => typeof id === 'number' && Number.isInteger(id) && id >= 0 && id < E.caseStories.length) ||
+        new Set(storyHistory).size !== storyHistory.length) return null;
       const n = puzzle.people.length;
       const { resolved, notes, markers, revealed } = saved;
       if (!Array.isArray(resolved) || !Array.isArray(notes) || !Array.isArray(markers) ||
@@ -78,7 +84,7 @@
       const status = trust < 0 ? 'lost' : puzzle.answer.every((liar, i) => !liar || resolved[i] !== null) ? 'won' : 'playing';
       const finalTrust = trust + (status === 'won' ? 1 : 0);
       if (saved.trust !== finalTrust || saved.status !== status) return null;
-      return { version: saveVersion, puzzle, startingTrust: saved.startingTrust as number, trust: finalTrust, status, resolved, notes, markers, revealed };
+      return { version: saveVersion, puzzle, storyHistory, startingTrust: saved.startingTrust as number, trust: finalTrust, status, resolved, notes, markers, revealed };
     } catch { return null; }
   }
   function save() {
@@ -113,7 +119,7 @@
     $('new-case').hidden = false;
     const p = state.puzzle; const count = state.resolved.filter((r, i) => r !== null && p.answer[i]).length;
     const mistakes = state.resolved.filter(r => r && !r.correct).length;
-    const story = E.caseStories[p.seed % E.caseStories.length];
+    const story = E.caseStories[state.storyHistory[state.storyHistory.length - 1]];
     $('campaign-progress').textContent = `捜査 ${p.round} / ${E.totalCases(p.level)}`;
     $('campaign-steps').innerHTML = Array.from({ length: E.totalCases(p.level) }, (_, i) => {
       const round = i + 1;
@@ -181,7 +187,7 @@
     if (state.status !== 'won' || state.puzzle.round === E.totalCases(state.puzzle.level)) { openNewCaseDialog(); return; }
     $<HTMLDialogElement>('result-dialog').close();
     judgmentSound.stop();
-    state = fresh(state.puzzle.level, state.puzzle.round + 1, state.trust);
+    state = fresh(state.puzzle.level, state.puzzle.round + 1, state.trust, state.storyHistory);
     $('feedback').className = 'feedback';
     render('捜査資金を引き継いで、新しい事件の捜査を始めましょう。');
     window.scrollTo({ top: 0, behavior: 'smooth' });

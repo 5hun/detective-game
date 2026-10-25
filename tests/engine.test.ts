@@ -3,6 +3,23 @@ import { test } from 'node:test';
 import assert = require('node:assert/strict');
 const E: typeof DetectiveEngine = require('../engine.js');
 
+test('stories never repeat during campaigns at every difficulty, even with identical seeds', () => {
+  for (const level of Object.keys(E.levels) as Level[]) {
+    for (const seed of [0, 1, 42, 4294967295]) {
+      let history: number[] = [];
+      for (let round = 1; round <= E.totalCases(level); round++) {
+        const id = E.selectStory(seed, history);
+        assert.ok(id >= 0 && id < E.caseStories.length);
+        assert.ok(!history.includes(id));
+        history.push(id);
+        history = JSON.parse(JSON.stringify(history));
+      }
+      assert.equal(new Set(history).size, E.totalCases(level));
+    }
+  }
+  assert.throws(() => E.selectStory(0, E.caseStories.map((_, i) => i)), /No unused/);
+});
+
 test('3,000 generated cases uniquely identify the actual answer and obey every role', () => {
   for (const [level, config] of (Object.entries(E.levels) as [Level, (typeof E.levels)[Level]][])) {
     for (let seed = 0; seed < 1000; seed++) {
