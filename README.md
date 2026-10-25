@@ -1,6 +1,6 @@
 # Animal Detective
 
-A Japanese and English logic puzzle game where you read animals' statements and identify the innocents and culprits.
+A logic puzzle game where you read animals' statements and identify the innocents and culprits.
 
 **[Play Animal Detective](https://5hun.github.io/detective-game/)** — play in your browser without installing anything or signing in.
 
