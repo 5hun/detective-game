@@ -203,3 +203,5 @@ body::before{
 #mistaken-count .mistaken-emphasis,.mistaken-emphasis{color:#b88a00;font-weight:700;font-size:inherit}
 
 .identity-connector{font-weight:400}
+
+#mistaken-count .identity-good{color:#56804a;font-weight:700;font-size:inherit}

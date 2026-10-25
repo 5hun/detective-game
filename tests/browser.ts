@@ -540,7 +540,7 @@ async function checkReadings(page: Page) {
     return puzzle.mistaken!;
   });
   await page.reload();
-  assert.ok((await baseText(page.locator('#mistaken-count'))).includes('勘違い 1匹'));
+  assert.ok((await baseText(page.locator('#mistaken-count'))).includes('うち勘違いしている善人１匹'));
   assert.ok(await page.locator('#mistaken-rule').isVisible());
   await page.locator(`#person-${mistaken} [data-marker-value="4"]`).click();
   await page.reload();

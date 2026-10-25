@@ -133,7 +133,7 @@
     document.title = `${story.title} — どうぶつ探偵`;
     $('liar-count').textContent = `犯人 ${p.k}匹`;
     $('good-count').textContent = `善人 ${p.people.length - p.k}匹`;
-    $('mistaken-count').innerHTML = `（うち<strong class="mistaken-emphasis">勘違い</strong> ${p.mistakenCount}匹）`;
+    $('mistaken-count').innerHTML = `（うち<strong class="mistaken-emphasis">勘違い</strong>している<strong class="identity-good">善人</strong>${p.mistakenCount === 1 ? '１' : '０'}匹）`;
     $('mistaken-rule').hidden = p.mistakenCount === 0;
     $('mistaken-rule').textContent = 'この事件には、勘違いしている善人が1匹います。証言は必ず間違っていますが、犯人ではありません。「同じ立場」や犯人の数では善人として扱います。';
     $('progress-count').textContent = `${count} / ${p.k}`;
