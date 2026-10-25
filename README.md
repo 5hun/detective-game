@@ -1,73 +1,73 @@
-# どうぶつ探偵
+# Animal Detective
 
-動物たちの証言を読み、善人と犯人を見分ける、日本語の論理推理ゲームです。
+A Japanese-language logic puzzle game where you read animals' statements and identify the innocents and culprits.
 
-## 公開版
+## Live version
 
-[どうぶつ探偵を遊ぶ](https://5hun.github.io/detective-game/)
+[Play Animal Detective](https://5hun.github.io/detective-game/)
 
-ブラウザからアクセスすれば、インストールやログインなしで遊べます。
-`main` ブランチへの更新時にGitHub Actionsで型検査・lint・テスト・ビルドを行い、GitHub Pagesへ自動公開します。
-公開対象はHTML・CSSとゲーム用JavaScriptのみです。リポジトリの Settings → Pages → Source は `GitHub Actions` に設定します。
+Play in your browser without installing anything or signing in.
+Updates to the `main` branch run type checks, lint, tests, and a build through GitHub Actions, then automatically deploy to GitHub Pages.
+Only HTML, CSS, and the game's JavaScript files are published. In the repository's Settings → Pages → Source, select `GitHub Actions`.
 
-## 起動
+## Getting started
 
-Node.js 20.19以降（22系は22.13以降、または24以降）で、初回に依存パッケージをインストールし、TypeScriptをビルドしてください。
+Use Node.js 20.19 or later (22.13 or later for the 22.x series, or 24 or later). Install dependencies and build the TypeScript on your first run:
 
 ```sh
 npm ci
 npm run build
 ```
 
-ビルド後は **`index.html` をブラウザで開くだけで遊べます。** サーバー起動は不要です。配布するときは `index.html`・`styles.css` と `dist/` 内の `engine.js`・`portraits.js`・`ruby.js`・`sound.js`・`app.js` を、フォルダ構成を保って配置してください。実行時の外部通信は不要です。
+After building, **open `index.html` in your browser to play.** No server is required. To distribute the game, include `index.html`, `styles.css`, and `engine.js`, `portraits.js`, `ruby.js`, `sound.js`, and `app.js` from `dist/`, preserving the folder structure. No external network access is required at runtime.
 
-PCでは `index.html` をダブルクリックするか、ブラウザにドラッグしてください。スマホの画面幅にも対応しています。ただし、スマホOSやファイル管理アプリによってはローカルHTMLのJavaScript実行を制限します。その場合は、静的ホスティングに同じファイルと `dist/` フォルダを置いてアクセスできます（アプリ用のバックエンドは不要です）。
+On a desktop, double-click `index.html` or drag it into your browser. The layout also supports mobile screen widths. Some mobile operating systems or file managers restrict JavaScript in local HTML files. In that case, upload the same files and the `dist/` folder to a static host and access them there; no application backend is needed.
 
-## 遊び方
+## How to play
 
-- 難易度ごとの事件（かんたん3回・ふつう5回・むずかしい7回）を連続で解決するとゲームクリアです。「次の事件へ」で捜査資金を引き継いで進みます。事件ごとの証言・メモ・マーカーは新しくなります。
-- 「最初から捜査」で最初の難易度を選び直し、捜査資金5・1回目から再挑戦できます。キャンセルすると現在の事件を続けられます。
-- 後の事件ほど動物や犯人が増えます（動物は最大10匹、犯人は最大5匹）。
-- 「動物一覧」で全10種類と証言ルールを確認できます。
-- 「証言を聞く」をタップすると、その動物の発言が公開されます。全難易度で、聞く前から証言の対象となる動物を表示します。
-- 「むずかしい」の5回目以降は、一部の動物に証言の費用（捜査資金1または2）が設定されます。費用は聞く前に表示され、捜査資金が費用以上あれば、残りが0になる場合も証言を聞けます。一度聞いた証言に再び費用はかかりません。
-- 画面上部の「かん／漢」のルビアイコンでルビを切り替えられます。設定は事件とは別に保存します。
-- 漢字にはルビを表示します（選択欄・入力欄の案内はかな表記）。
-- 冒頭に12種類から選ばれた事件名と短い説明を表示します。同じ事件を再開すると、説明も引き継がれます。事件解決時は、結果画面と結果ダイアログに事件ごとの短い結末「事件のその後」を表示します。解決後に再開した場合も読み返せます。
-- 事件の内訳・発見した犯人数・残り捜査資金は、スクロール中も画面上部に表示します。
-- 事件ごとに犯人と善人の数が決まっています。
-- 通常の善人の発言は必ず正しく、犯人と勘違いしている善人の発言は必ず間違っています。
-- すべての証言と犯人数の条件に合う組み合わせは、必ず1つです。一部の証言だけでは、候補が複数残る場合があります。
-- 各動物の「犯人と判定」で、その場で正体が判明します。犯人をすべて見つけると残りは自動で善人と確定し、善人を判定する操作は不要です。
-- 判定した動物は、正体に合わせて絵が変わります。善人を誤判定すると悲しい顔になり、格子は表示しません。犯人は困った表情と格子で表示し、事件解決で自動確定した善人は笑顔になります。
-- 判定時は正解・不正解に応じた短い効果音が鳴ります。スピーカーアイコンで切り替えられ、設定は保存されます。判定音は効果音ラボの「クイズ正解2」「クイズ不正解2」を `assets/sounds/` に同梱して再生します。証言を開く音はブラウザ内で生成します。
-  - 全事件クリア時は、スタンプ音の終了後に「歓声と拍手1」を再生します。音源は `assets/sounds/` に同梱しています。効果音OFF時は再生せず、結果画面を閉じると停止します。出典：[歓声と拍手1](https://soundeffect-lab.info/sound/search.php?s=%E6%8B%8D%E6%89%8B)。
-  - 音源の出典：[効果音ラボ（判定音）](https://soundeffect-lab.info/sound/search.php?s=%E6%AD%A3%E8%A7%A3)（[利用規約](https://soundeffect-lab.info/agreement/)）。音源はこのゲームの効果音として使用しています。
-- 誤判定すると捜査資金が2減ります。誤判定した相手も判定済みになります。
-- 捜査資金は5から開始し、正解しても増えません。不正解で2減り、事件を1つ解決するたびに1増えます。捜査資金がマイナスになると捜査終了です。捜査資金が0以上の状態で犯人をすべて見つけると解決です。自動で確定した善人の分は捜査資金を増やしません。
-- メモとマーカー（未設定・犯人候補・善人候補・要検討・勘違い候補）は自由に使え、判定には影響しません。
-- 終了時は中央に結果ダイアログを表示します。閉じた後もページ上に結果と「次の事件へ」が残ります。
-- 終了後は各証言と真相の照合を確認できます。全事件クリア時は解決した事件数・全事件で間違えて犯人と判定した回数・残った捜査資金を表示します。誤判定0回の場合は専用のメッセージで祝います。「最後の事件のその後」は結果本文の末尾に表示します。
+- Solve a series of cases to complete the game: three on Easy, five on Normal, or seven on Hard. Select “Next case” to continue with your remaining investigation funds. Statements, notes, and markers reset for each case.
+- Select “Start over” to choose the initial difficulty again and restart at case one with five investigation funds. Cancel to continue the current case.
+- Later cases feature more animals and culprits, up to ten animals and five culprits.
+- Open “Animal list” to see all ten species and their statement rules.
+- Tap “Hear statement” to reveal an animal's statement. On every difficulty, the animals mentioned in a statement are shown before you hear it.
+- From case five on Hard, some statements cost one or two investigation funds. The cost is displayed beforehand. You can hear a statement if you have enough funds, even if paying leaves you with zero. Revealed statements never cost funds again.
+- Toggle furigana (phonetic readings above kanji) with the “かん／漢” icon at the top of the screen. This preference is saved separately from case progress.
+- Kanji have furigana readings; instructions in selection and input fields use kana.
+- Each case begins with a title selected from twelve possibilities and a short introduction. Resuming the same case preserves its introduction. When you solve a case, the results screen and dialog show a short, case-specific epilogue, “After the case.” You can reread it when resuming a solved case.
+- The case breakdown, number of culprits found, and remaining investigation funds stay visible at the top while scrolling.
+- Each case has a fixed number of culprits and innocents.
+- Ordinary innocents always make true statements. A mistaken innocent who believes they are a culprit always makes a false statement.
+- Exactly one assignment satisfies all statements and the required culprit count. Hearing only some statements may leave multiple possibilities.
+- Select “Identify as culprit” for an animal to reveal its identity immediately. Once you find every culprit, all remaining animals are automatically confirmed innocent; you do not need to identify innocents yourself.
+- An animal's portrait changes after identification. An innocent accused by mistake looks sad, without bars. Culprits look troubled behind bars, and innocents automatically confirmed when the case is solved smile.
+- Correct and incorrect identifications play short sound effects. Toggle sound with the speaker icon; this preference is saved. The identification sounds, “Quiz correct 2” and “Quiz incorrect 2,” come from Sound Effect Lab and are bundled in `assets/sounds/`. The statement-reveal sound is generated in the browser.
+  - When you complete all cases, “Cheers and applause 1” plays after the stamp sound finishes. This audio is bundled in `assets/sounds/`. It does not play when sound effects are off, and stops when you close the results screen. Source: [Cheers and applause 1](https://soundeffect-lab.info/sound/search.php?s=%E6%8B%8D%E6%89%8B).
+  - Audio source: [Sound Effect Lab (identification sounds)](https://soundeffect-lab.info/sound/search.php?s=%E6%AD%A3%E8%A7%A3) ([terms of use](https://soundeffect-lab.info/agreement/)). These recordings are used as game sound effects.
+- An incorrect identification costs two investigation funds. The accused animal is still marked as identified.
+- You start with five investigation funds. Correct identifications do not increase them; incorrect identifications cost two, and solving a case earns one. The investigation ends if your funds fall below zero. Find every culprit with zero or more funds to solve the case. Automatically confirmed innocents do not earn funds.
+- Use notes and markers freely: unset, suspected culprit, suspected innocent, needs review, or suspected mistaken innocent. They do not affect identification results.
+- A results dialog appears in the center when a case ends. After you close it, the results and “Next case” remain on the page.
+- After a case ends, you can compare each statement with the truth. Completing all cases shows the number of cases solved, the total number of innocents incorrectly accused across all cases, and your remaining investigation funds. A special message celebrates a run with no incorrect accusations. “After the final case” appears at the end of the results text.
 
-| 最初の難易度 | 1回目の動物 | 1回目の犯人 |
+| Initial difficulty | Animals in case one | Culprits in case one |
 | --- | ---: | ---: |
-| かんたん | 4 | 1 |
-| ふつう | 5 | 2 |
-| むずかしい | 7 | 3 |
+| Easy | 4 | 1 |
+| Normal | 5 | 2 |
+| Hard | 7 | 3 |
 
-10種類の動物から重複なしで登場し、種類ごとに証言の論理形式が異なります。どの動物も善人・犯人の両方になれます。
+Animals are selected from ten species without duplicates. Each species uses a different logical statement format. Any animal can be either innocent or a culprit.
 
-## 保存
+## Saving
 
-保存データのバージョンや形式・内容が現行仕様と一致しない場合は、データなしとして新しい事件を開始します。旧形式からの移行は行いません。全事件の誤判定回数に対応した保存形式はバージョン13です。以前の保存データには過去の誤判定回数がないため、新しく捜査を開始してください。
+If saved data has a version, format, or contents incompatible with the current specification, the game treats it as missing and starts a new case. Older formats are not migrated. Save format version 13 supports the total number of incorrect accusations across all cases. Earlier saves do not contain past accusation counts, so start a new investigation.
 
-現在の捜査回数、引き継いだ捜査資金、進行状況、公開した証言、メモ、マーカーをブラウザの `localStorage` に自動保存します。保存できない環境でもプレイ可能ですが、画面を閉じると進行状況は失われます。ローカルファイルの保存領域はブラウザごとに扱いが異なり、別の場所に移動した場合やプライベートブラウズでは引き継げない場合があります。
+The current case number, carried-over investigation funds, progress, revealed statements, notes, and markers are automatically saved in the browser's `localStorage`. You can still play when storage is unavailable, but progress is lost when you close the page. Browsers handle storage for local files differently; moving the files or using private browsing may prevent progress from carrying over.
 
-## 実装と検証
+## Implementation and verification
 
-HTML/CSS/TypeScriptで実装しています。実行時の依存ライブラリはありません。TypeScriptは `strict` モードで検査し、`dist/` にJavaScriptを出力します。ゲーム状態・難易度・証言・ブラウザAPIの型は `types.d.ts` で共有しています。生成ファイルと `node_modules/` はGit管理対象外です。ソースを変更したら再度 `npm run build` を実行してください。動物のオリジナルドット絵はSVGの矩形で描画しています。生成器は数の条件を満たす組み合わせから真相を1つ選び、各動物の立場に合う証言をランダムに選びます。全配置を探索し、別解のない問題だけを採用します。最大32回試しても採用できない場合は、人数・犯人数ごとに一意性を検証した固定シードの予備問題を使い、実行時にも再検証します。証言費用は採用後に設定するため、資金内で必要な証言を聞けることまでは保証しません。保存された乱数シードで同じ問題を再現できます。
+The game is built with HTML, CSS, and TypeScript, with no runtime library dependencies. TypeScript checks the code in `strict` mode and outputs JavaScript to `dist/`. Types for game state, difficulty, statements, and browser APIs are shared in `types.d.ts`. Generated files and `node_modules/` are excluded from Git. Run `npm run build` again after changing the source. Original animal pixel art is drawn with SVG rectangles. The generator selects a true assignment from combinations satisfying the count constraints, then randomly selects statements consistent with each animal's role. It searches every assignment and accepts only puzzles with a unique solution. If none is accepted after 32 attempts, it uses a fixed-seed fallback puzzle whose uniqueness has been verified for that animal and culprit count, and verifies it again at runtime. Statement costs are assigned after a puzzle is accepted, so the generator does not guarantee that you can afford all necessary statements. The saved random seed reproduces the same puzzle.
 
-Node.js 20.19以降（22系は22.13以降、または24以降）で、3難易度・計3,000問の独立した全探索検証と、捜査資金／勝敗／再現性のテストを実行できます。
+With Node.js 20.19 or later (22.13 or later for the 22.x series, or 24 or later), run independent exhaustive verification of 3,000 puzzles across the three difficulties, plus tests for investigation funds, win/loss conditions, and reproducibility:
 
 ```sh
 npm run typecheck
@@ -75,25 +75,25 @@ npm run lint
 npm test
 ```
 
-静的解析は `npm run lint` で実行します。ESLintとtypescript-eslintの `recommendedTypeChecked` を使い、本体・共有型定義・テストを型情報付きで検査します。型解析には、すべての対象ファイルを含む `tsconfig.tests.json` を使います。警告もCIの失敗として扱い、生成先の `dist/`・`_site/` は検査しません。ブラウザ向けのグローバル変数宣言とCommonJSの読み込みには限定的な例外を設けています。Node.jsのテスト登録が返すPromiseは、テストランナーが結果を管理するため `void test(...)` で扱います。
+Run static analysis with `npm run lint`. ESLint and typescript-eslint's `recommendedTypeChecked` configuration check the application, shared type declarations, and tests using type information. Type analysis uses `tsconfig.tests.json`, which includes all checked files. Warnings fail CI, and generated output in `dist/` and `_site/` is excluded. Limited exceptions allow browser global declarations and CommonJS imports. Promises returned by Node.js test registration are handled with `void test(...)`, since the test runner manages the results.
 
-ブラウザテスト（初回にChromiumをインストール）:
+Browser tests (install Chromium before the first run):
 
 ```sh
 npx playwright install chromium
 npm run test:browser
 ```
 
-既存の環境を使う場合、`PLAYWRIGHT_MODULE` にPlaywrightパッケージのパス、`CHROMIUM_PATH` にChromium実行ファイルのパスを指定できます。テストは `file://` で開き、メモ・マーカーの保存、勝敗、難易度、ダイアログ、320px／390pxの横幅、保存不可の場合を確認します。スクリーンショットは `/tmp/beast-detective-desktop.png` と `/tmp/beast-detective-mobile.png` に保存します。
+To use an existing installation, set `PLAYWRIGHT_MODULE` to the Playwright package path and `CHROMIUM_PATH` to the Chromium executable path. Tests open the game over `file://` and check note and marker persistence, wins and losses, difficulty, dialogs, layouts at 320px and 390px widths, and behavior when storage is unavailable. Screenshots are saved to `/tmp/beast-detective-desktop.png` and `/tmp/beast-detective-mobile.png`.
 
-## 勘違いしている善人
+## Mistaken innocents
 
-「むずかしい」の4回目から、善人のうち1匹は証言が必ず間違っています。
-犯人数や「同じ立場」などの証言では善人として扱い、犯人と判定すると捜査資金が2減ります。
-犯人がその動物を「犯人だ」と証言することもあります。人数は最初から「善人○匹（うち勘違い1匹）」と表示します。
-初登場の4回目はすべての証言が無料で、有料の証言は5回目からです。
-勘違い候補のマーカーを使えます。犯人を全員見つければ解決し、勘違い役の指名は不要です。
+Starting with case four on Hard, one innocent always makes a false statement.
+This animal still counts as innocent for culprit counts and statements such as “same role,” and accusing it costs two investigation funds.
+A culprit may also claim that this animal is a culprit. From the start, the count is shown as “N innocents (including one mistaken innocent).”
+All statements are free in case four, when this role first appears; paid statements begin in case five.
+You can use the suspected mistaken innocent marker. Finding every culprit solves the case; identifying the mistaken innocent is unnecessary.
 
-生成・解探索では、犯人の証言がすべて偽で、善人の偽の証言が指定数に一致することを検証します。
-犯人配置が決まれば偽の証言をした善人が勘違い役と決まるため、犯人配置の一意性で全員の正体の一意性も保証します。
-勘違い役が登場する全構成に固定シードの予備問題を用意しています。保存形式はバージョン12です。
+Puzzle generation and solution searches verify that every culprit's statement is false and that the number of innocents making false statements matches the specified count.
+Once the culprit assignment is known, the innocent making a false statement is determined to be the mistaken innocent, so a unique culprit assignment also guarantees unique identities for everyone.
+Fixed-seed fallback puzzles are available for every configuration featuring a mistaken innocent. This feature uses save format version 12.
