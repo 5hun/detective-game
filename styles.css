@@ -49,6 +49,7 @@ html{scroll-padding-top:calc(var(--summary-height,120px) + 12px)}
 #result-dialog{border-color:#afbea1;background:#f1f5e9}
 #result-dialog.lost{border-color:#cbb5a2;background:#f8eee6}
 #result-dialog .dialog-actions{flex-wrap:wrap}
+.case-ending{border-top:1px dashed #afbea1;padding-top:14px;line-height:2.3}
 
 #result-dialog .dialog-heading{gap:12px}
 #result-dialog .close-button{flex-shrink:0}

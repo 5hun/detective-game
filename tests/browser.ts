@@ -132,7 +132,7 @@ async function checkReadings(page: Page) {
     probe.id = 'readings-probe';
     for (const story of DetectiveEngine.caseStories) {
       const line = document.createElement('p');
-      line.textContent = story.title + story.description;
+      line.textContent = story.title + story.description + story.ending;
       probe.append(line);
     }
     for (const role of DetectiveEngine.roles) {
@@ -247,6 +247,7 @@ async function checkReadings(page: Page) {
   });
   assert.equal(storyTitle, expectedStory.title);
   assert.equal(storyDescription, expectedStory.description);
+  assert.equal(await page.locator('.case-ending').count(), 0, 'ending stays hidden during the investigation');
   const solution = await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.answer);
   assert.deepEqual(await page.evaluate(() => window.playedTones), []);
   await setToggle(page.locator('#sound-toggle'), false);
@@ -285,6 +286,8 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('#result-dialog').isVisible(), false, 'judgment feedback appears before the result dialog');
   await page.locator('#result-dialog').waitFor({ state: 'visible' });
   assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('事件解決'));
+  assert.equal(await baseText(page.locator('#result .case-ending')), `事件のその後${expectedStory.ending}`);
+  assert.equal(await baseText(page.locator('#result-dialog .case-ending')), `事件のその後${expectedStory.ending}`);
   await page.waitForFunction(() => window.playedRecordings.includes('assets/sounds/stamp.wav'));
   assert.deepEqual(await page.evaluate(() => window.playedRecordings.splice(0)), ['assets/sounds/stamp.wav']);
   await page.screenshot({ path: '/tmp/detective-result-dialog-desktop.png' });
@@ -298,6 +301,7 @@ async function checkReadings(page: Page) {
   await page.reload();
   await page.locator('#menu-toggle').click();
   assert.ok(await page.locator('#result').isVisible());
+  assert.equal(await baseText(page.locator('#result .case-ending')), `事件のその後${expectedStory.ending}`, 'ending survives reload');
   assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(5 + criminals.reduce((sum, index) => sum + (index < 2 ? 0 : 1), 0) + 1));
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
   assert.deepEqual(await page.evaluate(() => window.playedRecordings), [], 'restoring a solved case does not play the stamp');
@@ -327,6 +331,7 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('#result-dialog').isVisible(), false, 'judgment feedback appears before the result dialog');
   await page.locator('#result-dialog').waitFor({ state: 'visible' });
   assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('捜査資金がマイナスになりました'));
+  assert.equal(await page.locator('.case-ending').count(), 0, 'unsolved cases have no ending');
   await page.keyboard.press('Escape');
   assert.equal(await page.locator('#result-dialog').isVisible(), false);
   assert.ok((await baseText(page.locator('#result'))).includes('捜査資金がマイナスになりました'));
