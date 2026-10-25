@@ -104,7 +104,7 @@
     const sortedTargets = [...state.puzzle.statements[i].targets].sort((a, b) => a - b);
     const targets = sortedTargets.map(t => `${t + 1}. ${state.puzzle.people[t].name}`).join('、');
     let actions;
-    const identity = `<strong class="identity-${liar ? 'liar' : 'good'}">${E.identity(state.puzzle, i).replace('勘違い', '<span class="mistaken-emphasis">勘違い</span>')}</strong>`;
+    const identity = `<strong class="identity-${liar ? 'liar' : 'good'}">${E.identity(state.puzzle, i).replace('勘違いしている', '<span class="mistaken-emphasis">勘違い</span><span class="identity-connector">している</span>')}</strong>`;
     if (resolved) actions = `<span class="resolved-tag ${resolved.correct ? '' : 'wrong'}">${resolved.correct ? '✅ 正解' : '❌ 誤判定'} · ${person.name}は${identity}</span>`;
     else if (state.status === 'won') actions = `<span class="resolved-tag revealed">✓ ${identity}と確定 · ${person.name}は${identity}</span>`;
     else if (ended) actions = `<span class="resolved-tag unjudged">未判定 · 真相：${identity}</span>`;
