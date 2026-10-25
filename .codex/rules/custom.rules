@@ -1,1 +1,1 @@
-prefix_rule(pattern=["git", ["add", "commit", "status"]], decision="allow")
+prefix_rule(pattern=["git", ["add", "commit", "status", "diff"]], decision="allow")
