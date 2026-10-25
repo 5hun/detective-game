@@ -468,9 +468,14 @@ async function checkReadings(page: Page) {
     assert.equal(result!.includes('すべての事件を解決！'), round === 3);
     await page.waitForFunction(() => window.playedRecordings.includes('assets/sounds/stamp.wav'));
     if (round === 3) {
-      assert.ok(result.includes('全事件で間違えて犯人と判定した回数：0回'));
+      assert.ok(result.includes('全事件で間違えて犯人と判定した回数0回'));
       assert.ok(result.includes('一度も間違えずに、すべての事件を解決しました！'));
       assert.equal(await baseText(page.locator('#result-dialog-content > :last-child > summary')), '最後の事件のその後');
+      await page.setViewportSize({ width: 320, height: 844 });
+      const table = await page.locator('#result-dialog .campaign-results').boundingBox();
+      assert.ok(table && table.x >= 0 && table.x + table.width <= 320, 'campaign table fits narrow screens');
+      await page.screenshot({ path: '/tmp/detective-campaign-table.png' });
+      await page.setViewportSize({ width: 390, height: 844 });
       await page.waitForFunction(() => window.playedRecordings.includes('assets/sounds/people-performance-cheer1.mp3'), { timeout: 15000 });
       const celebration = await page.evaluate(() => window.playedRecordings.filter(src => !src.endsWith('correct2.mp3')));
       assert.deepEqual(celebration, ['assets/sounds/stamp.wav', 'assets/sounds/people-performance-cheer1.mp3']);
@@ -608,13 +613,13 @@ async function checkReadings(page: Page) {
     if (round < 3) await campaign.locator('#dialog-next-case').click();
   }
   const completedText = await baseText(campaign.locator('#result-dialog-content'));
-  assert.ok(completedText.includes('全事件で間違えて犯人と判定した回数：2回'));
+  assert.ok(completedText.includes('全事件で間違えて犯人と判定した回数2回'));
   assert.ok(!completedText.includes('一度も間違えずに'));
   assert.equal(await baseText(campaign.locator('#result-dialog-content > :last-child > summary')), '最後の事件のその後');
   assert.equal(await baseText(campaign.locator('#result-dialog .quiet-button')), '結果を確認');
   await checkReadings(campaign);
   await campaign.reload();
-  assert.ok((await baseText(campaign.locator('#result'))).includes('全事件で間違えて犯人と判定した回数：2回'));
+  assert.ok((await baseText(campaign.locator('#result'))).includes('全事件で間違えて犯人と判定した回数2回'));
   await campaign.locator('#next-case').click();
   await campaign.locator('#confirm-new').click();
   assert.equal(await campaign.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).previousMistakes), 0);
