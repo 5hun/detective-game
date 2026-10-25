@@ -209,6 +209,7 @@
     $('case-intro-title').textContent = E.caseStories[state.storyHistory[state.storyHistory.length - 1]].title;
     addReadings(caseIntro);
     caseIntro.showModal();
+    if (preferences.sound) void judgmentSound.title();
     caseIntroTimer = setTimeout(() => finishCaseIntro(true), 1400);
   }
   caseIntro.addEventListener('click', () => finishCaseIntro());

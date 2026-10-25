@@ -79,6 +79,7 @@ async function checkReadings(page: Page) {
   assert.ok(await page.locator('#home-page').isVisible());
   await startGame(page);
   assert.ok(await page.locator('#case-intro').isVisible());
+  assert.deepEqual(await page.evaluate(() => window.playedRecordings.splice(0)), ['assets/sounds/title1.mp3']);
   assert.equal(await baseText(page.locator('#case-intro-number')), '事件 1');
   assert.equal(await baseText(page.locator('#case-intro-title')), await baseText(page.locator('#case-title')));
   await page.locator('#case-intro-title').click();
@@ -110,7 +111,7 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('#memo-0').inputValue(), '');
 
   const durations = await page.evaluate(() => Promise.all(
-    ['assets/sounds/correct2.mp3', 'assets/sounds/incorrect2.mp3'].map(src => new Promise<number>((resolve, reject) => {
+    ['assets/sounds/correct2.mp3', 'assets/sounds/incorrect2.mp3', 'assets/sounds/title1.mp3'].map(src => new Promise<number>((resolve, reject) => {
       const audio = new Audio(src);
       audio.onloadedmetadata = () => resolve(audio.duration);
       audio.onerror = () => reject(new Error(`Cannot load ${src}`));
@@ -316,6 +317,7 @@ async function checkReadings(page: Page) {
   const hard = await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.answer);
   assert.equal(await page.locator('#suspects [data-portrait-state="neutral"], #animals-list [data-portrait-state="neutral"]').count(), 7 + await page.evaluate(() => window.DetectiveEngine.roles.length));
   const innocents = hard.flatMap((liar, i) => liar ? [] : [i]);
+  assert.deepEqual(await page.evaluate(() => window.playedRecordings.splice(0)), ['assets/sounds/title1.mp3']);
   for (let step = 0; step < 3; step++) {
     const i = innocents[step];
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
