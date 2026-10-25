@@ -160,6 +160,7 @@ const DetectiveI18n = (() => {
     "動物たちの証言から嘘つきを見つける、何度でも遊べる論理推理ゲーム。": "A replayable logic mystery game: find the liars by comparing the animals’ testimony.",
     "どうぶつ探偵 ホーム": "Animal Detective home",
     "最初から": "Restart",
+    "home.start": "New Game",
     "遊び方": "Help",
     "ゲームメニュー": "Game menu",
     "動物一覧": "Animal guide",
@@ -234,7 +235,11 @@ const DetectiveI18n = (() => {
       for (const attribute of ['text', 'aria-label', 'title', 'content', 'alt', 'placeholder']) {
         if (!element.hasAttribute(attribute === 'text' ? 'data-i18n' : `data-i18n-${attribute}`)) continue;
         if (!original.has(attribute)) original.set(attribute, (attribute === 'text' ? element.textContent : element.getAttribute(attribute))?.trim() || '');
-        const value = text(original.get(attribute)!);
+        // Explicit keys distinguish labels that share the same Japanese text.
+        const source = attribute === 'text' && language === 'en'
+          ? element.getAttribute('data-i18n') || original.get(attribute)!
+          : original.get(attribute)!;
+        const value = text(source);
         if (attribute === 'text') element.textContent = value;
         else element.setAttribute(attribute, value);
       }
