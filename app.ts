@@ -174,7 +174,9 @@
     const stamp = content.querySelector<HTMLElement>('.case-closed-stamp');
     if (stamp) {
       const playStamp = () => {
-        if (preferences.sound && $<HTMLDialogElement>('result-dialog').open) void judgmentSound.stamp();
+        if (preferences.sound && $<HTMLDialogElement>('result-dialog').open) {
+          void judgmentSound.stamp(state.puzzle.round === E.totalCases(state.puzzle.level));
+        }
       };
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) playStamp();
       else stamp.addEventListener('animationstart', event => {
@@ -230,6 +232,7 @@
   $('dialog-next-case').addEventListener('click', nextCase);
   $('result-dialog').addEventListener('close', () => {
     clearTimeout(stampSoundTimer);
+    judgmentSound.stop();
     if (hasGame && !$('game-page').hidden && state.status !== 'playing' && !$<HTMLDialogElement>('new-dialog').open) {
       $('result').scrollIntoView({ block: 'start', behavior: 'instant' });
       $('next-case').focus({ preventScroll: true });

@@ -8,11 +8,14 @@
     incorrect: new Audio('assets/sounds/incorrect2.mp3'),
     stamp: new Audio('assets/sounds/stamp.wav'),
     title: new Audio('assets/sounds/title1.mp3'),
+    fanfare: new Audio('assets/sounds/trumpet1.mp3'),
+    applause: new Audio('assets/sounds/people-performance-cheer1.mp3'),
   };
   const active = new Set<{ oscillator: OscillatorNode; gain: GainNode }>();
   function stop() {
     generation++;
     for (const audio of Object.values(recordings)) {
+      audio.onended = null;
       audio.pause();
       audio.currentTime = 0;
     }
@@ -31,7 +34,23 @@
       // Missing or blocked audio must never interrupt the game.
     }
   }
-  async function playStamp() {
+  async function playStamp(celebrate = false) {
+    const request = generation;
+    if (celebrate) {
+      const playNext = (audio: HTMLAudioElement) => {
+        if (request !== generation) return;
+        audio.currentTime = 0;
+        void audio.play().catch(() => { /* Blocked audio must never interrupt the game. */ });
+      };
+      recordings.stamp.onended = () => {
+        recordings.stamp.onended = null;
+        playNext(recordings.fanfare);
+      };
+      recordings.fanfare.onended = () => {
+        recordings.fanfare.onended = null;
+        playNext(recordings.applause);
+      };
+    }
     try {
       recordings.stamp.currentTime = 0;
       await recordings.stamp.play();

@@ -458,12 +458,22 @@ async function checkReadings(page: Page) {
     assert.ok(current.puzzle.k >= previous.puzzle.k);
     assert.ok(current.resolved.every(r => r === null));
     assert.ok(current.revealed.every(r => !r));
+    await setToggle(page.locator('#sound-toggle'), true);
+    await page.evaluate(() => window.playedRecordings.splice(0));
     for (let i = 0; i < current.puzzle.answer.length; i++) {
       if (current.puzzle.answer[i]) await page.locator(`#person-${i} [data-judge="liar"]`).click();
     }
     await page.locator('#result-dialog').waitFor({ state: 'visible' });
     const result = await baseText(page.locator('#result-dialog-content'));
     assert.equal(result!.includes('ゲームクリア'), round === 3);
+    await page.waitForFunction(() => window.playedRecordings.includes('assets/sounds/stamp.wav'));
+    if (round === 3) {
+      await page.waitForFunction(() => window.playedRecordings.includes('assets/sounds/people-performance-cheer1.mp3'), { timeout: 15000 });
+      const celebration = await page.evaluate(() => window.playedRecordings.filter(src => !src.endsWith('correct2.mp3')));
+      assert.deepEqual(celebration, ['assets/sounds/stamp.wav', 'assets/sounds/trumpet1.mp3', 'assets/sounds/people-performance-cheer1.mp3']);
+    } else {
+      assert.equal(await page.evaluate(() => window.playedRecordings.includes('assets/sounds/trumpet1.mp3')), false);
+    }
     await checkReadings(page);
   }
   await page.locator('#dialog-next-case').click();
