@@ -119,16 +119,16 @@ test('all statement polarities and count boundaries are evaluated correctly', ()
   assert.throws(() => E.generate(0, 'unknown' as Level));
 });
 
-test('correct arrest before hearing that testimony earns one trust', () => {
+test('correct arrest before testimony does not recover trust', () => {
   const s = state('hard');
   const criminals = s.puzzle.answer.flatMap((liar, i) => liar ? [i] : []);
-  s.revealed[criminals[0]] = false;
+  s.revealed.fill(false);
   assert.equal(E.judge(s, criminals[0]), true);
-  assert.equal(s.trust, 6);
+  assert.equal(s.trust, 5);
   assert.equal(E.judge(s, criminals[0]), null);
-  assert.equal(s.trust, 6);
+  assert.equal(s.trust, 5);
   assert.equal(E.judge(s, criminals[1]), true);
-  assert.equal(s.trust, 6);
+  assert.equal(s.trust, 5);
 });
 test('incorrect arrest before testimony still loses two trust', () => {
   const s = state();

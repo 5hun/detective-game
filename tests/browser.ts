@@ -261,12 +261,12 @@ async function checkReadings(page: Page) {
   for (const [step, i] of criminals.entries()) {
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
-    assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(5 + criminals.slice(0, step + 1).reduce((sum, index) => sum + (index < 2 ? 0 : 1), 0) + (step === criminals.length - 1 ? 1 : 0)));
+    assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(5 + (step === criminals.length - 1 ? 1 : 0)));
     if (step < criminals.length - 1) {
       const feedback = await page.locator('#feedback').boundingBox();
       assert.ok(feedback);
       assert.ok(feedback.y >= 0 && feedback.y + feedback.height <= 1100, 'judgment message stays in viewport');
-      assert.ok((await baseText(page.locator('#feedback'))).includes(`正解です。${i < 2 ? '捜査資金の増減はありません。' : '捜査資金 ＋1。'}`));
+      assert.ok((await baseText(page.locator('#feedback'))).includes('正解です。捜査資金の増減はありません。'));
       await checkReadings(page);
     }
     if (step === 0) {
@@ -302,7 +302,7 @@ async function checkReadings(page: Page) {
   await page.locator('#menu-toggle').click();
   assert.ok(await page.locator('#result').isVisible());
   assert.equal(await baseText(page.locator('#result .case-ending')), `事件のその後${expectedStory.ending}`, 'ending survives reload');
-  assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(5 + criminals.reduce((sum, index) => sum + (index < 2 ? 0 : 1), 0) + 1));
+  assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(6));
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
   assert.deepEqual(await page.evaluate(() => window.playedRecordings), [], 'restoring a solved case does not play the stamp');
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', true);

@@ -366,13 +366,12 @@
     const judge = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-judge]');
     if (judge) {
       const i = Number(judge.dataset.index);
-      const reward = state.revealed[i] ? 0 : 1;
       const previousTrust = state.trust;
       const correct = E.judge(state, i);
       if (correct === null) return;
       if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
-      render(`${correct ? `✅ 正解です。${reward ? '捜査資金 ＋1。' : '捜査資金の増減はありません。'}` : '❌ 誤判定。捜査資金 −2。'}${state.puzzle.people[i].name}は${E.identity(state.puzzle, i)}でした。`);
+      render(`${correct ? '✅ 正解です。捜査資金の増減はありません。' : '❌ 誤判定。捜査資金 −2。'}${state.puzzle.people[i].name}は${E.identity(state.puzzle, i)}でした。`);
       animateJudgment(state.trust - previousTrust);
       if (state.status !== 'playing') {
         const completedState = state;

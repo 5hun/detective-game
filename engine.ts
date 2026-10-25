@@ -185,7 +185,7 @@ var DetectiveEngine = (function () {
   function judge(state: JudgmentState, index: number) {
     if (state.status !== 'playing' || state.resolved[index] !== null) return null;
     const correct = state.puzzle.answer[index] === true;
-    const reward = correct ? (state.revealed[index] ? 0 : 1) : -2;
+    const reward = correct ? 0 : -2;
     state.resolved[index] = { correct, guess: true, reward };
     state.trust += reward;
     if (state.trust < 0) state.status = 'lost';
