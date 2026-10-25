@@ -185,6 +185,37 @@
       }, { once: true });
     }
   }
+  const caseIntro = $<HTMLDialogElement>('case-intro');
+  let caseIntroTimer: ReturnType<typeof setTimeout>;
+  function finishCaseIntro(animateCards = false) {
+    clearTimeout(caseIntroTimer);
+    if (!caseIntro.open) return;
+    caseIntro.close();
+    $('case-title').tabIndex = -1;
+    $('case-title').focus({ preventScroll: true });
+    if (animateCards && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      $('suspects').querySelectorAll<HTMLElement>('.suspect').forEach((card, index) => {
+        card.animate([
+          { opacity: 0, transform: 'translateY(10px)' },
+          { opacity: 1, transform: 'translateY(0)' }
+        ], { duration: 280, delay: index * 45, fill: 'backwards', easing: 'ease-out' });
+      });
+    }
+  }
+  function showCaseIntro() {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    $('case-intro-number').textContent = `事件 ${state.puzzle.round}`;
+    $('case-intro-title').textContent = E.caseStories[state.storyHistory[state.storyHistory.length - 1]].title;
+    addReadings(caseIntro);
+    caseIntro.showModal();
+    caseIntroTimer = setTimeout(() => finishCaseIntro(true), 1400);
+  }
+  caseIntro.addEventListener('click', () => finishCaseIntro());
+  caseIntro.addEventListener('cancel', event => {
+    event.preventDefault();
+    finishCaseIntro();
+  });
   function nextCase() {
     clearTimeout(resultDialogTimer);
     if (state.status !== 'won' || state.puzzle.round === E.totalCases(state.puzzle.level)) { openNewCaseDialog(); return; }
@@ -193,7 +224,7 @@
     state = fresh(state.puzzle.level, state.puzzle.round + 1, state.trust, state.storyHistory);
     $('feedback').className = 'feedback';
     render('捜査資金を引き継いで、新しい事件の捜査を始めましょう。');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showCaseIntro();
   }
   $('dialog-next-case').addEventListener('click', nextCase);
   $('result-dialog').addEventListener('close', () => {
@@ -218,7 +249,7 @@
       state = fresh($<HTMLSelectElement>('difficulty').value as Level);
       $('feedback').className = 'feedback';
       render('新しい事件が届きました。みんなの証言が、捜査の手がかりです。');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showCaseIntro();
     } catch (err) { $('feedback').textContent = err instanceof Error ? err.message : String(err); addReadings($('feedback')); }
   }
   // Keep keyboard/scrollIntoView targets below the pinned summary, including with ruby enabled.

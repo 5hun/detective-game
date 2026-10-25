@@ -205,3 +205,13 @@ body::before{
 .identity-connector{font-weight:400}
 
 #mistaken-count .identity-good{color:#56804a;font-weight:700;font-size:inherit}
+
+/* A brief chapter title before each new investigation. */
+#case-intro{width:min(540px,calc(100% - 40px));padding:32px 24px;text-align:center;border:0;border-top:2px solid var(--gold);border-bottom:2px solid var(--gold);border-radius:2px;background:var(--paper);box-shadow:0 12px 48px #172c3833;cursor:pointer}
+#case-intro::backdrop{background:#182c38b8}
+#case-intro[open]{animation:case-intro-enter .24s ease-out both}
+#case-intro .eyebrow{color:var(--green);letter-spacing:.18em}
+#case-intro h2{font-size:clamp(21px,5vw,30px);line-height:2;margin:12px 0 20px;overflow-wrap:anywhere}
+#case-intro button{font-size:11px;color:var(--muted);min-height:44px}
+@keyframes case-intro-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){#case-intro[open]{animation:none}}

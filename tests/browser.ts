@@ -78,6 +78,13 @@ async function checkReadings(page: Page) {
   await page.reload();
   assert.ok(await page.locator('#home-page').isVisible());
   await startGame(page);
+  assert.ok(await page.locator('#case-intro').isVisible());
+  assert.equal(await baseText(page.locator('#case-intro-number')), '事件 1');
+  assert.equal(await baseText(page.locator('#case-intro-title')), await baseText(page.locator('#case-title')));
+  await page.locator('#case-intro button').click();
+  assert.ok(await page.locator('#case-intro').isHidden());
+  await page.waitForTimeout(1500);
+  assert.ok(await page.locator('#case-intro').isHidden(), 'skipped intro must stay closed');
   await page.locator('.suspect').last().waitFor();
   await page.locator('#memo-0').fill('初期ページから再開');
   const saveBeforeHome = await page.evaluate(() => localStorage.getItem('beast-detective-v1'));
@@ -91,6 +98,7 @@ async function checkReadings(page: Page) {
   await page.locator('[data-close="new-dialog"]').click();
   assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), saveBeforeHome);
   await page.locator('#continue-game').click();
+  assert.ok(await page.locator('#case-intro').isHidden(), 'resuming must not replay the intro');
   assert.ok(await page.locator('#game-page').isVisible());
   assert.equal(await page.locator('#memo-0').inputValue(), '初期ページから再開');
   assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), saveBeforeHome);
