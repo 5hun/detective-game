@@ -1,9 +1,9 @@
 'use strict';
 import { test } from 'node:test';
 import assert = require('node:assert/strict');
-const E: typeof DetectiveEngine = require('../engine.js');
+const E: typeof DetectiveEngine = require('../engine.js') as typeof DetectiveEngine;
 
-test('stories never repeat during campaigns at every difficulty, even with identical seeds', () => {
+void test('stories never repeat during campaigns at every difficulty, even with identical seeds', () => {
   for (const level of Object.keys(E.levels) as Level[]) {
     for (const seed of [0, 1, 42, 4294967295]) {
       let history: number[] = [];
@@ -12,7 +12,7 @@ test('stories never repeat during campaigns at every difficulty, even with ident
         assert.ok(id >= 0 && id < E.caseStories.length);
         assert.ok(!history.includes(id));
         history.push(id);
-        history = JSON.parse(JSON.stringify(history));
+        history = JSON.parse(JSON.stringify(history)) as number[];
       }
       assert.equal(new Set(history).size, E.totalCases(level));
     }
@@ -20,7 +20,7 @@ test('stories never repeat during campaigns at every difficulty, even with ident
   assert.throws(() => E.selectStory(0, E.caseStories.map((_, i) => i)), /No unused/);
 });
 
-test('3,000 generated cases uniquely identify the actual answer and obey every role', () => {
+void test('3,000 generated cases uniquely identify the actual answer and obey every role', () => {
   for (const [level, config] of (Object.entries(E.levels) as [Level, (typeof E.levels)[Level]][])) {
     for (let seed = 0; seed < 1000; seed++) {
       const p = E.generate(seed, level);
@@ -58,7 +58,7 @@ test('3,000 generated cases uniquely identify the actual answer and obey every r
     }
   }
 });
-test('same seed reproduces the case, different seeds vary it', () => {
+void test('same seed reproduces the case, different seeds vary it', () => {
   for (const level of Object.keys(E.levels) as Level[]) {
     assert.deepEqual(E.generate(4294967295, level), E.generate(4294967295, level));
     const cases = new Set(Array.from({ length: 100 }, (_, i) => JSON.stringify(E.generate(i, level).statements)));
@@ -66,7 +66,7 @@ test('same seed reproduces the case, different seeds vary it', () => {
   }
 });
 function state(level: Level = 'normal'): JudgmentState { const puzzle = E.generate(333, level); return { puzzle, revealed: puzzle.people.map(() => true), resolved: puzzle.people.map(() => null), trust: E.initialTrust, status: 'playing' }; }
-test('only criminals need judgment at every difficulty', () => {
+void test('only criminals need judgment at every difficulty', () => {
   for (const level of Object.keys(E.levels) as Level[]) {
     const s = state(level);
     const criminals = s.puzzle.answer.flatMap((liar, i) => liar ? [i] : []);
@@ -80,7 +80,7 @@ test('only criminals need judgment at every difficulty', () => {
     assert.equal(E.judge(s, s.puzzle.answer.indexOf(false)), null);
   }
 });
-test('three incorrect accusations lose and cannot be repeated', () => {
+void test('three incorrect accusations lose and cannot be repeated', () => {
   const s = state('hard');
   const innocents = s.puzzle.answer.flatMap((liar, i) => liar ? [] : [i]);
   innocents.slice(0, 3).forEach((index, j) => {
@@ -91,7 +91,7 @@ test('three incorrect accusations lose and cannot be repeated', () => {
   });
   assert.equal(E.judge(s, s.puzzle.answer.indexOf(true)), null);
 });
-test('correct accusation after testimony does not recover trust', () => {
+void test('correct accusation after testimony does not recover trust', () => {
   const s = state('hard');
   const innocents = s.puzzle.answer.flatMap((liar, i) => liar ? [] : [i]);
   E.judge(s, innocents[0]);
@@ -102,14 +102,14 @@ test('correct accusation after testimony does not recover trust', () => {
   assert.equal(s.status, 'lost');
   assert.equal(s.trust, -1);
 });
-test('finding all criminals wins after an incorrect accusation', () => {
+void test('finding all criminals wins after an incorrect accusation', () => {
   const s = state();
   E.judge(s, s.puzzle.answer.indexOf(false));
   s.puzzle.answer.forEach((liar, i) => { if (liar) E.judge(s, i); });
   assert.equal(s.status, 'won');
   assert.equal(s.trust, 4);
 });
-test('all statement polarities and count boundaries are evaluated correctly', () => {
+void test('all statement polarities and count boundaries are evaluated correctly', () => {
   assert.equal(E.evaluate({ type:'count', targets:[0,1,2], value:0 }, [false,false,false]), true);
   assert.equal(E.evaluate({ type:'count', targets:[0,1,2], value:3 }, [true,true,true]), true);
   assert.equal(E.evaluate({ type:'ordered', targets:[0,1], value:false }, [true,true]), true);
@@ -119,7 +119,7 @@ test('all statement polarities and count boundaries are evaluated correctly', ()
   assert.throws(() => E.generate(0, 'unknown' as Level));
 });
 
-test('correct arrest before testimony does not recover trust', () => {
+void test('correct arrest before testimony does not recover trust', () => {
   const s = state('hard');
   const criminals = s.puzzle.answer.flatMap((liar, i) => liar ? [i] : []);
   s.revealed.fill(false);
@@ -130,14 +130,14 @@ test('correct arrest before testimony does not recover trust', () => {
   assert.equal(E.judge(s, criminals[1]), true);
   assert.equal(s.trust, 5);
 });
-test('incorrect arrest before testimony still loses two trust', () => {
+void test('incorrect arrest before testimony still loses two trust', () => {
   const s = state();
   s.revealed.fill(false);
   assert.equal(E.judge(s, s.puzzle.answer.indexOf(false)), false);
   assert.equal(s.trust, 3);
 });
 
-test('testimony mentions animals in number order while preserving ordered roles', () => {
+void test('testimony mentions animals in number order while preserving ordered roles', () => {
   const statement: Statement = { type: 'ordered', targets: [1, 0], value: true };
   assert.equal(E.statementText(statement, E.roles), 'ゾウは善人で、ウサギは犯人だ。');
   assert.equal(E.evaluate(statement, [false, true]), true);
@@ -160,7 +160,7 @@ test('testimony mentions animals in number order while preserving ordered roles'
   }
 });
 
-test('affirmative wording preserves the meaning of complementary statements', () => {
+void test('affirmative wording preserves the meaning of complementary statements', () => {
   const cases: { type: 'any' | 'both' | 'ordered'; text: string; truth: (a: boolean, b: boolean) => boolean }[] = [
     { type: 'any', text: 'ゾウとウサギは、両方とも善人だ。', truth: (a, b) => !a && !b },
     { type: 'both', text: 'ゾウとウサギのうち、少なくとも1匹は善人だ。', truth: (a, b) => !a || !b },
@@ -177,7 +177,7 @@ test('affirmative wording preserves the meaning of complementary statements', ()
   }
 });
 
-test('bounded generation falls back to verified unique cases for every campaign configuration', () => {
+void test('bounded generation falls back to verified unique cases for every campaign configuration', () => {
   for (const level of Object.keys(E.levels) as Level[]) {
     for (let round = 1; round <= E.totalCases(level); round++) {
       for (const seed of [0, 1, 333, 4294967295]) {
@@ -200,7 +200,7 @@ test('bounded generation falls back to verified unique cases for every campaign 
   }
 });
 
-test('a one-attempt budget retries ambiguous draws using the unique fallback', () => {
+void test('a one-attempt budget retries ambiguous draws using the unique fallback', () => {
   // The original first draw for easy seed 7 is ambiguous: one attempt must use the fallback.
   const limited = E.generate(7, 'easy', 1, 1);
   const fallback = E.generate(7, 'easy', 1, 0);
@@ -214,7 +214,7 @@ test('a one-attempt budget retries ambiguous draws using the unique fallback', (
   }
 });
 
-test('difficulty-specific campaigns grow in size and preserve valid testimony at every starting level', () => {
+void test('difficulty-specific campaigns grow in size and preserve valid testimony at every starting level', () => {
   for (const level of Object.keys(E.levels) as Level[]) {
     let previous = E.caseConfig(level, 1);
     for (let round = 1; round <= E.totalCases(level); round++) {
@@ -236,7 +236,7 @@ test('difficulty-specific campaigns grow in size and preserve valid testimony at
 });
 
 
-test('paid testimony appears only in later hard cases with bounded costs', () => {
+void test('paid testimony appears only in later hard cases with bounded costs', () => {
   const paidRoles = new Set<string>();
   for (const level of ['easy', 'normal', 'hard'] as Level[]) {
     for (let round = 1; round <= E.totalCases(level); round++) {
@@ -259,7 +259,7 @@ test('paid testimony appears only in later hard cases with bounded costs', () =>
   assert.equal(paidRoles.size, E.roles.length);
 });
 
-test('paid testimony allows zero funds, rejects insufficient funds, and charges once', () => {
+void test('paid testimony allows zero funds, rejects insufficient funds, and charges once', () => {
   for (const cost of [1, 2]) {
     const s = state('hard');
     s.revealed.fill(false);
@@ -283,7 +283,7 @@ test('paid testimony allows zero funds, rejects insufficient funds, and charges 
   }
 });
 
-test('zero funds allow continued investigation and case completion', () => {
+void test('zero funds allow continued investigation and case completion', () => {
   const s = state('hard');
   s.trust = 2;
   E.judge(s, s.puzzle.answer.indexOf(false));
@@ -294,7 +294,7 @@ test('zero funds allow continued investigation and case completion', () => {
   assert.equal(s.trust, 1);
 });
 
-test('an incorrect accusation at zero funds ends the investigation', () => {
+void test('an incorrect accusation at zero funds ends the investigation', () => {
   const s = state();
   s.trust = 0;
   E.judge(s, s.puzzle.answer.indexOf(false));
@@ -302,7 +302,7 @@ test('an incorrect accusation at zero funds ends the investigation', () => {
   assert.equal(s.status, 'lost');
 });
 
-test('mistaken innocents have a unique identity under independent role enumeration', () => {
+void test('mistaken innocents have a unique identity under independent role enumeration', () => {
   for (const round of [4, 5, 6, 7]) {
     for (let seed = 0; seed < 150; seed++) {
       const p = E.generate(seed, 'hard', round);
@@ -325,7 +325,7 @@ test('mistaken innocents have a unique identity under independent role enumerati
   }
 });
 
-test('accusing a mistaken innocent costs two and criminals alone complete the case', () => {
+void test('accusing a mistaken innocent costs two and criminals alone complete the case', () => {
   const p = E.generate(0, 'hard', 4);
   const s: JudgmentState = { puzzle: p, trust: 5, status: 'playing',
     resolved: p.people.map(() => null), revealed: p.people.map(() => true) };

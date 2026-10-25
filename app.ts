@@ -63,11 +63,11 @@
         !Number.isInteger(storedPuzzle.round) || storedPuzzle.round! < 1 || storedPuzzle.round! > E.totalCases(storedPuzzle.level!) ||
         !Number.isInteger(saved.startingTrust) || (saved.startingTrust as number) < 1 ||
         (storedPuzzle.round === 1 && saved.startingTrust !== E.initialTrust)) return null;
-      const puzzle = E.generate(storedPuzzle.seed!, storedPuzzle.level!, storedPuzzle.round!);
+      const puzzle = E.generate(storedPuzzle.seed!, storedPuzzle.level, storedPuzzle.round);
       // Older saves only retain the current story; preserve it when upgrading.
       const storyHistory = saved.storyHistory ?? [puzzle.seed % E.caseStories.length];
       if (!Array.isArray(storyHistory) || storyHistory.length < 1 || storyHistory.length > puzzle.round ||
-        !storyHistory.every((id: unknown) => typeof id === 'number' && Number.isInteger(id) && id >= 0 && id < E.caseStories.length) ||
+        !storyHistory.every((id: unknown): id is number => typeof id === 'number' && Number.isInteger(id) && id >= 0 && id < E.caseStories.length) ||
         new Set(storyHistory).size !== storyHistory.length) return null;
       const previousMistakes = saved.previousMistakes;
       if (!Number.isSafeInteger(previousMistakes) || (previousMistakes as number) < 0 ||

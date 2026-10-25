@@ -1,6 +1,8 @@
 // Optional browser check: PLAYWRIGHT_MODULE may point to an existing Playwright installation.
 import type { Locator, Page } from 'playwright';
-const { chromium }: typeof import('playwright') = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+// The optional installation path requires loading Playwright dynamically.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { chromium }: typeof import('playwright') = require(process.env.PLAYWRIGHT_MODULE || 'playwright') as typeof import('playwright');
 import { pathToFileURL } from 'node:url';
 import path = require('node:path');
 import assert = require('node:assert/strict');
@@ -49,6 +51,8 @@ async function checkReadings(page: Page) {
   await page.addInitScript(() => {
     window.playedTones = [];
     window.playedRecordings = [];
+    // Preserve the native method and invoke it with the media element as this.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     const nativePlay = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () {
       window.playedRecordings.push(this.getAttribute('src') || '');
@@ -465,7 +469,7 @@ async function checkReadings(page: Page) {
     }
     await page.locator('#result-dialog').waitFor({ state: 'visible' });
     const result = await baseText(page.locator('#result-dialog-content'));
-    assert.equal(result!.includes('すべての事件を解決！'), round === 3);
+    assert.equal(result.includes('すべての事件を解決！'), round === 3);
     await page.waitForFunction(() => window.playedRecordings.includes('assets/sounds/stamp.wav'));
     if (round === 3) {
       assert.ok(result.includes('全事件で間違えて犯人と判定した回数0回'));
