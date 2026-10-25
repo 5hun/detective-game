@@ -1,6 +1,6 @@
 type Level = 'easy' | 'normal' | 'hard';
 type StatementType = 'single' | 'same' | 'count' | 'any' | 'both' | 'parity' | 'ordered' | 'majority' | 'allSame' | 'balance';
-interface Person { id: string; name: string; job: string; rule: string; type: StatementType }
+interface Person { id: string; name: string; rule: string; type: StatementType }
 type Statement =
   | { type: 'balance'; targets: number[]; value: number }
   | { type: 'count'; targets: number[]; value: number }
