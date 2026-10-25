@@ -453,6 +453,7 @@ async function checkReadings(page: Page) {
     assert.deepEqual(current.storyHistory.slice(0, -1), previous.storyHistory);
     assert.equal(new Set(current.storyHistory).size, round);
     assert.equal(current.trust, previous.trust);
+    assert.equal(current.previousMistakes, previous.previousMistakes + previous.resolved.filter(r => r && !r.correct).length);
     assert.ok(current.puzzle.people.length >= previous.puzzle.people.length);
     assert.ok(current.puzzle.k >= previous.puzzle.k);
     assert.ok(current.resolved.every(r => r === null));
@@ -464,9 +465,12 @@ async function checkReadings(page: Page) {
     }
     await page.locator('#result-dialog').waitFor({ state: 'visible' });
     const result = await baseText(page.locator('#result-dialog-content'));
-    assert.equal(result!.includes('ゲームクリア'), round === 3);
+    assert.equal(result!.includes('すべての事件を解決！'), round === 3);
     await page.waitForFunction(() => window.playedRecordings.includes('assets/sounds/stamp.wav'));
     if (round === 3) {
+      assert.ok(result.includes('全事件で間違えて犯人と判定した回数：0回'));
+      assert.ok(result.includes('一度も間違えずに、すべての事件を解決しました！'));
+      assert.equal(await baseText(page.locator('#result-dialog-content > :last-child > summary')), '最後の事件のその後');
       await page.waitForFunction(() => window.playedRecordings.includes('assets/sounds/people-performance-cheer1.mp3'), { timeout: 15000 });
       const celebration = await page.evaluate(() => window.playedRecordings.filter(src => !src.endsWith('correct2.mp3')));
       assert.deepEqual(celebration, ['assets/sounds/stamp.wav', 'assets/sounds/people-performance-cheer1.mp3']);
@@ -585,6 +589,36 @@ async function checkReadings(page: Page) {
   assert.ok((await baseText(page.locator(`#person-${mistaken} .truth-detail`))).includes('勘違い（間違い）'));
   assert.ok((await baseText(page.locator('#result'))).includes('事件解決'));
   await checkReadings(page);
+  // Count mistakes across cases and reloads, including a mistake in the final case.
+  const campaign = await browser.newPage({ reducedMotion: 'reduce' });
+  await campaign.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
+  await campaign.evaluate(() => localStorage.removeItem('beast-detective-v1'));
+  await campaign.reload();
+  await campaign.locator('#start-game').click();
+  await campaign.locator('#difficulty').selectOption('easy');
+  await campaign.locator('#confirm-new').click();
+  for (let round = 1; round <= 3; round++) {
+    const answer = await campaign.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.answer);
+    if (round !== 2) await campaign.locator(`#person-${answer.indexOf(false)} [data-judge="liar"]`).click();
+    await campaign.reload();
+    for (let i = 0; i < answer.length; i++) {
+      if (answer[i]) await campaign.locator(`#person-${i} [data-judge="liar"]`).click();
+    }
+    await campaign.locator('#result-dialog').waitFor({ state: 'visible' });
+    if (round < 3) await campaign.locator('#dialog-next-case').click();
+  }
+  const completedText = await baseText(campaign.locator('#result-dialog-content'));
+  assert.ok(completedText.includes('全事件で間違えて犯人と判定した回数：2回'));
+  assert.ok(!completedText.includes('一度も間違えずに'));
+  assert.equal(await baseText(campaign.locator('#result-dialog-content > :last-child > summary')), '最後の事件のその後');
+  assert.equal(await baseText(campaign.locator('#result-dialog .quiet-button')), '結果を確認');
+  await checkReadings(campaign);
+  await campaign.reload();
+  assert.ok((await baseText(campaign.locator('#result'))).includes('全事件で間違えて犯人と判定した回数：2回'));
+  await campaign.locator('#next-case').click();
+  await campaign.locator('#confirm-new').click();
+  assert.equal(await campaign.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).previousMistakes), 0);
+  await campaign.close();
   const blocked = await browser.newPage();
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
   await blocked.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);

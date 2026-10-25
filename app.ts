@@ -7,7 +7,7 @@
     return element as T;
   }
   const key = 'beast-detective-v1';
-  const saveVersion = 12;
+  const saveVersion = 13;
   const markers = [{ name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' }, { name: '勘違い候補', color: '#9481bb' }];
   const preferencesKey = 'animal-detective-preferences-v1';
   const preferences = { ruby: true, sound: true };
@@ -45,11 +45,11 @@
     savePreferences();
   });
   let state: GameState; let hasGame = false; let storageAvailable = true;
-  function fresh(level: Level, round = 1, trust = E.initialTrust, previousStories: readonly number[] = []): GameState {
+  function fresh(level: Level, round = 1, trust = E.initialTrust, previousStories: readonly number[] = [], previousMistakes = 0): GameState {
     const seed = window.crypto ? crypto.getRandomValues(new Uint32Array(1))[0] : Date.now() >>> 0;
     const puzzle = E.generate(seed, level, round);
     const storyHistory = [...previousStories, E.selectStory(seed, previousStories)];
-    return { version: saveVersion, puzzle, storyHistory, startingTrust: trust, trust, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0), revealed: puzzle.people.map(() => false) };
+    return { version: saveVersion, puzzle, storyHistory, previousMistakes, startingTrust: trust, trust, status: 'playing', resolved: puzzle.people.map(() => null), notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0), revealed: puzzle.people.map(() => false) };
   }
   function restore(): GameState | null {
     try {
@@ -69,6 +69,9 @@
       if (!Array.isArray(storyHistory) || storyHistory.length < 1 || storyHistory.length > puzzle.round ||
         !storyHistory.every((id: unknown) => typeof id === 'number' && Number.isInteger(id) && id >= 0 && id < E.caseStories.length) ||
         new Set(storyHistory).size !== storyHistory.length) return null;
+      const previousMistakes = saved.previousMistakes;
+      if (!Number.isSafeInteger(previousMistakes) || (previousMistakes as number) < 0 ||
+        (puzzle.round === 1 && previousMistakes !== 0)) return null;
       const n = puzzle.people.length;
       const { resolved, notes, markers, revealed } = saved;
       if (!Array.isArray(resolved) || !Array.isArray(notes) || !Array.isArray(markers) ||
@@ -84,7 +87,7 @@
       const status = trust < 0 ? 'lost' : puzzle.answer.every((liar, i) => !liar || resolved[i] !== null) ? 'won' : 'playing';
       const finalTrust = trust + (status === 'won' ? 1 : 0);
       if (saved.trust !== finalTrust || saved.status !== status) return null;
-      return { version: saveVersion, puzzle, storyHistory, startingTrust: saved.startingTrust as number, trust: finalTrust, status, resolved, notes, markers, revealed };
+      return { version: saveVersion, puzzle, storyHistory, previousMistakes: previousMistakes as number, startingTrust: saved.startingTrust as number, trust: finalTrust, status, resolved, notes, markers, revealed };
     } catch { return null; }
   }
   function save() {
@@ -151,7 +154,12 @@
       $('dialog-next-case').textContent = nextLabel;
       result.className = `result ${won ? '' : 'lost'}`;
       const stamp = won ? '<span class="case-closed-stamp-layer" aria-hidden="true"><img class="case-closed-stamp" src="assets/case-closed.png" alt="" width="1280" height="1280"></span>' : '';
-      result.innerHTML = `${stamp}<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${cleared ? `全${E.totalCases(p.level)}回の捜査完了！ ゲームクリア！` : won ? `事件解決！ (${p.round} / ${E.totalCases(p.level)})` : '今回の捜査は、ここまで'}</h2><p>${won ? `事件解決。捜査資金 ＋1。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '捜査資金がマイナスになりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p>${won && !cleared ? '<p>次の捜査へ進みましょう。</p>' : ''}<p>各カードの「真相と証言の照合」で振り返れます。</p>${won ? `<details class="case-ending"><summary>事件のその後</summary><p>${story.ending}</p></details>` : ''}${won && !cleared ? '' : `<p>${cleared ? `捜査資金 ${state.trust}を残して、すべての事件を解決しました。` : `${p.round - 1} / ${E.totalCases(p.level)}の事件を解決しました。最初から挑戦できます。`}</p>`}<button class="primary-button" id="next-case">${nextLabel}</button>`;
+      const totalMistakes = state.previousMistakes + mistakes;
+      const heading = cleared ? 'すべての事件を解決！' : won ? `事件解決！ (${p.round} / ${E.totalCases(p.level)})` : '今回の捜査は、ここまで';
+      const description = cleared
+        ? `<p>おめでとうございます！<br>あなたの推理で、全${E.totalCases(p.level)}件の事件が解決しました。<br>森の名探偵、おつかれさまでした！</p><p>解決した事件：${E.totalCases(p.level)}件<br>全事件で間違えて犯人と判定した回数：${totalMistakes}回<br>残った捜査資金：${state.trust}</p>${totalMistakes === 0 ? '<p>一度も間違えずに、すべての事件を解決しました！</p>' : ''}`
+        : `<p>${won ? `事件解決。捜査資金 ＋1。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '捜査資金がマイナスになりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p>${won ? '<p>次の捜査へ進みましょう。</p>' : ''}`;
+      result.innerHTML = `${stamp}<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${heading}</h2>${description}<p>各カードの「真相と証言の照合」で振り返れます。</p>${!won ? `<p>${p.round - 1} / ${E.totalCases(p.level)}の事件を解決しました。最初から挑戦できます。</p>` : ''}${won ? `<details class="case-ending"><summary>${cleared ? '最後の事件のその後' : '事件のその後'}</summary><p>${story.ending}</p></details>` : ''}<button class="primary-button" id="next-case">${nextLabel}</button>`;
       $('next-case').addEventListener('click', nextCase);
     }
     if (persist) save();
@@ -223,7 +231,7 @@
     if (state.status !== 'won' || state.puzzle.round === E.totalCases(state.puzzle.level)) { openNewCaseDialog(); return; }
     $<HTMLDialogElement>('result-dialog').close();
     judgmentSound.stop();
-    state = fresh(state.puzzle.level, state.puzzle.round + 1, state.trust, state.storyHistory);
+    state = fresh(state.puzzle.level, state.puzzle.round + 1, state.trust, state.storyHistory, state.previousMistakes + state.resolved.filter(r => r && !r.correct).length);
     $('feedback').className = 'feedback';
     render('捜査資金を引き継いで、新しい事件の捜査を始めましょう。');
     showCaseIntro();
