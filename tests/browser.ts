@@ -81,7 +81,7 @@ async function checkReadings(page: Page) {
   assert.ok(await page.locator('#case-intro').isVisible());
   assert.equal(await baseText(page.locator('#case-intro-number')), '事件 1');
   assert.equal(await baseText(page.locator('#case-intro-title')), await baseText(page.locator('#case-title')));
-  await page.locator('#case-intro button').click();
+  await page.locator('#case-intro-title').click();
   assert.ok(await page.locator('#case-intro').isHidden());
   await page.waitForTimeout(1500);
   assert.ok(await page.locator('#case-intro').isHidden(), 'skipped intro must stay closed');

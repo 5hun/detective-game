@@ -211,7 +211,6 @@ body::before{
 #case-intro::backdrop{background:#182c38b8}
 #case-intro[open]{animation:case-intro-enter .24s ease-out both}
 #case-intro .eyebrow{color:var(--green);letter-spacing:.18em}
-#case-intro h2{font-size:clamp(21px,5vw,30px);line-height:2;margin:12px 0 20px;overflow-wrap:anywhere}
-#case-intro button{font-size:11px;color:var(--muted);min-height:44px}
+#case-intro h2{font-size:clamp(21px,5vw,30px);line-height:2;margin:12px 0 0;overflow-wrap:anywhere}
 @keyframes case-intro-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){#case-intro[open]{animation:none}}
