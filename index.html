@@ -65,7 +65,7 @@
         </div>
         <h1 id="home-title">どうぶつ探偵</h1>
         <p class="home-description">動物たちの証言を読み比べて、<br>嘘をつく犯人を見つけましょう。</p>
-        <p>善人は本当のことを、犯人は嘘を話します。<br>難易度ごとの事件に挑戦しましょう。</p>
+        <p>善人は本当のことを、犯人は嘘を話します（高難易度では勘違いする善人も登場）。<br>難易度ごとの事件に挑戦しましょう。</p>
         <button id="start-game" class="primary-button" type="button">最初から</button>
         <button id="continue-game" class="primary-button" type="button" hidden>続きから</button>
       </section>
@@ -78,12 +78,13 @@
             </div>
             <h1 id="case-title"></h1>
             <p id="case-description" class="case-description"></p>
+            <p id="mistaken-rule" class="case-description" hidden></p>
           </div>
         </div>
         <div class="case-status">
           <section class="case-summary" aria-label="事件の情報">
             <div class="population"><span class="summary-label">この事件の内訳</span>
-              <div><strong id="liar-count"></strong><span class="slash">/</span><strong id="good-count"></strong></div>
+              <div><strong id="liar-count"></strong><span class="slash">/</span><strong id="good-count"></strong></div><small id="mistaken-count"></small>
             </div>
             <div class="progress-summary"><span class="summary-label">発見した犯人</span>
               <div><strong id="progress-count"></strong><span>匹</span></div>
@@ -106,7 +107,7 @@
     <div class="dialog-heading">
       <h2>すべての動物</h2><button class="close-button" aria-label="動物一覧を閉じる" data-close="animals-dialog">×</button>
     </div>
-    <p>全8種類。どの動物も善人・犯人の両方になります。</p>
+    <p>全10種類。どの動物も善人・犯人になり、「むずかしい」の4回目からは善人のうち1匹が勘違いします。</p>
     <div id="animals-list"></div>
   </dialog>
   <dialog id="help-dialog">
@@ -116,17 +117,17 @@
     <p>動物たちの証言を読み、<strong>犯人</strong>を見つけて「犯人と判定」を押しましょう。</p>
     <ol>
       <li>
-        <strong>タップして証言を聞こう。</strong><br>「証言を聞く」を押すと、その動物の発言が公開されます。聞く前に、どの動物についての証言か確認できます。動物が7匹以上の事件では、一部の証言に捜査資金1が必要です。捜査資金が費用以上あれば、残りが0になる場合も証言を聞けます。
+        <strong>タップして証言を聞こう。</strong><br>「証言を聞く」を押すと、その動物の発言が公開されます。聞く前に、どの動物についての証言か確認できます。「むずかしい」の5回目から、一部の証言に捜査資金1または2が必要です。捜査資金が費用以上あれば、残りが0になる場合も証言を聞けます。
       </li>
-      <li><strong>数が、最初の手がかり。</strong><br>犯人と善人の数は事件の上部に表示されます。</li>
+      <li><strong>数が、最初の手がかり。</strong><br>犯人と善人の数、善人のうち勘違いしている数は事件の上部に表示されます。</li>
       <li>
-        <strong>善人は真実を、犯人は嘘を。</strong><br>真相はひとつですが、証言と数の条件に合う組み合わせが複数残ることもあります。捜査資金を使い、判定で正体を確かめましょう。「同じ立場」は両方善人、または両方犯人という意味です。
+        <strong>善人は真実を、犯人は嘘を。</strong><br>すべての証言と数の条件から真相は一つに決まります。一部の証言だけでは候補が複数残ることもあります。捜査資金を使い、判定で正体を確かめましょう。「むずかしい」の4回目から、証言が必ず間違っている善人が1匹登場します。この勘違いしている善人も犯人ではなく、犯人と判定すると捜査資金が2減ります。「同じ立場」は両方善人、または両方犯人という意味で、勘違いしている善人も善人として扱います。犯人がこの動物を「犯人だ」と証言することもあります。初登場の4回目は証言がすべて無料です。
       </li>
       <li><strong>種類ごとに、証言の形が違う。</strong><br>同じ動物は1事件に1匹だけ。動物名の横の「証言ルール」で説明を確認できます。</li>
       <li>
         <strong>判定は、その場で確定。</strong><br>捜査資金は5から始まり、正解しても増えませんが、その動物の証言を聞く前に正しく犯人と判定すると1増えます。間違えると2減り、事件を1つ解決するたびに1増えます。間違えた場合も正体が判明します。捜査資金がマイナスになると捜査終了。選んだ難易度の事件をすべて解決するとゲームクリアです。次の事件でも捜査資金は引き継ぎ、動物や犯人の数が増えます。捜査資金が0以上の状態で犯人をすべて見つければ解決です。残りは善人と確定し、判定の操作は不要です。
       </li>
-      <li><strong>メモは、あなただけの手がかり。</strong><br>色マーカーは未設定・犯人候補・善人候補・要検討から選べます。マーカーやメモは判定に影響しません。</li>
+      <li><strong>メモは、あなただけの手がかり。</strong><br>色マーカーは未設定・犯人候補・善人候補・要検討・勘違い候補から選べます。マーカーやメモは判定に影響しません。</li>
     </ol>
     <p class="small-note">進行状況はこのブラウザに保存します。保存を利用できない環境でも、そのまま遊べます。終了後には各証言の真偽と参照先の正体を確認できます。</p><button
       class="primary-button" data-close="help-dialog">捜査に戻る</button>

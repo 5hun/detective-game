@@ -1,4 +1,4 @@
-/* Pure, deterministic puzzle engine. true means liar. No network or DOM needed. */
+/* Pure, deterministic puzzle engine. true means criminal. No network or DOM needed. */
 var DetectiveEngine = (function () {
   'use strict';
   const roles: Person[] = [
@@ -67,7 +67,21 @@ var DetectiveEngine = (function () {
     if (type === 'count') return groups.flatMap(targets => [0, 1, 2, 3].map(value => ({ type, targets, value })));
     return groups.flatMap(targets => [false, true].map(value => ({ type, targets, value })));
   }
-  function solve(puzzle: Puzzle) { return assignments(puzzle.people.length, puzzle.k).filter(a => puzzle.statements.every((s, i) => evaluate(s, a) === !a[i])); }
+  // For a fixed criminal assignment, every false innocent statement identifies
+  // a mistaken animal. No additional hidden-role ambiguity remains.
+  function fits(statements: Statement[], a: boolean[], mistakenCount: number) {
+    let mistakes = 0;
+    for (let i = 0; i < a.length; i++) {
+      const truth = evaluate(statements[i], a);
+      if (a[i] && truth) return false;
+      if (!a[i] && !truth) mistakes++;
+    }
+    return mistakes === mistakenCount;
+  }
+  function solve(puzzle: Puzzle) { return assignments(puzzle.people.length, puzzle.k).filter(a => fits(puzzle.statements, a, puzzle.mistakenCount)); }
+  function identity(puzzle: Puzzle, index: number) {
+    return puzzle.answer[index] ? '犯人' : puzzle.mistaken === index ? '勘違いしている善人' : '善人';
+  }
   const campaigns = {
     easy: [[4, 1], [5, 1], [6, 2]],
     normal: [[5, 2], [6, 2], [7, 3], [8, 3], [9, 4]],
@@ -77,11 +91,12 @@ var DetectiveEngine = (function () {
   function caseConfig(level: Level, round: number) {
     if (!Number.isInteger(round) || round < 1 || round > totalCases(level)) throw new Error('Invalid round');
     const [n, k] = campaigns[level][round - 1];
-    return { n, k };
+    return { n, k, mistakenCount: level === 'hard' && round >= 4 ? 1 : 0 };
   }
   // These seeds produce a unique first draw for every supported (n, k).
   // Tests exhaustively verify them; changing draw order requires rechecking this table.
   const fallbackSeeds: Record<string, number> = {
+    '9,4,1': 0, '10,4,1': 2, '10,5,1': 2,
     '4,1': 0, '5,1': 0, '6,2': 0, '5,2': 0, '7,3': 1,
     '8,3': 0, '9,4': 0, '10,4': 0, '10,5': 1
   };
@@ -89,21 +104,23 @@ var DetectiveEngine = (function () {
   function generate(seed: number, level: Level = 'normal', round = 1, attemptLimit = maxGenerationAttempts): Puzzle {
     if (!levels[level]) throw new Error('Invalid difficulty');
     if (!Number.isInteger(attemptLimit) || attemptLimit < 0 || attemptLimit > maxGenerationAttempts) throw new Error('Invalid generation attempt limit');
-    const rng = random(seed); const { n, k } = caseConfig(level, round); const all = assignments(n, k);
+    const rng = random(seed); const { n, k, mistakenCount } = caseConfig(level, round); const all = assignments(n, k);
     function draw(source: () => number) {
       const people = shuffle(roles, source).slice(0, n);
       const answer = all[Math.floor(source() * all.length)];
+      const innocents = answer.flatMap((criminal, i) => criminal ? [] : [i]);
+      const mistaken = mistakenCount ? innocents[Math.floor(source() * innocents.length)] : null;
       const statements = people.map((person, i) => {
-        const valid = candidates(person.type, i, n).filter(s => evaluate(s, answer) === !answer[i]);
+        const valid = candidates(person.type, i, n).filter(s => evaluate(s, answer) === (!answer[i] && i !== mistaken));
         if (!valid.length) throw new Error('No valid statement for this role');
         return valid[Math.floor(source() * valid.length)];
       });
-      return { people, answer, statements };
+      return { people, answer, statements, mistaken };
     }
     function unique(candidate: ReturnType<typeof draw>) {
       // The chosen answer is valid by construction. Stop at the first other solution.
       return !all.some(a => a.some((value, i) => value !== candidate.answer[i]) &&
-        candidate.statements.every((s, i) => evaluate(s, a) === !a[i]));
+        fits(candidate.statements, a, mistakenCount));
     }
     let chosen: ReturnType<typeof draw> | undefined;
     for (let attempt = 0; attempt < attemptLimit; attempt++) {
@@ -111,14 +128,14 @@ var DetectiveEngine = (function () {
       if (unique(candidate)) { chosen = candidate; break; }
     }
     if (!chosen) {
-      const fallbackSeed = fallbackSeeds[`${n},${k}`];
+      const fallbackSeed = fallbackSeeds[`${n},${k}${mistakenCount ? ",1" : ""}`];
       if (fallbackSeed === undefined) throw new Error('Missing unique fallback for this case configuration');
       chosen = draw(random(fallbackSeed));
       if (!unique(chosen)) throw new Error('Fallback testimony must have exactly one solution');
     }
-    const { people, answer, statements } = chosen;
+    const { people, answer, statements, mistaken } = chosen;
     const testimonyCosts: number[] = people.map(() => 0);
-    if (level === 'hard' && round >= 4) {
+    if (level === 'hard' && round >= 5) {
       const twoRate = (round - 4) * 0.05;
       let paid = 0;
       let twos = 0;
@@ -133,7 +150,7 @@ var DetectiveEngine = (function () {
       }
       if (!paid) testimonyCosts[Math.floor(rng() * n)] = 1;
     }
-    return { seed: seed >>> 0, level, round, k, people, statements, testimonyCosts, answer };
+    return { seed: seed >>> 0, level, round, k, mistakenCount, mistaken, people, statements, testimonyCosts, answer };
   }
   function statementText(s: Statement, people: Person[]) {
     const names = [...s.targets].sort((a, b) => a - b).map(i => people[i].name); const [a, b] = names; const list = names.join('、');
@@ -178,7 +195,7 @@ var DetectiveEngine = (function () {
     }
     return correct;
   }
-  const api = { totalCases, caseConfig, initialTrust, roles, caseStories, selectStory, levels, generate, solve, evaluate, statementText, assignments, judge, reveal };
+  const api = { identity, totalCases, caseConfig, initialTrust, roles, caseStories, selectStory, levels, generate, solve, evaluate, statementText, assignments, judge, reveal };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   return api;
 })();

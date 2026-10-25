@@ -51,7 +51,7 @@ test('3,000 generated cases uniquely identify the actual answer and obey every r
         assert.ok(!s.targets.includes(i));
         assert.equal(new Set(s.targets).size, s.targets.length);
         assert.ok(s.targets.every(t => t >= 0 && t < config.n));
-        assert.equal(E.evaluate(s, p.answer), !p.answer[i]);
+        assert.equal(E.evaluate(s, p.answer), !p.answer[i] && i !== p.mistaken);
         assert.ok(E.statementText(s, p.people).endsWith('。'));
         assert.doesNotMatch(E.statementText(s, p.people), /ない|なかった|ません|ぬ|ではなく/);
       });
@@ -190,7 +190,7 @@ test('bounded generation falls back to verified unique cases for every campaign 
         p.statements.forEach((s, i) => {
           assert.equal(s.type, p.people[i].type);
           assert.ok(!s.targets.includes(i));
-          assert.equal(E.evaluate(s, p.answer), !p.answer[i]);
+          assert.equal(E.evaluate(s, p.answer), !p.answer[i] && i !== p.mistaken);
         });
       }
     }
@@ -226,7 +226,7 @@ test('difficulty-specific campaigns grow in size and preserve valid testimony at
         assert.equal(p.round, round);
         assert.equal(p.people.length, config.n);
         assert.equal(p.answer.filter(Boolean).length, config.k);
-        assert.ok(p.statements.every((statement, i) => E.evaluate(statement, p.answer) !== p.answer[i]));
+        assert.ok(p.statements.every((statement, i) => E.evaluate(statement, p.answer) === (!p.answer[i] && i !== p.mistaken)));
         assert.deepEqual(E.solve(p), [p.answer]);
       }
       previous = config;
@@ -243,14 +243,14 @@ test('paid testimony appears only in later hard cases with bounded costs', () =>
       for (let seed = 0; seed < 100; seed++) {
         const p = E.generate(seed, level, round);
         assert.equal(p.testimonyCosts.length, p.people.length);
-        if (level === 'hard' && round >= 4) {
+        if (level === 'hard' && round >= 5) {
           assert.ok(p.testimonyCosts.filter(Boolean).length >= 1);
           assert.ok(p.testimonyCosts.filter(Boolean).length <= 4);
           assert.ok(p.testimonyCosts.filter(c => c === 2).length <= (round === 4 ? 0 : round === 5 ? 1 : 2));
         }
         p.testimonyCosts.forEach((cost, i) => {
           assert.ok(cost === 0 || cost === 1 || cost === 2);
-          if (level !== 'hard' || round < 4) assert.equal(cost, 0);
+          if (level !== 'hard' || round < 5) assert.equal(cost, 0);
           if (cost) paidRoles.add(p.people[i].id);
         });
       }
@@ -300,4 +300,41 @@ test('an incorrect accusation at zero funds ends the investigation', () => {
   E.judge(s, s.puzzle.answer.indexOf(false));
   assert.equal(s.trust, -2);
   assert.equal(s.status, 'lost');
+});
+
+test('mistaken innocents have a unique identity under independent role enumeration', () => {
+  for (const round of [4, 5, 6, 7]) {
+    for (let seed = 0; seed < 150; seed++) {
+      const p = E.generate(seed, 'hard', round);
+      assert.equal(p.mistakenCount, 1);
+      assert.equal(p.answer[p.mistaken!], false);
+      if (round === 4) assert.ok(p.testimonyCosts.every(c => c === 0));
+      const solutions: { answer: boolean[]; mistaken: number }[] = [];
+      for (let mask = 0; mask < 2 ** p.people.length; mask++) {
+        const a = p.people.map((_, i) => Boolean(mask & (1 << i)));
+        if (a.filter(Boolean).length !== p.k) continue;
+        const truths = p.statements.map(s => E.evaluate(s, a));
+        for (let m = 0; m < a.length; m++) {
+          if (!a[m] && truths.every((truth, i) => truth === (!a[i] && i !== m)))
+            solutions.push({ answer: a, mistaken: m });
+        }
+      }
+      assert.deepEqual(solutions, [{ answer: p.answer, mistaken: p.mistaken }]);
+      assert.deepEqual(E.generate(seed, 'hard', round), p);
+    }
+  }
+});
+
+test('accusing a mistaken innocent costs two and criminals alone complete the case', () => {
+  const p = E.generate(0, 'hard', 4);
+  const s: JudgmentState = { puzzle: p, trust: 5, status: 'playing',
+    resolved: p.people.map(() => null), revealed: p.people.map(() => true) };
+  assert.equal(E.judge(s, p.mistaken!), false);
+  assert.equal(s.trust, 3);
+  assert.equal(s.status, 'playing');
+  assert.equal(E.identity(p, p.mistaken!), '勘違いしている善人');
+  p.answer.forEach((criminal, i) => { if (criminal) E.judge(s, i); });
+  assert.equal(s.status, 'won');
+  assert.equal(s.trust, 4);
+  assert.equal(E.evaluate({ type: 'single', targets: [p.mistaken!], value: false }, p.answer), true);
 });

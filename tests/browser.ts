@@ -507,18 +507,18 @@ async function checkReadings(page: Page) {
   const paidIndices = await page.evaluate(() => {
     const saved = JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState;
     let seed = 0;
-    let puzzle = window.DetectiveEngine.generate(seed, 'hard', 4);
+    let puzzle = window.DetectiveEngine.generate(seed, 'hard', 5);
     while (puzzle.testimonyCosts.filter(Boolean).length < 2 || !puzzle.testimonyCosts.includes(0)) {
-      puzzle = window.DetectiveEngine.generate(++seed, 'hard', 4);
+      puzzle = window.DetectiveEngine.generate(++seed, 'hard', 5);
     }
     Object.assign(saved, { puzzle, startingTrust: 1, trust: 1, status: 'playing',
       revealed: puzzle.people.map(() => false), resolved: puzzle.people.map(() => null),
       notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0) });
     localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
-    return puzzle.testimonyCosts.flatMap((cost, i) => cost ? [i] : []);
+    return puzzle.testimonyCosts.flatMap((cost, i) => cost ? [i] : []).sort((a, b) => puzzle.testimonyCosts[a] - puzzle.testimonyCosts[b]);
   });
   await page.reload();
-  assert.equal(await page.locator('.testimony-targets').count(), 9);
+  assert.equal(await page.locator('.testimony-targets').count(), 10);
   await checkReadings(page);
   await page.locator(`[data-reveal="${paidIndices[0]}"]`).click();
   assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り捜査資金 0');
@@ -530,6 +530,37 @@ async function checkReadings(page: Page) {
   const freeIndex = await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.testimonyCosts.indexOf(0));
   await page.locator(`[data-reveal="${freeIndex}"]`).click();
   assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り捜査資金 0');
+  const mistaken = await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState;
+    const puzzle = window.DetectiveEngine.generate(0, 'hard', 4);
+    Object.assign(saved, { puzzle, startingTrust: 5, trust: 5, status: 'playing',
+      revealed: puzzle.people.map(() => false), resolved: puzzle.people.map(() => null),
+      notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 0) });
+    localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
+    return puzzle.mistaken!;
+  });
+  await page.reload();
+  assert.ok((await baseText(page.locator('#mistaken-count'))).includes('勘違い 1匹'));
+  assert.ok(await page.locator('#mistaken-rule').isVisible());
+  await page.locator(`#person-${mistaken} [data-marker-value="4"]`).click();
+  await page.reload();
+  assert.equal(await page.locator(`#person-${mistaken}`).getAttribute('data-marker'), '4');
+  await page.locator(`#person-${mistaken} [data-judge]`).click();
+  assert.ok((await baseText(page.locator(`#person-${mistaken} .resolved-tag`))).includes('勘違いしている善人'));
+  assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り捜査資金 3');
+  await page.reload();
+  assert.ok((await baseText(page.locator(`#person-${mistaken} .resolved-tag`))).includes('勘違いしている善人'));
+  await checkReadings(page);
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  }
+  const remainingCriminals = await page.evaluate(() =>
+    (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.answer.flatMap((criminal, i) => criminal ? [i] : []));
+  for (const i of remainingCriminals) await page.locator(`#person-${i} [data-judge]`).click();
+  assert.ok((await baseText(page.locator(`#person-${mistaken} .truth-detail`))).includes('勘違い（間違い）'));
+  assert.ok((await baseText(page.locator('#result'))).includes('事件解決'));
+  await checkReadings(page);
   const blocked = await browser.newPage();
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
   await blocked.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
