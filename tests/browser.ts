@@ -470,9 +470,9 @@ async function checkReadings(page: Page) {
     if (round === 3) {
       await page.waitForFunction(() => window.playedRecordings.includes('assets/sounds/people-performance-cheer1.mp3'), { timeout: 15000 });
       const celebration = await page.evaluate(() => window.playedRecordings.filter(src => !src.endsWith('correct2.mp3')));
-      assert.deepEqual(celebration, ['assets/sounds/stamp.wav', 'assets/sounds/trumpet1.mp3', 'assets/sounds/people-performance-cheer1.mp3']);
+      assert.deepEqual(celebration, ['assets/sounds/stamp.wav', 'assets/sounds/people-performance-cheer1.mp3']);
     } else {
-      assert.equal(await page.evaluate(() => window.playedRecordings.includes('assets/sounds/trumpet1.mp3')), false);
+      assert.equal(await page.evaluate(() => window.playedRecordings.includes('assets/sounds/people-performance-cheer1.mp3')), false);
     }
     await checkReadings(page);
   }
