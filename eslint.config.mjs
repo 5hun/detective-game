@@ -16,11 +16,11 @@ export default tseslint.config(
     },
   },
   {
-    files: ['engine.ts'],
+    files: ['engine.ts', 'i18n.ts'],
     rules: {
       // A classic script exposes this API to the browser and CommonJS tests.
       'no-var': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^DetectiveEngine$' }],
+      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^Detective(Engine|I18n)$' }],
     },
   },
   {

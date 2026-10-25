@@ -76,6 +76,7 @@
   }));
   const pattern = new RegExp(Object.keys(readings).sort((a, b) => b.length - a.length).join('|'), 'g');
   window.addReadings = function (root = document.body) {
+    if (document.documentElement.lang === 'en') return;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
         return node.parentElement?.closest('ruby, svg, script, style, textarea, select, option, noscript')

@@ -32,7 +32,7 @@ jobs:
           mkdir -p _site/dist
           cp index.html styles.css _site/
           cp -R assets _site/
-          cp dist/engine.js dist/portraits.js dist/ruby.js dist/sound.js dist/app.js _site/dist/
+          cp dist/i18n.js dist/engine.js dist/portraits.js dist/ruby.js dist/sound.js dist/app.js _site/dist/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

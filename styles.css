@@ -222,3 +222,12 @@ body::before{
 .campaign-results th,.campaign-results td{padding:5px 8px;border:1px solid #c5ceba;background:transparent}
 .campaign-results th{font-weight:400;text-align:left;overflow-wrap:anywhere}
 .campaign-results td{min-width:44px;text-align:right;white-space:nowrap;font-weight:400;font-variant-numeric:tabular-nums}
+
+/* Translation wrappers preserve the original text layout. */
+span[data-i18n]{display:contents;font:inherit;color:inherit;letter-spacing:inherit}
+.language-label{font-size:12px;font-weight:600}
+html[lang="en"] .brand{letter-spacing:0;font-size:22px}
+html[lang="en"] .header-actions .new-case span{font-size:inherit;margin:0}
+html[lang="en"] .case-summary{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr)}
+html[lang="en"] .summary-label{letter-spacing:0}
+@media(max-width:600px){html[lang="en"] .masthead{flex-wrap:wrap;height:auto;min-height:75px;gap:8px;padding:10px 12px}html[lang="en"] .brand{font-size:18px}html[lang="en"] .case-summary{padding:10px;gap:6px}html[lang="en"] .population strong{font-size:12px}html[lang="en"] .progress-summary,html[lang="en"] .trust-summary{padding-left:7px}}

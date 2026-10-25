@@ -1,5 +1,6 @@
 (function () {
   'use strict';
+  const tr = DetectiveI18n.text;
   const E = window.DetectiveEngine;
   function $<T extends HTMLElement = HTMLElement>(id: string): T {
     const element = document.getElementById(id);
@@ -8,17 +9,22 @@
   }
   const key = 'beast-detective-v1';
   const saveVersion = 13;
-  const markers = [{ name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' }, { name: '勘違い候補', color: '#9481bb' }];
+  const markers = [{ get name() { return tr('未設定'); }, color: '#d4d7ca' }, { get name() { return tr('犯人候補'); }, color: '#b96d58' }, { get name() { return tr('善人候補'); }, color: '#749476' }, { get name() { return tr('要検討'); }, color: '#c4a359' }, { get name() { return tr('勘違い候補'); }, color: '#9481bb' }];
   const preferencesKey = 'animal-detective-preferences-v1';
-  const preferences = { ruby: true, sound: true };
+  const preferences: { ruby: boolean; sound: boolean; language: 'ja' | 'en' } = { ruby: true, sound: true, language: 'ja' };
   try {
     const saved: unknown = JSON.parse(localStorage.getItem(preferencesKey) || 'null');
     if (!saved || typeof saved !== 'object') throw new Error('Invalid preferences');
     const values = saved as Record<string, unknown>;
-    for (const name of Object.keys(preferences) as (keyof typeof preferences)[]) {
+    for (const name of ['ruby', 'sound'] as const) {
       if (typeof values[name] === 'boolean') preferences[name] = values[name];
     }
+    if (values.language === 'ja' || values.language === 'en') preferences.language = values.language;
   } catch { /* Settings still work when storage is unavailable. */ }
+  DetectiveI18n.setLanguage(preferences.language);
+  DetectiveI18n.localizePage();
+  $<HTMLSelectElement>('language-select').value = preferences.language;
+  $('ruby-toggle').hidden = preferences.language === 'en';
   function savePreferences() {
     try { localStorage.setItem(preferencesKey, JSON.stringify(preferences)); } catch { /* Optional persistence. */ }
   }
@@ -93,9 +99,12 @@
   function save() {
     try { localStorage.setItem(key, JSON.stringify(state)); storageAvailable = true; }
     catch { storageAvailable = false; }
-    $('save-status').hidden = storageAvailable;
-    $('save-status').textContent = storageAvailable ? '' : 'この環境では保存できません（現在の画面では遊べます）';
+    updateSaveStatus();
     addReadings();
+  }
+  function updateSaveStatus() {
+    $('save-status').hidden = storageAvailable;
+    $('save-status').textContent = storageAvailable ? '' : tr('この環境では保存できません（現在の画面では遊べます）');
   }
   function portraitStateFor(i: number) {
     return state.resolved[i] ? (state.puzzle.answer[i] ? 'liar' : 'sad') : state.status === 'won' ? 'good' : 'neutral';
@@ -105,15 +114,15 @@
     const portraitState = portraitStateFor(i);
     const cost = state.puzzle.testimonyCosts[i];
     const sortedTargets = [...state.puzzle.statements[i].targets].sort((a, b) => a - b);
-    const targets = sortedTargets.map(t => `${t + 1}. ${state.puzzle.people[t].name}`).join('、');
+    const targets = sortedTargets.map(t => `${t + 1}. ${state.puzzle.people[t].name}`).join(tr('、'));
     let actions;
-    const identity = `<strong class="identity-${liar ? 'liar' : 'good'}">${E.identity(state.puzzle, i).replace('勘違いしている', '<span class="mistaken-emphasis">勘違い</span><span class="identity-connector">している</span>')}</strong>`;
-    if (resolved) actions = `<span class="resolved-tag ${resolved.correct ? '' : 'wrong'}">${resolved.correct ? '✅ 正解' : '❌ 誤判定'} · ${person.name}は${identity}</span>`;
-    else if (state.status === 'won') actions = `<span class="resolved-tag revealed">✓ ${identity}と確定 · ${person.name}は${identity}</span>`;
-    else if (ended) actions = `<span class="resolved-tag unjudged">未判定 · 真相：${identity}</span>`;
-    else actions = `<button class="judge liar" data-judge="liar" data-index="${i}" aria-label="${person.name}を犯人と判定"><span class="judge-icon" aria-hidden="true">😈</span><span>犯人と判定</span></button>`;
-    const truth = ended ? `<details class="truth-detail"><summary>真相と証言の照合：この証言は${liar ? '嘘' : state.puzzle.mistaken === i ? '勘違い（間違い）' : '本当'}</summary><p>${sortedTargets.map(t => `${state.puzzle.people[t].name}＝${E.identity(state.puzzle, t)}`).join(' ／ ')}</p><p>この組み合わせでは、上の証言は${E.evaluate(state.puzzle.statements[i], state.puzzle.answer) ? '正しい' : '間違っています'}。${person.name}が${E.identity(state.puzzle, i)}という真相と一致します。</p></details>` : '';
-    return `<article class="suspect" data-marker="${state.markers[i]}" id="person-${i}" aria-labelledby="name-${i}"><div class="card-main"><div class="portrait-box"><span class="person-number">${String(i + 1).padStart(2, '0')}</span>${portrait(person.id, '', portraitState)}</div><div class="person-content"><div class="person-heading"><h3 id="name-${i}">${i + 1}. ${person.name}</h3><details class="role-details"><summary>証言ルール</summary><p>${person.rule}</p></details></div><p class="testimony-targets">${targets}についての証言が聞けそうだ</p><div id="statement-${i}">${state.revealed[i] || ended ? `<p class="statement">${E.statementText(state.puzzle.statements[i], state.puzzle.people)}</p>` : `<button class="reveal-button quiet-button" data-reveal="${i}" aria-controls="statement-${i}" ${state.trust < cost ? 'disabled' : ''}>証言を聞く${cost ? `（🪙${cost}使用）` : ''}</button>${cost && state.trust < cost ? `<p class="testimony-cost-note">捜査資金が${cost}未満のときは聞けません。</p>` : ''}`}</div><div class="actions">${actions}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="${person.name}のマーカー">${markers.map((m, j) => `<button class="marker-button" style="--dot:${m.color}" data-marker-value="${j}" data-index="${i}" aria-label="${person.name}：${m.name}" title="${m.name}" aria-pressed="${state.markers[i] === j}"></button>`).join('')}</div><label class="memo-label" for="memo-${i}">MEMO</label><textarea id="memo-${i}" data-note="${i}" aria-label="${person.name}の捜査メモ" maxlength="1000" rows="1" placeholder="きになることをメモ…"></textarea></div>${truth}</article>`;
+    const identity = `<strong class="identity-${liar ? 'liar' : 'good'}">${E.identity(state.puzzle, i).replace(tr('勘違いしている'), tr('<span class="mistaken-emphasis">勘違い</span><span class="identity-connector">している</span>'))}</strong>`;
+    if (resolved) actions = tr`<span class="resolved-tag ${resolved.correct ? '' : 'wrong'}">${resolved.correct ? tr('✅ 正解') : tr('❌ 誤判定')} · ${person.name}は${identity}</span>`;
+    else if (state.status === 'won') actions = tr`<span class="resolved-tag revealed">✓ ${identity}と確定 · ${person.name}は${identity}</span>`;
+    else if (ended) actions = tr`<span class="resolved-tag unjudged">未判定 · 真相：${identity}</span>`;
+    else actions = tr`<button class="judge liar" data-judge="liar" data-index="${i}" aria-label="${person.name}を犯人と判定"><span class="judge-icon" aria-hidden="true">😈</span><span>犯人と判定</span></button>`;
+    const truth = ended ? tr`<details class="truth-detail"><summary>真相と証言の照合：この証言は${liar ? tr('嘘') : state.puzzle.mistaken === i ? tr('勘違い（間違い）') : tr('本当')}</summary><p>${sortedTargets.map(t => tr`${state.puzzle.people[t].name}＝${E.identity(state.puzzle, t)}`).join(tr(' ／ '))}</p><p>この組み合わせでは、上の証言は${E.evaluate(state.puzzle.statements[i], state.puzzle.answer) ? tr('正しい') : tr('間違っています')}。${person.name}が${E.identity(state.puzzle, i)}という真相と一致します。</p></details>` : '';
+    return tr`<article class="suspect" data-marker="${state.markers[i]}" id="person-${i}" aria-labelledby="name-${i}"><div class="card-main"><div class="portrait-box"><span class="person-number">${String(i + 1).padStart(2, '0')}</span>${portrait(person.id, '', portraitState)}</div><div class="person-content"><div class="person-heading"><h3 id="name-${i}">${i + 1}. ${person.name}</h3><details class="role-details"><summary>証言ルール</summary><p>${person.rule}</p></details></div><p class="testimony-targets">${targets}についての証言が聞けそうだ</p><div id="statement-${i}">${state.revealed[i] || ended ? `<p class="statement">${E.statementText(state.puzzle.statements[i], state.puzzle.people)}</p>` : tr`<button class="reveal-button quiet-button" data-reveal="${i}" aria-controls="statement-${i}" ${state.trust < cost ? 'disabled' : ''}>証言を聞く${cost ? tr`（🪙${cost}使用）` : ''}</button>${cost && state.trust < cost ? tr`<p class="testimony-cost-note">捜査資金が${cost}未満のときは聞けません。</p>` : ''}`}</div><div class="actions">${actions}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="${person.name}のマーカー">${markers.map((m, j) => tr`<button class="marker-button" style="--dot:${m.color}" data-marker-value="${j}" data-index="${i}" aria-label="${person.name}：${m.name}" title="${m.name}" aria-pressed="${state.markers[i] === j}"></button>`).join('')}</div><label class="memo-label" for="memo-${i}">MEMO</label><textarea id="memo-${i}" data-note="${i}" aria-label="${person.name}の捜査メモ" maxlength="1000" rows="1" placeholder="きになることをメモ…"></textarea></div>${truth}</article>`;
   }
   function render(message?: string, persist = true) {
     hasGame = true;
@@ -123,47 +132,48 @@
     const p = state.puzzle; const count = state.resolved.filter((r, i) => r !== null && p.answer[i]).length;
     const mistakes = state.resolved.filter(r => r && !r.correct).length;
     const story = E.caseStories[state.storyHistory[state.storyHistory.length - 1]];
-    $('campaign-progress').textContent = `事件 ${p.round} / ${E.totalCases(p.level)}`;
+    $('campaign-progress').textContent = tr`事件 ${p.round} / ${E.totalCases(p.level)}`;
     $('campaign-steps').innerHTML = Array.from({ length: E.totalCases(p.level) }, (_, i) => {
       const round = i + 1;
       const completed = round < p.round || (round === p.round && state.status === 'won');
       const current = round === p.round;
-      const label = completed ? '解決済み' : current ? '今回の捜査' : 'これから';
-      return `<li class="campaign-step${completed ? ' completed' : ''}${current ? ' current' : ''}"${current ? ' aria-current="step"' : ''} aria-label="捜査 ${round}：${label}"><span aria-hidden="true">${completed ? '✓' : current ? round : ''}</span></li>`;
+      const label = completed ? tr('解決済み') : current ? tr('今回の捜査') : tr('これから');
+      return tr`<li class="campaign-step${completed ? ' completed' : ''}${current ? ' current' : ''}"${current ? ' aria-current="step"' : ''} aria-label="捜査 ${round}：${label}"><span aria-hidden="true">${completed ? '✓' : current ? round : ''}</span></li>`;
     }).join('');
     $('case-title').textContent = story.title;
     $('case-description').textContent = story.description;
-    document.title = `${story.title} — どうぶつ探偵`;
-    $('liar-count').textContent = `犯人 ${p.k}匹`;
-    $('good-count').textContent = `善人 ${p.people.length - p.k}匹`;
-    $('mistaken-count').innerHTML = `（うち<strong class="mistaken-emphasis">勘違い</strong>している<strong class="identity-good">善人</strong>${p.mistakenCount === 1 ? '１' : '０'}匹）`;
+    document.title = tr`${story.title} — どうぶつ探偵`;
+    $('liar-count').textContent = tr`犯人 ${p.k}匹`;
+    $('good-count').textContent = tr`善人 ${p.people.length - p.k}匹`;
+    $('mistaken-count').innerHTML = tr`（うち<strong class="mistaken-emphasis">勘違い</strong>している<strong class="identity-good">善人</strong>${p.mistakenCount === 1 ? tr('１') : tr('０')}匹）`;
     $('mistaken-rule').hidden = p.mistakenCount === 0;
-    $('mistaken-rule').textContent = 'この事件には、勘違いしている善人が1匹います。証言は必ず間違っていますが、犯人ではありません。「同じ立場」や犯人の数では善人として扱います。';
+    $('mistaken-rule').textContent = tr('この事件には、勘違いしている善人が1匹います。証言は必ず間違っていますが、犯人ではありません。「同じ立場」や犯人の数では善人として扱います。');
     $('progress-count').textContent = `${count} / ${p.k}`;
     $('trust-value').textContent = String(state.trust);
-    $('trust').setAttribute('aria-label', `残り捜査資金 ${state.trust}`);
+    $('trust').setAttribute('aria-label', tr`残り捜査資金 ${state.trust}`);
     $('suspects').innerHTML = p.people.map(renderCard).join('');
-    $('testimony-nav').innerHTML = p.people.map((person, i) => `<button type="button" class="testimony-link" data-person="${i}" style="--marker-color:${markers[state.markers[i]].color}" aria-label="${person.name}の証言へ移動（${markers[state.markers[i]].name}）" title="${person.name}：${markers[state.markers[i]].name}">${portrait(person.id, '', portraitStateFor(i))}</button>`).join('');
+    $('testimony-nav').innerHTML = p.people.map((person, i) => tr`<button type="button" class="testimony-link" data-person="${i}" style="--marker-color:${markers[state.markers[i]].color}" aria-label="${person.name}の証言へ移動（${markers[state.markers[i]].name}）" title="${person.name}：${markers[state.markers[i]].name}">${portrait(person.id, '', portraitStateFor(i))}</button>`).join('');
     state.notes.forEach((v, i) => { $<HTMLTextAreaElement>(`memo-${i}`).value = v; });
-    $('feedback').textContent = message || '「証言を聞く」をタップして、証言を読み比べましょう。';
+    $('feedback').textContent = message || tr('「証言を聞く」をタップして、証言を読み比べましょう。');
     const result = $('result'); result.hidden = state.status === 'playing';
+    if (result.hidden) result.replaceChildren();
     if (!result.hidden) {
       const won = state.status === 'won';
       const cleared = won && p.round === E.totalCases(p.level);
-      const nextLabel = won && !cleared ? '次の事件へ' : 'もう一度挑戦';
+      const nextLabel = won && !cleared ? tr('次の事件へ') : tr('もう一度挑戦');
       $('dialog-next-case').textContent = nextLabel;
       result.className = `result ${won ? '' : 'lost'}`;
       const stamp = won ? '<span class="case-closed-stamp-layer" aria-hidden="true"><img class="case-closed-stamp" src="assets/case-closed.png" alt="" width="1280" height="1280"></span>' : '';
       const totalMistakes = state.previousMistakes + mistakes;
-      const heading = cleared ? 'すべての事件を解決！' : won ? `事件解決！ (${p.round} / ${E.totalCases(p.level)})` : '今回の捜査は、ここまで';
+      const heading = cleared ? tr('すべての事件を解決！') : won ? tr`事件解決！ (${p.round} / ${E.totalCases(p.level)})` : tr('今回の捜査は、ここまで');
       const description = cleared
-        ? `<p>おめでとうございます！<br>あなたの推理で、全${E.totalCases(p.level)}件の事件が解決しました。<br>森の名探偵、おつかれさまでした！</p><table class="campaign-results" aria-label="全事件の結果"><tbody><tr><th scope="row">解決した事件</th><td>${E.totalCases(p.level)}件</td></tr><tr><th scope="row">全事件で間違えて犯人と判定した回数</th><td>${totalMistakes}回</td></tr><tr><th scope="row">残った捜査資金</th><td>${state.trust}</td></tr></tbody></table>${totalMistakes === 0 ? '<p><strong>一度も間違えずに、すべての事件を解決しました！🎉</strong></p>' : ''}`
-        : `<p>${won ? `事件解決。捜査資金 ＋1。${mistakes === 0 ? '一度も間違えず、みんなの正体を見抜きました。' : `誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : '捜査資金がマイナスになりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。'}</p>${won ? '<p>次の捜査へ進みましょう。</p>' : ''}`;
-      result.innerHTML = `${stamp}<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${heading}</h2>${description}<p>各カードの「真相と証言の照合」で振り返れます。</p>${!won ? `<p>${p.round - 1} / ${E.totalCases(p.level)}の事件を解決しました。最初から挑戦できます。</p>` : ''}${won ? `<details class="case-ending"><summary>${cleared ? '最後の事件のその後' : '事件のその後'}</summary><p>${story.ending}</p></details>` : ''}<button class="primary-button" id="next-case">${nextLabel}</button>`;
+        ? tr`<p>おめでとうございます！<br>あなたの推理で、全${E.totalCases(p.level)}件の事件が解決しました。<br>森の名探偵、おつかれさまでした！</p><table class="campaign-results" aria-label="全事件の結果"><tbody><tr><th scope="row">解決した事件</th><td>${E.totalCases(p.level)}件</td></tr><tr><th scope="row">全事件で間違えて犯人と判定した回数</th><td>${totalMistakes}回</td></tr><tr><th scope="row">残った捜査資金</th><td>${state.trust}</td></tr></tbody></table>${totalMistakes === 0 ? tr('<p><strong>一度も間違えずに、すべての事件を解決しました！🎉</strong></p>') : ''}`
+        : `<p>${won ? tr`事件解決。捜査資金 ＋1。${mistakes === 0 ? tr('一度も間違えず、みんなの正体を見抜きました。') : tr`誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : tr('捜査資金がマイナスになりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。')}</p>${won ? tr('<p>次の捜査へ進みましょう。</p>') : ''}`;
+      result.innerHTML = tr`${stamp}<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${heading}</h2>${description}<p>各カードの「真相と証言の照合」で振り返れます。</p>${!won ? tr`<p>${p.round - 1} / ${E.totalCases(p.level)}の事件を解決しました。最初から挑戦できます。</p>` : ''}${won ? `<details class="case-ending"><summary>${cleared ? tr('最後の事件のその後') : tr('事件のその後')}</summary><p>${story.ending}</p></details>` : ''}<button class="primary-button" id="next-case">${nextLabel}</button>`;
       $('next-case').addEventListener('click', nextCase);
     }
     if (persist) save();
-    else addReadings();
+    else { updateSaveStatus(); addReadings(); }
   }
   let resultDialogTimer: ReturnType<typeof setTimeout> | undefined;
   let stampSoundTimer: ReturnType<typeof setTimeout> | undefined;
@@ -215,7 +225,7 @@
   function showCaseIntro() {
     window.scrollTo({ top: 0, behavior: 'instant' });
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    $('case-intro-number').textContent = `事件 ${state.puzzle.round}`;
+    $('case-intro-number').textContent = tr`事件 ${state.puzzle.round}`;
     $('case-intro-title').textContent = E.caseStories[state.storyHistory[state.storyHistory.length - 1]].title;
     addReadings(caseIntro);
     caseIntro.showModal();
@@ -233,7 +243,7 @@
     judgmentSound.stop();
     state = fresh(state.puzzle.level, state.puzzle.round + 1, state.trust, state.storyHistory, state.previousMistakes + state.resolved.filter(r => r && !r.correct).length);
     $('feedback').className = 'feedback';
-    render('捜査資金を引き継いで、新しい事件の捜査を始めましょう。');
+    render(tr('捜査資金を引き継いで、新しい事件の捜査を始めましょう。'));
     showCaseIntro();
   }
   $('dialog-next-case').addEventListener('click', nextCase);
@@ -259,7 +269,7 @@
       judgmentSound.stop();
       state = fresh($<HTMLSelectElement>('difficulty').value as Level);
       $('feedback').className = 'feedback';
-      render('新しい事件が届きました。みんなの証言が、捜査の手がかりです。');
+      render(tr('新しい事件が届きました。みんなの証言が、捜査の手がかりです。'));
       showCaseIntro();
     } catch (err) { $('feedback').textContent = err instanceof Error ? err.message : String(err); addReadings($('feedback')); }
   }
@@ -299,14 +309,14 @@
       $('suspects').replaceChildren();
       $('testimony-nav').replaceChildren();
     }
-    document.title = 'どうぶつ探偵';
+    document.title = tr('どうぶつ探偵');
     addReadings();
   }
   const restored = restore();
   if (restored) {
     state = restored;
     $<HTMLSelectElement>('difficulty').value = state.puzzle.level;
-    render(state.status !== 'playing' ? '前回の捜査結果を開きました。新しい事件にも挑戦できます。' : undefined);
+    render(state.status !== 'playing' ? tr('前回の捜査結果を開きました。新しい事件にも挑戦できます。') : undefined);
   } else showHome();
   $('start-game').addEventListener('click', openNewCaseDialog);
   $('continue-game').addEventListener('click', () => {
@@ -367,7 +377,7 @@
       if (!E.reveal(state, i)) return;
       if (preferences.sound) void judgmentSound.testimony();
       $('feedback').className = 'feedback';
-      render(state.puzzle.testimonyCosts[i] ? `証言を聞きました。捜査資金 −${state.puzzle.testimonyCosts[i]}。` : undefined);
+      render(state.puzzle.testimonyCosts[i] ? tr`証言を聞きました。捜査資金 −${state.puzzle.testimonyCosts[i]}。` : undefined);
       if (state.trust !== previousTrust) animateJudgment(state.trust - previousTrust);
       const statement = $(`statement-${i}`);
       statement.tabIndex = -1;
@@ -382,7 +392,7 @@
       if (correct === null) return;
       if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
-      render(`${correct ? '✅ 正解です。捜査資金の増減はありません。' : '❌ 誤判定。捜査資金 −2。'}${state.puzzle.people[i].name}は${E.identity(state.puzzle, i)}でした。`);
+      render(tr`${correct ? tr('✅ 正解です。捜査資金の増減はありません。') : tr('❌ 誤判定。捜査資金 −2。')}${state.puzzle.people[i].name}は${E.identity(state.puzzle, i)}でした。`);
       animateJudgment(state.trust - previousTrust);
       if (state.status !== 'playing') {
         const completedState = state;
@@ -404,8 +414,8 @@
       const selectedMarker = markers[state.markers[i]];
       const person = state.puzzle.people[i];
       navLink.style.setProperty('--marker-color', selectedMarker.color);
-      navLink.setAttribute('aria-label', `${person.name}の証言へ移動（${selectedMarker.name}）`);
-      navLink.title = `${person.name}：${selectedMarker.name}`;
+      navLink.setAttribute('aria-label', tr`${person.name}の証言へ移動（${selectedMarker.name}）`);
+      navLink.title = tr`${person.name}：${selectedMarker.name}`;
       marker.parentElement!.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === marker)));
       save();
     }
@@ -414,8 +424,31 @@
     const target = event.target;
     if (target instanceof HTMLTextAreaElement && target.matches('[data-note]')) { state.notes[Number(target.dataset.note)] = target.value; save(); }
   });
-  $('animals-list').innerHTML = E.roles.map(person => `<article class="animal-entry"><div>${portrait(person.id)}</div><div><h3>${person.name}</h3><p>${person.rule}</p></div></article>`).join('');
-  addReadings($('animals-list'));
+  function renderAnimals() {
+    $('animals-list').innerHTML = E.roles.map(person => `<article class="animal-entry"><div>${portrait(person.id)}</div><div><h3>${person.name}</h3><p>${person.rule}</p></div></article>`).join('');
+    addReadings($('animals-list'));
+  }
+  renderAnimals();
+  $('language-select').addEventListener('change', () => {
+    const language = $<HTMLSelectElement>('language-select').value;
+    if (language !== 'ja' && language !== 'en') return;
+    preferences.language = language;
+    DetectiveI18n.setLanguage(language);
+    DetectiveI18n.localizePage();
+    $('ruby-toggle').hidden = language === 'en';
+    savePreferences();
+    const onHome = !$('home-page').hidden;
+    if (hasGame) {
+      render(undefined, false);
+      $('case-intro-number').textContent = tr`事件 ${state.puzzle.round}`;
+      $('case-intro-title').textContent = E.caseStories[state.storyHistory[state.storyHistory.length - 1]].title;
+    }
+    $('result-dialog-content').replaceChildren();
+    $('result-dialog-eyebrow').textContent = '';
+    if (onHome) showHome();
+    renderAnimals();
+    addReadings();
+  });
   $('animals-button').addEventListener('click', () => $<HTMLDialogElement>('animals-dialog').showModal());
   $('help-button').addEventListener('click', () => $<HTMLDialogElement>('help-dialog').showModal());
   $('new-case').addEventListener('click', openNewCaseDialog);

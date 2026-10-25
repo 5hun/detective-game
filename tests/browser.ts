@@ -1,5 +1,6 @@
 // Optional browser check: PLAYWRIGHT_MODULE may point to an existing Playwright installation.
 import type { Locator, Page } from 'playwright';
+import { checkEnglish } from './i18n-browser';
 // The optional installation path requires loading Playwright dynamically.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { chromium }: typeof import('playwright') = require(process.env.PLAYWRIGHT_MODULE || 'playwright') as typeof import('playwright');
@@ -650,6 +651,7 @@ async function checkReadings(page: Page) {
   await silent.locator('#person-0 [data-judge="liar"]').click();
   assert.equal(await silent.locator('#person-0 .resolved-tag').count(), 1);
   assert.deepEqual(errors, []);
+  await checkEnglish(browser);
   await browser.close();
   console.log('PASS: file:// launch, desktop/mobile widths, notes/markers, restore, dialogs, wins/losses, all levels, corrupt/blocked storage.');
 })().catch(e => { console.error(e); process.exit(1); });

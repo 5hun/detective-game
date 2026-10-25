@@ -1,6 +1,6 @@
 # Animal Detective
 
-A Japanese-language logic puzzle game where you read animals' statements and identify the innocents and culprits.
+A Japanese and English logic puzzle game where you read animals' statements and identify the innocents and culprits.
 
 ## Live version
 
@@ -19,9 +19,15 @@ npm ci
 npm run build
 ```
 
-After building, **open `index.html` in your browser to play.** No server is required. To distribute the game, include `index.html`, `styles.css`, and `engine.js`, `portraits.js`, `ruby.js`, `sound.js`, and `app.js` from `dist/`, preserving the folder structure. No external network access is required at runtime.
+After building, **open `index.html` in your browser to play.** No server is required. To distribute the game, include `index.html`, `styles.css`, and `i18n.js`, `engine.js`, `portraits.js`, `ruby.js`, `sound.js`, and `app.js` from `dist/`, preserving the folder structure. No external network access is required at runtime.
 
 On a desktop, double-click `index.html` or drag it into your browser. The layout also supports mobile screen widths. Some mobile operating systems or file managers restrict JavaScript in local HTML files. In that case, upload the same files and the `dist/` folder to a static host and access them there; no application backend is needed.
+
+## Language
+
+Open the game menu (☰) and select **日本語** or **English** under **Language**. Japanese is the default. Your choice is saved in this browser, independently of game progress. Switching languages keeps the current case, funds, revealed testimony, markers, and notes. Notes stay exactly as typed. Japanese reading guides are available only in Japanese; their setting is retained when switching back.
+
+Translations for menus, testimony, all twelve stories, rules, results, and accessibility labels live in `i18n.ts`. Tagged templates preserve dynamic values while allowing English word order. Add `data-i18n` to static text and `data-i18n-aria-label` (or the matching attribute name) to translated attributes.
 
 ## How to play
 
