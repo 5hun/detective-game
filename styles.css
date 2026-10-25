@@ -218,7 +218,7 @@ body::before{
 @media(prefers-reduced-motion:reduce){#case-intro[open]{animation:none}}
 
 /* Align campaign totals while allowing long labels to wrap on small screens. */
-.campaign-results{width:100%;border-collapse:collapse;margin:18px 0;font-size:13px;line-height:1.9}
-.campaign-results th,.campaign-results td{padding:10px 12px;border:1px solid #c5ceba}
-.campaign-results th{font-weight:400;text-align:left;background:#e9efdf;overflow-wrap:anywhere}
-.campaign-results td{width:26%;min-width:64px;text-align:right;white-space:nowrap;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;background:#fcfaf4}
+.campaign-results{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px;line-height:1.5}
+.campaign-results th,.campaign-results td{padding:5px 8px;border:1px solid #c5ceba;background:transparent}
+.campaign-results th{font-weight:400;text-align:left;overflow-wrap:anywhere}
+.campaign-results td{width:1%;min-width:44px;text-align:right;white-space:nowrap;font-weight:400;font-variant-numeric:tabular-nums}
