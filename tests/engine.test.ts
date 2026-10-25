@@ -3,9 +3,8 @@ import { test } from 'node:test';
 import assert = require('node:assert/strict');
 const E: typeof DetectiveEngine = require('../engine.js');
 
-test('3,000 generated cases include the actual answer and obey every role', () => {
+test('3,000 generated cases uniquely identify the actual answer and obey every role', () => {
   for (const [level, config] of (Object.entries(E.levels) as [Level, (typeof E.levels)[Level]][])) {
-    let ambiguousCases = 0;
     for (let seed = 0; seed < 1000; seed++) {
       const p = E.generate(seed, level);
       assert.equal(p.people.length, config.n);
@@ -29,7 +28,7 @@ test('3,000 generated cases include the actual answer and obey every role', () =
       }
       assert.ok(solutions.some(a => a.every((liar, i) => liar === p.answer[i])), `${level} seed=${seed}`);
       assert.deepEqual(E.solve(p).map(a => JSON.stringify(a)).sort(), solutions.map(a => JSON.stringify(a)).sort());
-      if (solutions.length > 1) ambiguousCases++;
+      assert.equal(solutions.length, 1, `${level} seed=${seed}`);
       p.statements.forEach((s, i) => {
         assert.equal(s.type, p.people[i].type);
         assert.ok(!s.targets.includes(i));
@@ -40,7 +39,6 @@ test('3,000 generated cases include the actual answer and obey every role', () =
         assert.doesNotMatch(E.statementText(s, p.people), /ない|なかった|ません|ぬ|ではなく/);
       });
     }
-    assert.ok(ambiguousCases > 0, `${level} should allow ambiguous testimony`);
   }
 });
 test('same seed reproduces the case, different seeds vary it', () => {
@@ -162,24 +160,42 @@ test('affirmative wording preserves the meaning of complementary statements', ()
   }
 });
 
-test('ambiguous cases judge the fixed truth even when an alternative fits testimony', () => {
+test('bounded generation falls back to verified unique cases for every campaign configuration', () => {
   for (const level of Object.keys(E.levels) as Level[]) {
-    const s = state(level);
-    for (let seed = 0; seed < 1000; seed++) {
-      s.puzzle = E.generate(seed, level);
-      if (E.solve(s.puzzle).length > 1) break;
+    for (let round = 1; round <= E.totalCases(level); round++) {
+      for (const seed of [0, 1, 333, 4294967295]) {
+        const p = E.generate(seed, level, round, 0);
+        assert.deepEqual(E.solve(p), [p.answer]);
+        assert.equal(p.seed, seed);
+        assert.equal(p.level, level);
+        assert.equal(p.round, round);
+        assert.deepEqual(p, E.generate(seed, level, round, 0));
+        p.statements.forEach((s, i) => {
+          assert.equal(s.type, p.people[i].type);
+          assert.ok(!s.targets.includes(i));
+          assert.equal(E.evaluate(s, p.answer), !p.answer[i]);
+        });
+      }
     }
-    const alternative = E.solve(s.puzzle).find(a => a.some((liar, i) => liar !== s.puzzle.answer[i]));
-    assert.ok(alternative, `${level} should have an alternative`);
-    const innocent = alternative.findIndex((liar, i) => liar && !s.puzzle.answer[i]);
-    assert.equal(E.judge(s, innocent), false);
-    assert.equal(s.trust, 3);
-    assert.equal(s.status, 'playing');
-    s.puzzle.answer.forEach((liar, i) => { if (liar) E.judge(s, i); });
-    assert.equal(s.status, 'won');
+  }
+  for (const limit of [-1, 33, 1.5, NaN, Infinity]) {
+    assert.throws(() => E.generate(0, 'normal', 1, limit));
   }
 });
 
+test('a one-attempt budget retries ambiguous draws using the unique fallback', () => {
+  // The original first draw for easy seed 7 is ambiguous: one attempt must use the fallback.
+  const limited = E.generate(7, 'easy', 1, 1);
+  const fallback = E.generate(7, 'easy', 1, 0);
+  assert.deepEqual(limited, fallback);
+  const retried = E.generate(7, 'easy');
+  assert.deepEqual(E.solve(retried), [retried.answer]);
+  assert.notDeepEqual(retried.statements, fallback.statements);
+  for (let seed = 0; seed < 100; seed++) {
+    const p = E.generate(seed, 'easy', 1, 1);
+    assert.deepEqual(E.solve(p), [p.answer]);
+  }
+});
 
 test('difficulty-specific campaigns grow in size and preserve valid testimony at every starting level', () => {
   for (const level of Object.keys(E.levels) as Level[]) {
@@ -194,7 +210,7 @@ test('difficulty-specific campaigns grow in size and preserve valid testimony at
         assert.equal(p.people.length, config.n);
         assert.equal(p.answer.filter(Boolean).length, config.k);
         assert.ok(p.statements.every((statement, i) => E.evaluate(statement, p.answer) !== p.answer[i]));
-        assert.ok(E.solve(p).some(a => a.every((value, i) => value === p.answer[i])));
+        assert.deepEqual(E.solve(p), [p.answer]);
       }
       previous = config;
     }

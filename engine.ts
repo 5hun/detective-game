@@ -68,17 +68,44 @@ var DetectiveEngine = (function () {
     const [n, k] = campaigns[level][round - 1];
     return { n, k };
   }
-  function generate(seed: number, level: Level = 'normal', round = 1): Puzzle {
+  // These seeds produce a unique first draw for every supported (n, k).
+  // Tests exhaustively verify them; changing draw order requires rechecking this table.
+  const fallbackSeeds: Record<string, number> = {
+    '4,1': 0, '5,1': 0, '6,2': 0, '5,2': 0, '7,3': 1,
+    '8,3': 0, '9,4': 0, '10,4': 0, '10,5': 1
+  };
+  const maxGenerationAttempts = 32;
+  function generate(seed: number, level: Level = 'normal', round = 1, attemptLimit = maxGenerationAttempts): Puzzle {
     if (!levels[level]) throw new Error('Invalid difficulty');
+    if (!Number.isInteger(attemptLimit) || attemptLimit < 0 || attemptLimit > maxGenerationAttempts) throw new Error('Invalid generation attempt limit');
     const rng = random(seed); const { n, k } = caseConfig(level, round); const all = assignments(n, k);
-    const people = shuffle(roles, rng).slice(0, n);
-    const answer = all[Math.floor(rng() * all.length)];
-    // Keep the actual answer consistent without forcing testimony to identify it uniquely.
-    const statements = people.map((person, i) => {
-      const valid = candidates(person.type, i, n).filter(s => evaluate(s, answer) === !answer[i]);
-      if (!valid.length) throw new Error('No valid statement for this role');
-      return valid[Math.floor(rng() * valid.length)];
-    });
+    function draw(source: () => number) {
+      const people = shuffle(roles, source).slice(0, n);
+      const answer = all[Math.floor(source() * all.length)];
+      const statements = people.map((person, i) => {
+        const valid = candidates(person.type, i, n).filter(s => evaluate(s, answer) === !answer[i]);
+        if (!valid.length) throw new Error('No valid statement for this role');
+        return valid[Math.floor(source() * valid.length)];
+      });
+      return { people, answer, statements };
+    }
+    function unique(candidate: ReturnType<typeof draw>) {
+      // The chosen answer is valid by construction. Stop at the first other solution.
+      return !all.some(a => a.some((value, i) => value !== candidate.answer[i]) &&
+        candidate.statements.every((s, i) => evaluate(s, a) === !a[i]));
+    }
+    let chosen: ReturnType<typeof draw> | undefined;
+    for (let attempt = 0; attempt < attemptLimit; attempt++) {
+      const candidate = draw(rng);
+      if (unique(candidate)) { chosen = candidate; break; }
+    }
+    if (!chosen) {
+      const fallbackSeed = fallbackSeeds[`${n},${k}`];
+      if (fallbackSeed === undefined) throw new Error('Missing unique fallback for this case configuration');
+      chosen = draw(random(fallbackSeed));
+      if (!unique(chosen)) throw new Error('Fallback testimony must have exactly one solution');
+    }
+    const { people, answer, statements } = chosen;
     const testimonyCosts: number[] = people.map(() => 0);
     if (level === 'hard' && round >= 4) {
       const twoRate = (round - 4) * 0.05;

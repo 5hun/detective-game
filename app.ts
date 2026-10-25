@@ -7,7 +7,7 @@
     return element as T;
   }
   const key = 'beast-detective-v1';
-  const saveVersion = 10;
+  const saveVersion = 11;
   const markers = [{ name: '未設定', color: '#d4d7ca' }, { name: '犯人候補', color: '#b96d58' }, { name: '善人候補', color: '#749476' }, { name: '要検討', color: '#c4a359' }];
   const preferencesKey = 'animal-detective-preferences-v1';
   const preferences = { ruby: true, sound: true };
