@@ -280,3 +280,7 @@ html[lang="en"] .summary-label{letter-spacing:0}
   html[lang="ja"] .brand{font-size:12px}
   html[lang="ja"] .brand-symbol{width:20px}
 }
+
+/* Keep referenced animals recognizable within testimony without splitting their names. */
+.animal-mention{display:inline-block;white-space:nowrap}
+.animal-mention .inline-portrait{display:inline-block;width:1.7em;height:1.3em;margin-right:.2em;vertical-align:-.2em}

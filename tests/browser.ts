@@ -264,11 +264,11 @@ async function checkReadings(page: Page) {
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', false);
   assert.equal(await baseText(page.locator('#case-title')), storyTitle);
   assert.equal(await baseText(page.locator('#case-description')), storyDescription);
-  const neutralPortrait = await page.locator('#person-0 .portrait').innerHTML();
+  const neutralPortrait = await page.locator('#person-0 .portrait-box .portrait').innerHTML();
   const criminals = solution.flatMap((liar, i) => liar ? [i] : []);
   for (const [step, i] of criminals.entries()) {
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
-    assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
+    assert.equal(await page.locator(`#person-${i} .portrait-box .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
     assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(5 + (step === criminals.length - 1 ? 2 : 0)));
     if (step < criminals.length - 1) {
       const feedback = await page.locator('#feedback').boundingBox();
@@ -302,7 +302,7 @@ async function checkReadings(page: Page) {
   await page.locator('#result-dialog .close-button').click();
   assert.equal(await page.locator('#result-dialog').isVisible(), false);
   assert.ok(await page.locator('#next-case').isVisible());
-  assert.notEqual(await page.locator('#person-0 .portrait').innerHTML(), neutralPortrait);
+  assert.notEqual(await page.locator('#person-0 .portrait-box .portrait').innerHTML(), neutralPortrait);
   assert.ok((await baseText(page.locator('#result'))).includes('事件解決'));
   assert.equal(await page.locator('.truth-detail').count(), 5);
   await checkReadings(page);
@@ -314,7 +314,7 @@ async function checkReadings(page: Page) {
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
   assert.deepEqual(await page.evaluate(() => window.playedRecordings), [], 'restoring a solved case does not play the stamp');
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', true);
-  assert.equal(await page.locator('#person-0 .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');
+  assert.equal(await page.locator('#person-0 .portrait-box .portrait').getAttribute('data-portrait-state'), solution[0] ? 'liar' : 'good');
   await openMenu(page);
   await openMenu(page);
   await page.locator('#new-case').click();
@@ -323,12 +323,12 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('.suspect').count(), 7);
   assert.equal(await page.locator('.statement').count(), 0);
   const hard = await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.answer);
-  assert.equal(await page.locator('#suspects [data-portrait-state="neutral"], #animals-list [data-portrait-state="neutral"]').count(), 7 + await page.evaluate(() => window.DetectiveEngine.roles.length));
+  assert.equal(await page.locator('#suspects .portrait-box [data-portrait-state="neutral"], #animals-list [data-portrait-state="neutral"]').count(), 7 + await page.evaluate(() => window.DetectiveEngine.roles.length));
   const innocents = hard.flatMap((liar, i) => liar ? [] : [i]);
   for (let step = 0; step < 3; step++) {
     const i = innocents[step];
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
-    assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), 'sad');
+    assert.equal(await page.locator(`#person-${i} .portrait-box .portrait`).getAttribute('data-portrait-state'), 'sad');
     assert.equal(await page.locator(`#testimony-nav [data-person="${i}"] .portrait`).getAttribute('data-portrait-state'), 'sad');
     assert.equal(await page.locator(`#testimony-nav [data-person="${i}"]`).evaluate(el => getComputedStyle(el).backgroundColor),
       await page.locator(`#person-${i} .portrait-box`).evaluate(el => getComputedStyle(el).backgroundColor));
