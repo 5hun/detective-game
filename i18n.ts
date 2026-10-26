@@ -3,6 +3,15 @@ const DetectiveI18n = (() => {
   type Language = 'ja' | 'en';
   let language: Language = 'ja';
   const english: Record<string, string> = {
+    "関連する証言": "Related testimony",
+    "{0}に関連する証言": "Testimony related to {0}",
+    "関連する証言を閉じる": "Close related testimony",
+    "本人の証言": "Own testimony",
+    "{0}についての証言": "Testimony about {0}",
+    "この動物についての証言はありません。": "No other testimony mentions this animal.",
+    "未聴取": "Not heard yet",
+    "元のカードへ": "Go to card",
+    "証言を聞く": "Hear testimony",
     "ゾウ": "Elephant",
     "ほかの1匹が犯人か善人かを証言する。": "Says whether one other animal is a culprit or innocent.",
     "ウサギ": "Rabbit",

@@ -1,6 +1,7 @@
 // Optional browser check: PLAYWRIGHT_MODULE may point to an existing Playwright installation.
 import type { Locator, Page } from 'playwright';
 import { checkEnglish } from './i18n-browser';
+import { checkRelatedTestimony } from './related-browser';
 // The optional installation path requires loading Playwright dynamically.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { chromium }: typeof import('playwright') = require(process.env.PLAYWRIGHT_MODULE || 'playwright') as typeof import('playwright');
@@ -46,6 +47,7 @@ async function checkReadings(page: Page) {
 }
 (async () => {
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
+  await checkRelatedTestimony(browser);
   const page = await browser.newPage({ locale: 'ja-JP', viewport: { width: 1440, height: 1100 } });
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));

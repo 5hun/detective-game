@@ -284,3 +284,26 @@ html[lang="en"] .summary-label{letter-spacing:0}
 /* Keep referenced animals recognizable within testimony without splitting their names. */
 .animal-mention{display:inline-block;white-space:nowrap}
 .animal-mention .inline-portrait{display:inline-block;width:1.7em;height:1.3em;margin-right:.2em;vertical-align:-.2em}
+
+/* Review all testimony connected to one animal. */
+.related-button{font-size:11px;min-height:44px}
+.judge,.related-button{height:44px;min-height:44px;padding-top:6px;padding-bottom:6px}
+@media(max-width:760px){
+  .suspect .actions>.judge,.suspect .actions>.related-button{padding-left:7px;padding-right:7px}
+  .suspect .actions>.judge{gap:4px}
+}
+#related-dialog{max-width:620px;width:calc(100vw - 32px);max-height:85dvh;box-sizing:border-box;overflow-y:auto}
+#related-dialog h2{font-size:22px;overflow-wrap:anywhere}
+#related-funds{color:var(--green);font-weight:700}
+#related-content section+section{margin-top:24px}
+#related-content h3{font-size:15px;margin:0 0 12px}
+.related-entry{padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);margin-top:10px}
+.related-witness{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.related-witness>.inline-portrait{width:28px;height:32px}
+.related-witness h4{font-size:15px;margin:0}
+.witness-marker{display:inline-flex;align-items:center}
+.witness-marker::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--marker-color)}
+.selected-animal{background:#ece1b5;border-radius:4px;box-shadow:0 0 0 2px #ece1b5}
+.related-card-link{display:block;min-height:44px;margin-top:8px;padding:8px 0;border:0;background:none;color:var(--green);text-decoration:underline;cursor:pointer;font:inherit;font-size:12px}
+.unheard-label{color:var(--muted)}
+@media(max-width:600px){#related-dialog{padding:18px}#related-dialog h2{font-size:19px}.related-entry{padding:12px}.related-entry .quiet-button{min-height:44px}}

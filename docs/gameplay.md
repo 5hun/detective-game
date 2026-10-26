@@ -22,6 +22,7 @@ Animals are selected from ten species without duplicates. Each species uses a di
 
 - Open “Animal list” to see all ten species and their statement rules.
 - Tap “Hear statement” to reveal an animal's statement. On every difficulty, the animals mentioned in a statement are shown before you hear it.
+- Select “Related testimony” on an animal’s card to compare its own statement with statements mentioning it. The selected animal is highlighted, and each speaker’s marker is shown. Unheard statements remain hidden until you choose to hear them at the usual cost; listening here also reveals the original card. Select “Go to card” to return to a speaker’s card.
 - Each case has a fixed number of culprits and innocents.
 - Ordinary innocents always make true statements. A mistaken innocent who believes they are a culprit always makes a false statement.
 - Exactly one assignment satisfies all statements and the required culprit count. Hearing only some statements may leave multiple possibilities.

@@ -126,13 +126,38 @@
   function portraitStateFor(i: number) {
     return state.resolved[i] ? (state.puzzle.answer[i] ? 'liar' : 'sad') : state.status === 'won' ? 'good' : 'neutral';
   }
-  function withAnimalIcons(text: string) {
+  function withAnimalIcons(text: string, highlighted?: number) {
     const people = state.puzzle.people;
     const names = people.map(person => person.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     return text.replace(new RegExp(names.join('|'), 'g'), name => {
       const person = people.find(person => person.name === name)!;
-      return `<span class="animal-mention">${portrait(person.id, 'inline-portrait')}${name}</span>`;
+      return `<span class="animal-mention${people.indexOf(person) === highlighted ? ' selected-animal' : ''}">${portrait(person.id, 'inline-portrait')}${name}</span>`;
     });
+  }
+  let relatedAnimal: number | null = null;
+  function relatedWitnesses(index: number) {
+    return state.puzzle.statements.flatMap((statement, i) => i !== index && statement.targets.includes(index) ? [i] : []);
+  }
+  function renderRelatedDialog() {
+    if (relatedAnimal === null) return;
+    const selected = relatedAnimal;
+    const person = state.puzzle.people[selected];
+    $('related-dialog-title').textContent = tr`${person.name}に関連する証言`;
+    $('related-funds').textContent = tr`残り捜査資金 ${state.trust}`;
+    function entry(i: number) {
+      const witness = state.puzzle.people[i];
+      const marker = markers[state.markers[i]];
+      const heard = state.revealed[i] || state.status !== 'playing';
+      const cost = state.puzzle.testimonyCosts[i];
+      const statement = heard
+        ? `<p class="statement">${withAnimalIcons(E.statementText(state.puzzle.statements[i], state.puzzle.people), selected)}</p>`
+        : `<p class="unheard-label">${tr('未聴取')}</p><button type="button" class="quiet-button" data-related-reveal="${i}" aria-controls="related-statement-${i}" ${state.trust < cost ? 'disabled' : ''}>${tr('証言を聞く')}${cost ? tr`（🪙${cost}使用）` : ''}</button>${cost && state.trust < cost ? tr`<p class="testimony-cost-note">捜査資金が${cost}未満のときは聞けません。</p>` : ''}`;
+      return `<article class="related-entry" aria-labelledby="related-witness-${i}"><div class="related-witness">${portrait(witness.id, 'inline-portrait', portraitStateFor(i))}<h4 id="related-witness-${i}">${i + 1}. ${witness.name}</h4><span class="witness-marker" role="img" aria-label="${marker.name}" style="--marker-color:${marker.color}"></span></div><div id="related-statement-${i}" tabindex="-1">${statement}</div><button type="button" class="related-card-link" data-related-person="${i}">${tr('元のカードへ')}</button></article>`;
+    }
+    const scrollTop = $('related-dialog').scrollTop;
+    $('related-content').innerHTML = `<section aria-labelledby="own-testimony-heading"><h3 id="own-testimony-heading">${tr('本人の証言')}</h3>${entry(selected)}</section><section aria-labelledby="other-testimony-heading"><h3 id="other-testimony-heading">${tr`${person.name}についての証言`}</h3>${relatedWitnesses(selected).map(entry).join('') || `<p>${tr('この動物についての証言はありません。')}</p>`}</section>`;
+    addReadings($('related-dialog'));
+    $('related-dialog').scrollTop = scrollTop;
   }
   function renderCard(person: Person, i: number) {
     const resolved = state.resolved[i]; const ended = state.status !== 'playing'; const liar = state.puzzle.answer[i];
@@ -146,6 +171,7 @@
     else if (state.status === 'won') actions = tr`<span class="resolved-tag revealed">✓ ${identity}と確定 · ${person.name}は${identity}</span>`;
     else if (ended) actions = tr`<span class="resolved-tag unjudged">未判定 · 真相：${identity}</span>`;
     else actions = tr`<button class="judge liar" data-judge="liar" data-index="${i}" aria-label="${person.name}を犯人と判定"><span class="judge-icon" aria-hidden="true">😈</span><span>犯人と判定</span></button>`;
+    actions += `<button type="button" class="quiet-button related-button" data-related="${i}" aria-haspopup="dialog" aria-controls="related-dialog">${tr('関連する証言')}</button>`;
     const truth = ended ? tr`<details class="truth-detail"><summary>真相と証言の照合：この証言は${liar ? tr('嘘') : state.puzzle.mistaken === i ? tr('勘違い（間違い）') : tr('本当')}</summary><p>${sortedTargets.map(t => tr`${state.puzzle.people[t].name}＝${E.identity(state.puzzle, t)}`).join(tr(' ／ '))}</p><p>この組み合わせでは、上の証言は${E.evaluate(state.puzzle.statements[i], state.puzzle.answer) ? tr('正しい') : tr('間違っています')}。${person.name}が${E.identity(state.puzzle, i)}という真相と一致します。</p></details>` : '';
     return tr`<article class="suspect" data-marker="${state.markers[i]}" id="person-${i}" aria-labelledby="name-${i}"><div class="card-main"><div class="portrait-box"><span class="person-number">${String(i + 1).padStart(2, '0')}</span>${portrait(person.id, '', portraitState)}</div><div class="person-content"><div class="person-heading"><h3 id="name-${i}">${i + 1}. ${person.name}</h3><details class="role-details"><summary>証言ルール</summary><p>${person.rule}</p></details></div><p class="testimony-targets">${withAnimalIcons(targets)}についての証言が聞けそうだ</p><div id="statement-${i}">${state.revealed[i] || ended ? `<p class="statement">${withAnimalIcons(E.statementText(state.puzzle.statements[i], state.puzzle.people))}</p>` : tr`<button class="reveal-button quiet-button" data-reveal="${i}" aria-controls="statement-${i}" ${state.trust < cost ? 'disabled' : ''}>証言を聞く${cost ? tr`（🪙${cost}使用）` : ''}</button>${cost && state.trust < cost ? tr`<p class="testimony-cost-note">捜査資金が${cost}未満のときは聞けません。</p>` : ''}`}</div><div class="actions">${actions}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="${person.name}のマーカー">${markers.map((m, j) => tr`<button class="marker-button" style="--dot:${m.color}" data-marker-value="${j}" data-index="${i}" aria-label="${person.name}：${m.name}" title="${m.name}" aria-pressed="${state.markers[i] === j}"></button>`).join('')}</div><label class="memo-label" for="memo-${i}">MEMO</label><textarea id="memo-${i}" data-note="${i}" aria-label="${person.name}の捜査メモ" maxlength="1000" rows="1" placeholder="きになることをメモ…"></textarea></div>${truth}</article>`;
   }
@@ -199,6 +225,7 @@
       result.innerHTML = tr`${stamp}<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${heading}</h2>${description}<p>各カードの「真相と証言の照合」で振り返れます。</p>${!won ? tr`<p>${p.round - 1} / ${E.totalCases(p.level)}の事件を解決しました。最初から挑戦できます。</p>` : ''}${won ? `<details class="case-ending"><summary>${cleared ? tr('最後の事件のその後') : tr('事件のその後')}</summary><p>${story.ending}</p></details>` : ''}<button class="primary-button" id="next-case">${nextLabel}</button>`;
       $('next-case').addEventListener('click', nextCase);
     }
+    renderRelatedDialog();
     if (persist) save();
     else { updateSaveStatus(); addReadings(); }
   }
@@ -364,7 +391,10 @@
   $('testimony-nav').addEventListener('click', event => {
     const button = (event.target as Element).closest<HTMLButtonElement>('[data-person]');
     if (!button) return;
-    const card = $(`person-${button.dataset.person}`);
+    focusPerson(Number(button.dataset.person));
+  });
+  function focusPerson(index: number) {
+    const card = $(`person-${index}`);
     card.tabIndex = -1;
     card.focus({ preventScroll: true });
     card.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
@@ -374,7 +404,7 @@
       { boxShadow: '0 0 0 3px #83c991', offset: 0.65 },
       { boxShadow: '0 0 0 3px transparent', offset: 1 },
     ], { duration: 1500, easing: 'ease-out' });
-  });
+  }
   let feedbackHighlight: Animation | undefined;
   function animateJudgment(trustChange: number) {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -396,19 +426,46 @@
     ], { duration: 1100, easing: 'ease-out', fill: 'forwards' });
     animation.onfinish = () => delta.remove();
   }
+  function hearTestimony(i: number) {
+    const previousTrust = state.trust;
+    if (!E.reveal(state, i)) return;
+    if (preferences.sound) void judgmentSound.testimony();
+    $('feedback').className = 'feedback';
+    render(state.puzzle.testimonyCosts[i] ? tr`証言を聞きました。捜査資金 −${state.puzzle.testimonyCosts[i]}。` : undefined);
+    if (state.trust !== previousTrust) animateJudgment(state.trust - previousTrust);
+    const statement = $(relatedAnimal === null ? `statement-${i}` : `related-statement-${i}`);
+    statement.tabIndex = -1;
+    statement.focus({ preventScroll: true });
+  }
+  $('related-dialog').addEventListener('close', () => {
+    const selected = relatedAnimal;
+    relatedAnimal = null;
+    $('related-content').replaceChildren();
+    if (selected !== null) $('suspects').querySelector<HTMLButtonElement>(`[data-related="${selected}"]`)?.focus({ preventScroll: true });
+  });
+  $('related-content').addEventListener('click', event => {
+    const target = event.target as Element;
+    const reveal = target.closest<HTMLButtonElement>('[data-related-reveal]');
+    if (reveal) hearTestimony(Number(reveal.dataset.relatedReveal));
+    const link = target.closest<HTMLButtonElement>('[data-related-person]');
+    if (link) {
+      relatedAnimal = null;
+      $<HTMLDialogElement>('related-dialog').close();
+      focusPerson(Number(link.dataset.relatedPerson));
+    }
+  });
   $('suspects').addEventListener('click', event => {
+    const related = (event.target as Element).closest<HTMLButtonElement>('[data-related]');
+    if (related) {
+      relatedAnimal = Number(related.dataset.related);
+      renderRelatedDialog();
+      $('related-dialog').scrollTop = 0;
+      $<HTMLDialogElement>('related-dialog').showModal();
+      return;
+    }
     const reveal = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-reveal]');
     if (reveal) {
-      const i = Number(reveal.dataset.reveal);
-      const previousTrust = state.trust;
-      if (!E.reveal(state, i)) return;
-      if (preferences.sound) void judgmentSound.testimony();
-      $('feedback').className = 'feedback';
-      render(state.puzzle.testimonyCosts[i] ? tr`証言を聞きました。捜査資金 −${state.puzzle.testimonyCosts[i]}。` : undefined);
-      if (state.trust !== previousTrust) animateJudgment(state.trust - previousTrust);
-      const statement = $(`statement-${i}`);
-      statement.tabIndex = -1;
-      statement.focus({ preventScroll: true });
+      hearTestimony(Number(reveal.dataset.reveal));
       return;
     }
     const judge = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-judge]');
