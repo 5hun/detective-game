@@ -30,7 +30,7 @@ Animals are selected from ten species without duplicates. Each species uses a di
 
 ## Investigation funds
 
-- You start with five investigation funds. Correct identifications do not increase them; incorrect identifications cost two, and solving a case earns one. The investigation ends if your funds fall below zero. Find every culprit with zero or more funds to solve the case. Automatically confirmed innocents do not earn funds.
+- You start with five investigation funds. Correct identifications do not increase them; incorrect identifications cost two, and solving a case earns two with no incorrect accusations, or one otherwise. The investigation ends if your funds fall below zero. Find every culprit with zero or more funds to solve the case. Automatically confirmed innocents do not earn funds.
 - From case five on Hard, some statements cost one or two investigation funds. The cost is displayed beforehand. You can hear a statement if you have enough funds, even if paying leaves you with zero. Revealed statements never cost funds again.
 - An animal accused by mistake is still marked as identified.
 

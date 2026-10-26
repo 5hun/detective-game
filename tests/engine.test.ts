@@ -72,7 +72,7 @@ void test('only criminals need judgment at every difficulty', () => {
     const criminals = s.puzzle.answer.flatMap((liar, i) => liar ? [i] : []);
     criminals.forEach((index, j) => {
       assert.equal(E.judge(s, index), true);
-      assert.equal(s.trust, j === criminals.length - 1 ? 6 : 5);
+      assert.equal(s.trust, j === criminals.length - 1 ? 7 : 5);
       assert.equal(s.status, j === criminals.length - 1 ? 'won' : 'playing');
       assert.equal(E.judge(s, index), null);
     });

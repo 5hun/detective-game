@@ -10,7 +10,7 @@ A logic puzzle game where you read animals' statements and identify the innocent
 2. Hear animals' statements and use notes and markers to work out who the culprits are. Ordinary innocents tell the truth; culprits lie. Later Hard cases introduce a mistaken innocent who also lies.
 3. Select “Identify as culprit” to check your deduction. Find every culprit to solve the case.
 
-You start with five investigation funds. An incorrect accusation costs two; solving a case earns one. Some statements in later Hard cases also cost funds. The investigation ends if your funds fall below zero.
+You start with five investigation funds. An incorrect accusation costs two; solving a case earns two with no incorrect accusations, or one otherwise. Some statements in later Hard cases also cost funds. The investigation ends if your funds fall below zero.
 
 Progress is saved automatically in your browser. Use the game menu (☰) to switch between Japanese and English.
 

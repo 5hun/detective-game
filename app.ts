@@ -93,7 +93,7 @@
       const testimonySpent = revealed.reduce((sum, heard, i) => sum + (heard ? puzzle.testimonyCosts[i] : 0), 0);
       const trust = (saved.startingTrust as number) + resolved.reduce((sum, r) => sum + (r ? r.reward! : 0), 0) - testimonySpent;
       const status = trust < 0 ? 'lost' : puzzle.answer.every((liar, i) => !liar || resolved[i] !== null) ? 'won' : 'playing';
-      const finalTrust = trust + (status === 'won' ? 1 : 0);
+      const finalTrust = trust + (status === 'won' ? E.caseReward(resolved) : 0);
       if (saved.trust !== finalTrust || saved.status !== status) return null;
       return { version: saveVersion, puzzle, storyHistory, previousMistakes: previousMistakes as number, startingTrust: saved.startingTrust as number, trust: finalTrust, status, resolved, notes, markers, revealed };
     } catch { return null; }
@@ -171,7 +171,7 @@
       const heading = cleared ? tr('すべての事件を解決！') : won ? tr`事件解決！ (${p.round} / ${E.totalCases(p.level)})` : tr('今回の捜査は、ここまで');
       const description = cleared
         ? tr`<p>おめでとうございます！<br>あなたの推理で、全${E.totalCases(p.level)}件の事件が解決しました。<br>森の名探偵、おつかれさまでした！</p><table class="campaign-results" aria-label="全事件の結果"><tbody><tr><th scope="row">解決した事件</th><td>${E.totalCases(p.level)}件</td></tr><tr><th scope="row">全事件で間違えて犯人と判定した回数</th><td>${totalMistakes}回</td></tr><tr><th scope="row">残った捜査資金</th><td>${state.trust}</td></tr></tbody></table>${totalMistakes === 0 ? tr('<p><strong>一度も間違えずに、すべての事件を解決しました！🎉</strong></p>') : ''}`
-        : `<p>${won ? tr`事件解決。捜査資金 ＋1。${mistakes === 0 ? tr('一度も間違えず、みんなの正体を見抜きました。') : tr`誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : tr('捜査資金がマイナスになりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。')}</p>${won ? tr('<p>次の捜査へ進みましょう。</p>') : ''}`;
+        : `<p>${won ? tr`事件解決。捜査資金 ＋${E.caseReward(state.resolved)}。${mistakes === 0 ? tr('一度も間違えず、みんなの正体を見抜きました。') : tr`誤判定 ${mistakes}回で、みんなの正体が明らかになりました。`}` : tr('捜査資金がマイナスになりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。')}</p>${won ? tr('<p>次の捜査へ進みましょう。</p>') : ''}`;
       result.innerHTML = tr`${stamp}<span class="eyebrow">${cleared ? 'ALL CASES CLOSED' : won ? 'CASE CLOSED' : 'INVESTIGATION ENDED'}</span><h2>${heading}</h2>${description}<p>各カードの「真相と証言の照合」で振り返れます。</p>${!won ? tr`<p>${p.round - 1} / ${E.totalCases(p.level)}の事件を解決しました。最初から挑戦できます。</p>` : ''}${won ? `<details class="case-ending"><summary>${cleared ? tr('最後の事件のその後') : tr('事件のその後')}</summary><p>${story.ending}</p></details>` : ''}<button class="primary-button" id="next-case">${nextLabel}</button>`;
       $('next-case').addEventListener('click', nextCase);
     }

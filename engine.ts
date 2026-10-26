@@ -186,6 +186,9 @@ var DetectiveEngine = (function () {
     return true;
   }
   const initialTrust = 5;
+  function caseReward(resolved: readonly (Resolution | null)[]) {
+    return resolved.some(r => r && !r.correct) ? 1 : 2;
+  }
   function judge(state: JudgmentState, index: number) {
     if (state.status !== 'playing' || state.resolved[index] !== null) return null;
     const correct = state.puzzle.answer[index] === true;
@@ -195,11 +198,11 @@ var DetectiveEngine = (function () {
     if (state.trust < 0) state.status = 'lost';
     else if (state.puzzle.answer.every((liar, i) => !liar || state.resolved[i] !== null)) {
       state.status = 'won';
-      state.trust += 1;
+      state.trust += caseReward(state.resolved);
     }
     return correct;
   }
-  const api = { identity, totalCases, caseConfig, initialTrust, roles, caseStories, selectStory, levels, generate, solve, evaluate, statementText, assignments, judge, reveal };
+  const api = { identity, totalCases, caseConfig, initialTrust, caseReward, roles, caseStories, selectStory, levels, generate, solve, evaluate, statementText, assignments, judge, reveal };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   return api;
 })();

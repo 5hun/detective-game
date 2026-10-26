@@ -269,7 +269,7 @@ async function checkReadings(page: Page) {
   for (const [step, i] of criminals.entries()) {
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
     assert.equal(await page.locator(`#person-${i} .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
-    assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(5 + (step === criminals.length - 1 ? 1 : 0)));
+    assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(5 + (step === criminals.length - 1 ? 2 : 0)));
     if (step < criminals.length - 1) {
       const feedback = await page.locator('#feedback').boundingBox();
       assert.ok(feedback);
@@ -310,7 +310,7 @@ async function checkReadings(page: Page) {
   await page.locator('#menu-toggle').click();
   assert.ok(await page.locator('#result').isVisible());
   assert.equal(await baseText(page.locator('#result .case-ending')), `事件のその後${expectedStory.ending}`, 'ending survives reload');
-  assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(6));
+  assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(7));
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'reload is silent');
   assert.deepEqual(await page.evaluate(() => window.playedRecordings), [], 'restoring a solved case does not play the stamp');
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', true);
