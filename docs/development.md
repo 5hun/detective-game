@@ -15,6 +15,14 @@ After building, **open `index.html` in your browser to play.** No server is requ
 
 On a desktop, double-click `index.html` or drag it into your browser. The layout also supports mobile screen widths. Some mobile operating systems or file managers restrict JavaScript in local HTML files. In that case, upload the same files and the `assets/` and `dist/` folders to a static host and access them there; no application backend is needed.
 
+## Setting funds for debugging
+
+Open `index.html?debugMoney=100` to set investigation funds to 100. This also works on a static host. The hidden parameter accepts integers from -1,000,000,000 to 1,000,000,000; invalid values are ignored. Zero allows testing insufficient funds, and negative values put the game into the lost state.
+
+For an existing save, the value is applied when the page loads. Without a save, it is applied when you start a game. It applies once per page load, so normal spending and rewards continue afterward. Reloading with the parameter sets the funds again; remove the parameter to resume with the saved balance. Changes use the ordinary save slot and persist without the parameter, preserving testimony, judgments, and notes. Starting over resets funds normally. Setting a nonnegative amount can resume a lost investigation; a solved case remains solved.
+
+This is a convenience for debugging, not an access restriction. It is available in the published game to anyone who knows the parameter.
+
 ## Checks
 
 Run type checks, lint, and independent exhaustive verification of 3,000 puzzles across the three difficulties, plus tests for investigation funds, win/loss conditions, and reproducibility:

@@ -640,6 +640,53 @@ async function checkReadings(page: Page) {
   await campaign.locator('#confirm-new').click();
   assert.equal(await campaign.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).previousMistakes), 0);
   await campaign.close();
+  // URL funds apply once per load, survive normal saves, and preserve the puzzle.
+  const debug = await browser.newPage({ locale: 'ja-JP', reducedMotion: 'reduce' });
+  debug.on('pageerror', e => errors.push(e.message));
+  const gameUrl = pathToFileURL(path.resolve(__dirname, '../../index.html')).href;
+  const debugState = () => debug.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState);
+  await debug.goto(`${gameUrl}?debugMoney=100`);
+  await startGame(debug);
+  assert.equal((await debugState()).trust, 100);
+  const debugPuzzle = (await debugState()).puzzle;
+  await debug.locator('[data-reveal="0"]').click();
+  await debug.locator(`#person-${debugPuzzle.answer.indexOf(false)} [data-judge="liar"]`).click();
+  const afterSpending = 98;
+  assert.equal((await debugState()).trust, afterSpending, 'rerender must not reset funds');
+  await debug.goto(gameUrl);
+  assert.equal((await debugState()).trust, afterSpending);
+  assert.equal(await debug.locator('#trust-value').textContent(), String(afterSpending));
+  assert.deepEqual((await debugState()).puzzle, debugPuzzle);
+  assert.equal((await debugState()).revealed[0], true);
+  for (const invalid of ['', 'abc', '1.5', '1e3', 'Infinity', '1000000001', '-1000000001']) {
+    await debug.goto(`${gameUrl}?debugMoney=${invalid}`);
+    assert.equal(await debug.locator('#trust-value').textContent(), String(afterSpending));
+  }
+  await debug.goto(`${gameUrl}?debugMoney=0`);
+  assert.equal((await debugState()).trust, 0);
+  assert.equal((await debugState()).status, 'playing');
+  await debug.goto(`${gameUrl}?debugMoney=-1`);
+  assert.equal((await debugState()).status, 'lost');
+  await debug.goto(gameUrl);
+  assert.equal(await debug.locator('#trust-value').textContent(), '-1');
+  await debug.goto(`${gameUrl}?debugMoney=100`);
+  assert.equal((await debugState()).status, 'playing');
+  for (const [i, criminal] of debugPuzzle.answer.entries()) {
+    if (criminal) await debug.locator(`#person-${i} [data-judge="liar"]`).click();
+  }
+  assert.equal((await debugState()).status, 'won');
+  for (const funds of [0, -1, 100]) {
+    await debug.goto(`${gameUrl}?debugMoney=${funds}`);
+    await debug.goto(gameUrl);
+    assert.equal(await debug.locator('#trust-value').textContent(), String(funds));
+    assert.equal((await debugState()).status, funds < 0 ? 'lost' : 'won');
+  }
+  await debug.goto(`${gameUrl}?debugMoney=0`);
+  await debug.locator('#next-case').click();
+  await debug.goto(gameUrl);
+  assert.equal((await debugState()).puzzle.round, 2);
+  assert.equal(await debug.locator('#trust-value').textContent(), '0');
+  await debug.close();
   const blocked = await browser.newPage({ locale: 'ja-JP' });
   await blocked.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } }); });
   await blocked.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);

@@ -53,6 +53,18 @@
     savePreferences();
   });
   let state: GameState; let hasGame = false; let storageAvailable = true;
+  const debugMoneyParam = new URLSearchParams(location.search).get('debugMoney');
+  let debugMoney = debugMoneyParam !== null && /^-?\d+$/.test(debugMoneyParam) && Math.abs(Number(debugMoneyParam)) <= 1_000_000_000
+    ? Number(debugMoneyParam) : null;
+  function applyDebugMoney() {
+    if (debugMoney === null) return;
+    const solved = state.puzzle.answer.every((liar, i) => !liar || state.resolved[i] !== null);
+    state.status = debugMoney < 0 ? 'lost' : solved ? 'won' : 'playing';
+    // Retain the original starting funds so ordinary save validation still applies.
+    state.debugMoneyAdjustment = (state.debugMoneyAdjustment ?? 0) + debugMoney - state.trust;
+    state.trust = debugMoney;
+    debugMoney = null;
+  }
   function fresh(level: Level, round = 1, trust = E.initialTrust, previousStories: readonly number[] = [], previousMistakes = 0): GameState {
     const seed = window.crypto ? crypto.getRandomValues(new Uint32Array(1))[0] : Date.now() >>> 0;
     const puzzle = E.generate(seed, level, round);
@@ -64,12 +76,14 @@
       const raw: unknown = JSON.parse(localStorage.getItem(key) || 'null');
       if (!raw || typeof raw !== 'object') return null;
       const saved = raw as Record<string, unknown>;
+      const debugMoneyAdjustment = saved.debugMoneyAdjustment ?? 0;
+      if (!Number.isSafeInteger(debugMoneyAdjustment) || Math.abs(debugMoneyAdjustment as number) > 1_000_000_000_000) return null;
       const storedPuzzle = saved.puzzle as Partial<Puzzle> | undefined;
       if (saved.version !== saveVersion || !storedPuzzle ||
         !Object.hasOwnProperty.call(E.levels, storedPuzzle.level || '') ||
         !Number.isInteger(storedPuzzle.seed) ||
         !Number.isInteger(storedPuzzle.round) || storedPuzzle.round! < 1 || storedPuzzle.round! > E.totalCases(storedPuzzle.level!) ||
-        !Number.isInteger(saved.startingTrust) || (saved.startingTrust as number) < 1 ||
+        !Number.isInteger(saved.startingTrust) || (saved.startingTrust as number) < 0 ||
         (storedPuzzle.round === 1 && saved.startingTrust !== E.initialTrust)) return null;
       const puzzle = E.generate(storedPuzzle.seed!, storedPuzzle.level, storedPuzzle.round);
       // Older saves only retain the current story; preserve it when upgrading.
@@ -91,11 +105,12 @@
           ('reward' in r && (r.correct ? r.reward === 0 || r.reward === 1 : r.reward === -2))))) return null;
       if (!Array.isArray(revealed) || revealed.length !== n || !revealed.every(v => typeof v === 'boolean')) return null;
       const testimonySpent = revealed.reduce((sum, heard, i) => sum + (heard ? puzzle.testimonyCosts[i] : 0), 0);
-      const trust = (saved.startingTrust as number) + resolved.reduce((sum, r) => sum + (r ? r.reward! : 0), 0) - testimonySpent;
-      const status = trust < 0 ? 'lost' : puzzle.answer.every((liar, i) => !liar || resolved[i] !== null) ? 'won' : 'playing';
-      const finalTrust = trust + (status === 'won' ? E.caseReward(resolved) : 0);
+      const trust = (saved.startingTrust as number) + (debugMoneyAdjustment as number) + resolved.reduce((sum, r) => sum + (r ? r.reward! : 0), 0) - testimonySpent;
+      const solved = puzzle.answer.every((liar, i) => !liar || resolved[i] !== null);
+      const finalTrust = trust + (solved ? E.caseReward(resolved) : 0);
+      const status = finalTrust < 0 ? 'lost' : solved ? 'won' : 'playing';
       if (saved.trust !== finalTrust || saved.status !== status) return null;
-      return { version: saveVersion, puzzle, storyHistory, previousMistakes: previousMistakes as number, startingTrust: saved.startingTrust as number, trust: finalTrust, status, resolved, notes, markers, revealed };
+      return { version: saveVersion, puzzle, storyHistory, previousMistakes: previousMistakes as number, startingTrust: saved.startingTrust as number, debugMoneyAdjustment: debugMoneyAdjustment as number, trust: finalTrust, status, resolved, notes, markers, revealed };
     } catch { return null; }
   }
   function save() {
@@ -127,6 +142,7 @@
     return tr`<article class="suspect" data-marker="${state.markers[i]}" id="person-${i}" aria-labelledby="name-${i}"><div class="card-main"><div class="portrait-box"><span class="person-number">${String(i + 1).padStart(2, '0')}</span>${portrait(person.id, '', portraitState)}</div><div class="person-content"><div class="person-heading"><h3 id="name-${i}">${i + 1}. ${person.name}</h3><details class="role-details"><summary>証言ルール</summary><p>${person.rule}</p></details></div><p class="testimony-targets">${targets}についての証言が聞けそうだ</p><div id="statement-${i}">${state.revealed[i] || ended ? `<p class="statement">${E.statementText(state.puzzle.statements[i], state.puzzle.people)}</p>` : tr`<button class="reveal-button quiet-button" data-reveal="${i}" aria-controls="statement-${i}" ${state.trust < cost ? 'disabled' : ''}>証言を聞く${cost ? tr`（🪙${cost}使用）` : ''}</button>${cost && state.trust < cost ? tr`<p class="testimony-cost-note">捜査資金が${cost}未満のときは聞けません。</p>` : ''}`}</div><div class="actions">${actions}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="${person.name}のマーカー">${markers.map((m, j) => tr`<button class="marker-button" style="--dot:${m.color}" data-marker-value="${j}" data-index="${i}" aria-label="${person.name}：${m.name}" title="${m.name}" aria-pressed="${state.markers[i] === j}"></button>`).join('')}</div><label class="memo-label" for="memo-${i}">MEMO</label><textarea id="memo-${i}" data-note="${i}" aria-label="${person.name}の捜査メモ" maxlength="1000" rows="1" placeholder="きになることをメモ…"></textarea></div>${truth}</article>`;
   }
   function render(message?: string, persist = true) {
+    applyDebugMoney();
     hasGame = true;
     $('home-page').hidden = true;
     $('game-page').hidden = false;
