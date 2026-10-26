@@ -37,7 +37,7 @@ export async function checkRelatedTestimony(browser: Browser) {
   for (let selected = 0; selected < fixture.puzzle.people.length; selected++) {
     const expected = [selected, ...fixture.puzzle.statements.flatMap((s, i) => i !== selected && s.targets.includes(selected) ? [i] : [])];
     const opener = page.locator(`[data-related="${selected}"]`);
-    assert.equal(await baseText(opener), '関連する証言');
+    assert.equal(await baseText(opener), '🔎 関連する証言');
     await opener.click();
     assert.deepEqual(await page.locator('[data-related-person]').evaluateAll(buttons => buttons.map(b => Number((b as HTMLElement).dataset.relatedPerson))), expected);
     assert.equal(await dialog.locator('.statement').count(), 0, 'unheard testimony is hidden');

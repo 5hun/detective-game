@@ -292,6 +292,10 @@ html[lang="en"] .summary-label{letter-spacing:0}
   .suspect .actions>.judge,.suspect .actions>.related-button{padding-left:7px;padding-right:7px}
   .suspect .actions>.judge{gap:4px}
 }
+@media(max-width:360px){
+  .suspect .actions{gap:4px}
+  .suspect .actions>.judge,.suspect .actions>.related-button{padding-left:4px;padding-right:4px}
+}
 #related-dialog{max-width:620px;width:calc(100vw - 32px);max-height:85dvh;box-sizing:border-box;overflow-y:auto}
 #related-dialog h2{font-size:22px;overflow-wrap:anywhere}
 #related-funds{color:var(--green);font-weight:700}
