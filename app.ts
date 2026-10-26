@@ -166,7 +166,7 @@
     $('mistaken-count').hidden = p.mistakenCount === 0;
     $('mistaken-count').innerHTML = tr`（うち<strong class="mistaken-emphasis">勘違い</strong>している<strong class="identity-good">善人</strong>${p.mistakenCount === 1 ? tr('１') : tr('０')}匹）`;
     $('mistaken-rule').hidden = p.mistakenCount === 0;
-    $('mistaken-rule').textContent = tr('この事件には、勘違いしている善人が1匹います。証言は必ず間違っていますが、犯人ではありません。「同じ立場」や犯人の数では善人として扱います。');
+    $('mistaken-rule').textContent = tr('この事件には、勘違いしている善人がいます。証言は必ず間違っていますが、犯人ではありません。\n「同じ立場」や犯人の数では善人として扱います。');
     $('progress-count').textContent = `${count} / ${p.k}`;
     $('trust-value').textContent = String(state.trust);
     $('trust').setAttribute('aria-label', tr`残り捜査資金 ${state.trust}`);

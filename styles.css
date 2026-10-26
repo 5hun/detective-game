@@ -28,6 +28,12 @@ ruby{ruby-align:center}rt{font-size:.55em;font-family:"Hiragino Kaku Gothic ProN
 .portrait-box:has([data-portrait-state="liar"]){border-color:#b89b88}
 
 .case-description{max-width:48em;font-size:14px;line-height:2.2;margin:16px 0 8px}
+.mistaken-notice{--notice-accent:#94721f;padding:4px 0 4px 16px;border-left:2px solid var(--notice-accent)}
+.mistaken-notice:has(> [hidden]){display:none}
+#mistaken-rule-title{display:flex;align-items:center;gap:8px;margin:0 0 6px;color:var(--notice-accent);font-size:inherit;font-weight:700}
+#mistaken-rule-title > span[data-i18n]{display:block;min-width:0}
+.mistaken-notice-icon{flex-shrink:0;color:var(--notice-accent)}
+#mistaken-rule{margin:0;font-weight:400;white-space:pre-line}
 #case-title{line-height:1.9}
 @media(max-width:760px){.case-description{font-size:13px}}
 
