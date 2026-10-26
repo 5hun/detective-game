@@ -181,7 +181,8 @@ main{padding-top:24px}
 .campaign-step.completed>span{border-color:var(--green);background:var(--green);color:#fff}
 .campaign-step.current>span{width:26px;height:26px;border-color:var(--green);outline:2px solid var(--green);outline-offset:3px}
 
-.testimony-targets,.testimony-cost-note{font-size:12px;overflow-wrap:anywhere;margin:8px 0;color:var(--ink)}.reveal-button:disabled{opacity:.55}
+.testimony-targets,.testimony-cost-note{font-size:12px;overflow-wrap:anywhere;margin:8px 0;color:var(--ink)}.reveal-button:disabled{display:block;margin-bottom:0;opacity:.55}
+.reveal-button + .testimony-cost-note{margin-top:4px}
 
 .resolved-tag.unjudged{background:#ecece1;color:#75816c}
 .resolved-tag .identity-good{color:#56804a;font-weight:700}
