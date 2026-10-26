@@ -129,9 +129,9 @@
   function withAnimalIcons(text: string, highlighted?: number) {
     const people = state.puzzle.people;
     const names = people.map(person => person.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    return text.replace(new RegExp(names.join('|'), 'g'), name => {
+    return text.replace(new RegExp(`(\\d+\\.\\s*)?(${names.join('|')})`, 'g'), (_match, number: string | undefined, name: string) => {
       const person = people.find(person => person.name === name)!;
-      return `<span class="animal-mention${people.indexOf(person) === highlighted ? ' selected-animal' : ''}">${portrait(person.id, 'inline-portrait')}${name}</span>`;
+      return `<span class="animal-mention${people.indexOf(person) === highlighted ? ' selected-animal' : ''}">${portrait(person.id, 'inline-portrait')}${number ?? ''}${name}</span>`;
     });
   }
   let relatedAnimal: number | null = null;
