@@ -201,6 +201,7 @@
     }).join('');
     $('case-title').textContent = story.title;
     $('case-description').textContent = story.description;
+    $<HTMLImageElement>('case-illustration').src = `assets/cases/${story.illustration}.png`;
     document.title = tr`${story.title} — どうぶつ探偵`;
     $('liar-count').textContent = tr`犯人 ${p.k}匹`;
     $('good-count').textContent = tr`善人 ${p.people.length - p.k}匹`;

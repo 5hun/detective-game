@@ -27,6 +27,9 @@ ruby{ruby-align:center}rt{font-size:.55em;font-family:"Hiragino Kaku Gothic ProN
 .portrait-box:has([data-portrait-state="liar"]),.testimony-link:has([data-portrait-state="liar"]),.animal-status-icon:has([data-portrait-state="liar"]){background:#e9ddd3}
 .portrait-box:has([data-portrait-state="liar"]){border-color:#b89b88}
 
+.title-row > div{min-width:0;width:100%}
+.case-story{position:relative;isolation:isolate;overflow:hidden}
+.case-illustration{position:absolute;z-index:-1;right:8px;top:50%;width:clamp(160px,32%,240px);height:auto;max-height:100%;object-fit:contain;opacity:.1;transform:translateY(-50%) rotate(-8deg);pointer-events:none;user-select:none}
 .case-description{max-width:48em;font-size:14px;line-height:2.2;margin:16px 0 8px}
 .mistaken-notice{--notice-accent:#94721f;padding:4px 0 4px 16px;border-left:2px solid var(--notice-accent)}
 .mistaken-notice:has(> [hidden]){display:none}
