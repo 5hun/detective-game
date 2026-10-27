@@ -32,6 +32,9 @@ export async function checkRelatedTestimony(browser: Browser) {
     return { puzzle, texts: puzzle.statements.map(s => window.DetectiveEngine.statementText(s, puzzle.people)) };
   });
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   await checkActionLayout(page);
   const dialog = page.locator('#related-dialog');
   for (let selected = 0; selected < fixture.puzzle.people.length; selected++) {
@@ -70,6 +73,9 @@ export async function checkRelatedTestimony(browser: Browser) {
   await dialog.waitFor({ state: 'hidden' });
   assert.equal(await page.locator(`#person-${paid}`).evaluate(element => element === document.activeElement), true);
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り捜査資金 0');
   const expensive = fixture.puzzle.testimonyCosts.indexOf(2);
   await page.locator(`[data-related="${expensive}"]`).click();

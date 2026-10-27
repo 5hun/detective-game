@@ -65,6 +65,9 @@ export async function checkEnglish(browser: Browser) {
   assert.equal(await page.locator('#memo-0').inputValue(), '日本語 notes <b>literal</b> {0}');
   assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), saved);
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   assert.equal(await page.locator('html').getAttribute('lang'), 'en');
   assert.equal(await page.locator('#memo-0').inputValue(), '日本語 notes <b>literal</b> {0}');
   await checkEnglishText(page);

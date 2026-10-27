@@ -94,6 +94,9 @@ async function checkReadings(page: Page) {
   await page.locator('[data-close="new-dialog"]').click();
   assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), null);
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   assert.ok(await page.locator('#home-page').isVisible());
   await startGame(page);
   assert.ok(await page.locator('#case-intro').isVisible());
@@ -122,6 +125,9 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('#memo-0').inputValue(), '初期ページから再開');
   assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), saveBeforeHome);
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   await page.locator('.brand').click();
   assert.ok(await page.locator('#continue-game').isVisible());
   await page.locator('#start-game').click();
@@ -195,6 +201,9 @@ async function checkReadings(page: Page) {
   await setToggle(page.locator('#ruby-toggle'), false);
   assert.equal(await page.locator('ruby rt').first().isVisible(), false);
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   await page.locator('#menu-toggle').click();
   assert.equal((await page.locator('#ruby-toggle').getAttribute('aria-pressed')) === 'true', false);
   assert.equal(await page.locator('ruby rt').first().isVisible(), false);
@@ -233,6 +242,9 @@ async function checkReadings(page: Page) {
   assert.deepEqual(await page.evaluate(() => window.playedTones), [], 'muted testimony is silent');
   await setToggle(page.locator('#sound-toggle'), true);
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('.statement').count(), 2);
   assert.equal(await page.locator('.testimony-targets').count(), 3);
@@ -242,6 +254,9 @@ async function checkReadings(page: Page) {
     assert.equal(await page.locator('#testimony-nav [data-person="0"]').evaluate(el => getComputedStyle(el).borderTopColor), color);
   }
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('#memo-0').inputValue(), '<script>alert("memo")</script> メモ保存テスト');
   assert.equal(await page.locator('#person-0').getAttribute('data-marker'), '1');
@@ -279,6 +294,9 @@ async function checkReadings(page: Page) {
   assert.deepEqual(await page.evaluate(() => window.playedTones), []);
   await setToggle(page.locator('#sound-toggle'), false);
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   await page.locator('#menu-toggle').click();
   assert.equal((await page.locator('#sound-toggle').getAttribute('aria-pressed')) === 'true', false);
   assert.equal(await baseText(page.locator('#case-title')), storyTitle);
@@ -344,12 +362,15 @@ async function checkReadings(page: Page) {
   await page.screenshot({ path: '/tmp/detective-result-dialog-desktop.png' });
   await page.locator('#result-dialog .close-button').click();
   assert.equal(await page.locator('#result-dialog').isVisible(), false);
-  assert.ok(await page.locator('#next-case').isVisible());
+  await page.locator('#next-case').waitFor({ state: 'visible' });
   assert.notEqual(await page.locator('#person-0 .portrait-box .portrait').innerHTML(), neutralPortrait);
   assert.ok((await baseText(page.locator('#result'))).includes('事件解決'));
   assert.equal(await page.locator('.truth-detail').count(), 5);
   await checkReadings(page);
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   await page.locator('#menu-toggle').click();
   assert.ok(await page.locator('#result').isVisible());
   assert.equal(await baseText(page.locator('#result .case-ending')), `事件のその後${expectedStory.ending}`, 'ending survives reload');
@@ -391,6 +412,9 @@ async function checkReadings(page: Page) {
   assert.ok((await baseText(page.locator('#result'))).includes('捜査資金がマイナスになりました'));
   assert.equal(await page.locator('[data-judge]').count(), 0);
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), '-1');
   assert.ok(await page.locator('#result').isVisible());
@@ -509,6 +533,9 @@ async function checkReadings(page: Page) {
     assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(previous.trust));
     assert.equal(await page.locator('#result').isVisible(), false);
     await page.reload();
+    assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+    assert.ok(await page.locator('#game-page').isHidden());
+    if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
     const current = await page.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState);
     assert.equal(current.puzzle.round, round);
     assert.deepEqual(current.storyHistory.slice(0, -1), previous.storyHistory);
@@ -552,6 +579,9 @@ async function checkReadings(page: Page) {
   assert.equal(await page.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.round), 1);
   await page.evaluate(() => localStorage.setItem('beast-detective-v1', '{bad json'));
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   assert.ok(await page.locator('#home-page').isVisible());
   await startGame(page);
   const invalidSave = await browser.newPage({ locale: 'ja-JP' });
@@ -593,6 +623,9 @@ async function checkReadings(page: Page) {
   assert.ok(await page.locator('#continue-game').isHidden());
   assert.equal(await page.evaluate(() => localStorage.getItem('animal-detective-preferences-v1')), preferencesBeforeDelete);
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   assert.ok(await page.locator('#home-page').isVisible());
   assert.equal(await page.evaluate(() => localStorage.getItem('beast-detective-v1')), null);
   await startGame(page);
@@ -612,12 +645,18 @@ async function checkReadings(page: Page) {
     return puzzle.testimonyCosts.flatMap((cost, i) => cost ? [i] : []).sort((a, b) => puzzle.testimonyCosts[a] - puzzle.testimonyCosts[b]);
   });
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   assert.equal(await page.locator('.testimony-targets').count(), 10);
   await checkReadings(page);
   await page.locator(`[data-reveal="${paidIndices[0]}"]`).click();
   assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り捜査資金 0');
   assert.ok(await page.locator(`[data-reveal="${paidIndices[1]}"]`).isDisabled());
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   assert.ok(await page.locator(`#statement-${paidIndices[0]} .statement`).isVisible());
   assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り捜査資金 0');
   assert.ok(await page.locator(`[data-reveal="${paidIndices[1]}"]`).isDisabled());
@@ -634,15 +673,24 @@ async function checkReadings(page: Page) {
     return puzzle.mistaken!;
   });
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   assert.ok((await baseText(page.locator('#mistaken-count'))).includes('うち勘違いしている善人１匹'));
   assert.ok(await page.locator('#mistaken-rule').isVisible());
   await page.locator(`#person-${mistaken} [data-marker-value="4"]`).click();
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   assert.equal(await page.locator(`#person-${mistaken}`).getAttribute('data-marker'), '4');
   await page.locator(`#person-${mistaken} [data-judge]`).click();
   assert.ok((await baseText(page.locator(`#person-${mistaken} .resolved-tag`))).includes('勘違いしている善人'));
   assert.equal(await page.locator('#trust').getAttribute('aria-label'), '残り捜査資金 3');
   await page.reload();
+  assert.ok(await page.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await page.locator('#game-page').isHidden());
+  if (await page.locator('#continue-game').isVisible()) await page.locator('#continue-game').click();
   assert.ok((await baseText(page.locator(`#person-${mistaken} .resolved-tag`))).includes('勘違いしている善人'));
   await checkReadings(page);
   for (const width of [320, 390]) {
@@ -666,6 +714,9 @@ async function checkReadings(page: Page) {
   await campaign.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
   await campaign.evaluate(() => localStorage.removeItem('beast-detective-v1'));
   await campaign.reload();
+  assert.ok(await campaign.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await campaign.locator('#game-page').isHidden());
+  if (await campaign.locator('#continue-game').isVisible()) await campaign.locator('#continue-game').click();
   await campaign.locator('#start-game').click();
   await campaign.locator('#difficulty').selectOption('easy');
   await campaign.locator('#confirm-new').click();
@@ -673,6 +724,9 @@ async function checkReadings(page: Page) {
     const answer = await campaign.evaluate(() => (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState).puzzle.answer);
     if (round !== 2) await campaign.locator(`#person-${answer.indexOf(false)} [data-judge="liar"]`).click();
     await campaign.reload();
+    assert.ok(await campaign.locator('#home-page').isVisible(), 'reload opens the home page');
+    assert.ok(await campaign.locator('#game-page').isHidden());
+    if (await campaign.locator('#continue-game').isVisible()) await campaign.locator('#continue-game').click();
     for (let i = 0; i < answer.length; i++) {
       if (answer[i]) await campaign.locator(`#person-${i} [data-judge="liar"]`).click();
     }
@@ -686,6 +740,9 @@ async function checkReadings(page: Page) {
   assert.equal(await baseText(campaign.locator('#result-dialog .quiet-button')), '結果を確認');
   await checkReadings(campaign);
   await campaign.reload();
+  assert.ok(await campaign.locator('#home-page').isVisible(), 'reload opens the home page');
+  assert.ok(await campaign.locator('#game-page').isHidden());
+  if (await campaign.locator('#continue-game').isVisible()) await campaign.locator('#continue-game').click();
   assert.ok((await baseText(campaign.locator('#result'))).includes('全事件で間違えて犯人と判定した回数2回'));
   await campaign.locator('#next-case').click();
   await campaign.locator('#confirm-new').click();
@@ -697,6 +754,7 @@ async function checkReadings(page: Page) {
   const gameUrl = pathToFileURL(path.resolve(__dirname, '../../index.html')).href;
   const debugState = () => debug.evaluate(() => JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState);
   await debug.goto(`${gameUrl}?debugMoney=100`);
+  if (await debug.locator('#continue-game').isVisible()) await debug.locator('#continue-game').click();
   await startGame(debug);
   assert.equal((await debugState()).trust, 100);
   const debugPuzzle = (await debugState()).puzzle;
@@ -705,22 +763,28 @@ async function checkReadings(page: Page) {
   const afterSpending = 98;
   assert.equal((await debugState()).trust, afterSpending, 'rerender must not reset funds');
   await debug.goto(gameUrl);
+  if (await debug.locator('#continue-game').isVisible()) await debug.locator('#continue-game').click();
   assert.equal((await debugState()).trust, afterSpending);
   assert.equal(await debug.locator('#trust-value').textContent(), String(afterSpending));
   assert.deepEqual((await debugState()).puzzle, debugPuzzle);
   assert.equal((await debugState()).revealed[0], true);
   for (const invalid of ['', 'abc', '1.5', '1e3', 'Infinity', '1000000001', '-1000000001']) {
     await debug.goto(`${gameUrl}?debugMoney=${invalid}`);
+    if (await debug.locator('#continue-game').isVisible()) await debug.locator('#continue-game').click();
     assert.equal(await debug.locator('#trust-value').textContent(), String(afterSpending));
   }
   await debug.goto(`${gameUrl}?debugMoney=0`);
+  if (await debug.locator('#continue-game').isVisible()) await debug.locator('#continue-game').click();
   assert.equal((await debugState()).trust, 0);
   assert.equal((await debugState()).status, 'playing');
   await debug.goto(`${gameUrl}?debugMoney=-1`);
+  if (await debug.locator('#continue-game').isVisible()) await debug.locator('#continue-game').click();
   assert.equal((await debugState()).status, 'lost');
   await debug.goto(gameUrl);
+  if (await debug.locator('#continue-game').isVisible()) await debug.locator('#continue-game').click();
   assert.equal(await debug.locator('#trust-value').textContent(), '-1');
   await debug.goto(`${gameUrl}?debugMoney=100`);
+  if (await debug.locator('#continue-game').isVisible()) await debug.locator('#continue-game').click();
   assert.equal((await debugState()).status, 'playing');
   for (const [i, criminal] of debugPuzzle.answer.entries()) {
     if (criminal) await debug.locator(`#person-${i} [data-judge="liar"]`).click();
@@ -728,13 +792,17 @@ async function checkReadings(page: Page) {
   assert.equal((await debugState()).status, 'won');
   for (const funds of [0, -1, 100]) {
     await debug.goto(`${gameUrl}?debugMoney=${funds}`);
+    if (await debug.locator('#continue-game').isVisible()) await debug.locator('#continue-game').click();
     await debug.goto(gameUrl);
+    if (await debug.locator('#continue-game').isVisible()) await debug.locator('#continue-game').click();
     assert.equal(await debug.locator('#trust-value').textContent(), String(funds));
     assert.equal((await debugState()).status, funds < 0 ? 'lost' : 'won');
   }
   await debug.goto(`${gameUrl}?debugMoney=0`);
+  if (await debug.locator('#continue-game').isVisible()) await debug.locator('#continue-game').click();
   await debug.locator('#next-case').click();
   await debug.goto(gameUrl);
+  if (await debug.locator('#continue-game').isVisible()) await debug.locator('#continue-game').click();
   assert.equal((await debugState()).puzzle.round, 2);
   assert.equal(await debug.locator('#trust-value').textContent(), '0');
   await debug.close();

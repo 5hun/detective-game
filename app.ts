@@ -380,8 +380,9 @@
   if (restored) {
     state = restored;
     $<HTMLSelectElement>('difficulty').value = state.puzzle.level;
-    render(state.status !== 'playing' ? tr('前回の捜査結果を開きました。新しい事件にも挑戦できます。') : undefined);
-  } else showHome();
+    render();
+  }
+  showHome();
   $('start-game').addEventListener('click', openNewCaseDialog);
   $('continue-game').addEventListener('click', () => {
     if (!hasGame) return;
