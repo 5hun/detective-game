@@ -89,12 +89,18 @@ export async function checkRelatedTestimony(browser: Browser) {
     assert.ok(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth), 'dialog has no horizontal overflow');
     const close = dialog.locator('.close-button');
     const beforeScroll = await close.boundingBox();
+    const titleBeforeScroll = await dialog.locator('h2').boundingBox();
+    const fundsBeforeScroll = await dialog.locator('#related-funds').boundingBox();
+    assert.ok(beforeScroll && titleBeforeScroll && Math.abs(beforeScroll.y - titleBeforeScroll.y) < 1, 'title and close button share the top row');
+    assert.equal(await dialog.locator('.eyebrow').count(), 0, 'dialog starts with its title');
     const scrolled = await dialog.locator('.related-dialog-body').evaluate(element => {
       element.scrollTop = element.scrollHeight;
       return element.scrollTop;
     });
     if (width === 320) assert.ok(scrolled > 0, 'mobile testimony content scrolls');
     assert.deepEqual(await close.boundingBox(), beforeScroll, 'close button stays in place when testimony scrolls');
+    assert.deepEqual(await dialog.locator('h2').boundingBox(), titleBeforeScroll, 'title stays in place when testimony scrolls');
+    assert.deepEqual(await dialog.locator('#related-funds').boundingBox(), fundsBeforeScroll, 'remaining funds stay in place when testimony scrolls');
     await dialog.locator('.related-dialog-body').evaluate(element => { element.scrollTop = 0; });
     if (width === 390) await page.screenshot({ path: '/tmp/detective-related-mobile.png' });
   }

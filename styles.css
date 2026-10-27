@@ -308,10 +308,11 @@ html[lang="en"] .summary-label{letter-spacing:0}
 }
 #related-dialog{max-width:620px;width:calc(100vw - 32px);max-height:85dvh;box-sizing:border-box;overflow:hidden}
 #related-dialog[open]{display:flex;flex-direction:column}
-#related-dialog .dialog-heading{flex-shrink:0}
+#related-dialog .dialog-heading{flex-shrink:0;align-items:flex-start;gap:12px}
+#related-dialog .close-button{flex-shrink:0}
 .related-dialog-body{min-height:0;overflow-y:auto;overflow-wrap:anywhere}
-#related-dialog h2{font-size:22px;overflow-wrap:anywhere}
-#related-funds{color:var(--green);font-weight:700}
+#related-dialog h2{font-size:22px;overflow-wrap:anywhere;min-width:0;margin:0}
+#related-funds{color:var(--green);font-weight:700;flex-shrink:0}
 #related-content section+section{margin-top:24px}
 #related-content h3{font-size:15px;margin:0 0 12px}
 .related-entry{padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);margin-top:10px}
