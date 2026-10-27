@@ -495,7 +495,7 @@
         clearTimeout(resultDialogTimer);
         resultDialogTimer = setTimeout(() => {
           if (hasGame && state === completedState && !$('game-page').hidden) showResultDialog();
-        }, state.status === 'won' ? 700 : 1500);
+        }, 1250);
         return;
       }
       // Restore keyboard focus after replacing the card list.
