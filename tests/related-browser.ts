@@ -27,7 +27,7 @@ export async function checkRelatedTestimony(browser: Browser) {
     }
     Object.assign(saved, { puzzle, startingTrust: 1, trust: 1, status: 'playing',
       revealed: puzzle.people.map(() => false), resolved: puzzle.people.map(() => null),
-      notes: puzzle.people.map(() => ''), markers: puzzle.people.map(() => 3) });
+      notes: puzzle.people.map((_, i) => i === 0 ? '' : `Note ${i} <b> & detail\nSecond line`), markers: puzzle.people.map((_, i) => i % 5) });
     localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
     return { puzzle, texts: puzzle.statements.map(s => window.DetectiveEngine.statementText(s, puzzle.people)) };
   });
@@ -41,10 +41,16 @@ export async function checkRelatedTestimony(browser: Browser) {
     await opener.click();
     assert.deepEqual(await page.locator('[data-related-person]').evaluateAll(buttons => buttons.map(b => Number((b as HTMLElement).dataset.relatedPerson))), expected);
     assert.equal(await dialog.locator('.statement').count(), 0, 'unheard testimony is hidden');
-    assert.equal(await dialog.locator('.unheard-label').count(), expected.length);
-    for (const marker of await dialog.locator('.witness-marker').all()) {
-      assert.equal(await baseText(marker), '');
-      assert.equal(await marker.getAttribute('aria-label'), '要検討');
+    assert.equal(await dialog.locator('.unheard-label, .witness-marker').count(), 0);
+    await checkRelatedIcons(page);
+    for (const i of expected) {
+      const note = dialog.locator(`[data-related-note="${i}"]`);
+      if (i === 0) assert.equal(await note.count(), 0, 'empty notes stay hidden');
+      else {
+        assert.equal(await baseText(note), `Note ${i} <b> & detail\nSecond line`);
+        assert.equal(await note.locator('b').count(), 0, 'notes render as plain text');
+        assert.equal(await note.evaluate(element => getComputedStyle(element).whiteSpace), 'pre-wrap');
+      }
     }
     await page.keyboard.press('Escape');
     await opener.waitFor({ state: 'visible' });
@@ -112,6 +118,7 @@ export async function checkRelatedTestimony(browser: Browser) {
   assert.equal(await dialog.locator('.unheard-label').count(), 0);
   assert.equal(await dialog.locator('[data-related-reveal]').count(), 0);
   assert.equal(await dialog.locator('.statement').count(), await dialog.locator('.related-entry').count());
+  await checkRelatedIcons(page);
   assert.deepEqual(errors, []);
   await page.close();
 }
@@ -134,4 +141,19 @@ async function checkActionLayout(page: Page) {
       if (await page.locator('html').getAttribute('lang') === 'ja') assert.ok(pair.sameRow, `action buttons share a row at ${width}px`);
     }
   }
+}
+
+async function checkRelatedIcons(page: Page) {
+  const icons = await page.locator('.related-witness .animal-status-icon').evaluateAll(elements => elements.map(icon => {
+    const entry = icon.closest('.related-entry')!;
+    const i = (entry.querySelector('[data-related-person]') as HTMLElement).dataset.relatedPerson;
+    const nav = document.querySelector(`[data-person="${i}"]`)!;
+    const appearance = (element: Element) => {
+      const style = getComputedStyle(element);
+      return { border: style.borderTopColor, background: style.backgroundColor,
+        portrait: element.querySelector('svg')!.outerHTML };
+    };
+    return { actual: appearance(icon), expected: appearance(nav) };
+  }));
+  for (const icon of icons) assert.deepEqual(icon.actual, icon.expected, 'dialog icons match the navigation marker, background, and expression');
 }

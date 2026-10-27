@@ -126,13 +126,19 @@
   function portraitStateFor(i: number) {
     return state.resolved[i] ? (state.puzzle.answer[i] ? 'liar' : 'sad') : state.status === 'won' ? 'good' : 'neutral';
   }
-  function withAnimalIcons(text: string, highlighted?: number) {
+  function withAnimalIcons(text: string, highlighted?: number, statusIcons = false) {
     const people = state.puzzle.people;
     const names = people.map(person => person.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     return text.replace(new RegExp(`(\\d+\\.\\s*)?(${names.join('|')})`, 'g'), (_match, number: string | undefined, name: string) => {
       const person = people.find(person => person.name === name)!;
-      return `<span class="animal-mention${people.indexOf(person) === highlighted ? ' selected-animal' : ''}">${portrait(person.id, 'inline-portrait')}${number ?? ''}${name}</span>`;
+      const i = people.indexOf(person);
+      const icon = statusIcons ? statusIcon(i) : portrait(person.id, 'inline-portrait');
+      return `<span class="animal-mention${i === highlighted ? ' selected-animal' : ''}">${icon}${number ?? ''}${name}</span>`;
     });
+  }
+  function statusIcon(i: number) {
+    const marker = markers[state.markers[i]];
+    return `<span class="animal-status-icon" role="img" aria-label="${marker.name}" title="${marker.name}" style="--marker-color:${marker.color}">${portrait(state.puzzle.people[i].id, '', portraitStateFor(i))}</span>`;
   }
   let relatedAnimal: number | null = null;
   function relatedWitnesses(index: number) {
@@ -146,16 +152,18 @@
     $('related-funds').textContent = tr`残り捜査資金 ${state.trust}`;
     function entry(i: number) {
       const witness = state.puzzle.people[i];
-      const marker = markers[state.markers[i]];
       const heard = state.revealed[i] || state.status !== 'playing';
       const cost = state.puzzle.testimonyCosts[i];
       const statement = heard
-        ? `<p class="statement">${withAnimalIcons(E.statementText(state.puzzle.statements[i], state.puzzle.people), selected)}</p>`
-        : `<p class="unheard-label">${tr('未聴取')}</p><button type="button" class="quiet-button" data-related-reveal="${i}" aria-controls="related-statement-${i}" ${state.trust < cost ? 'disabled' : ''}>💬 ${tr('証言を聞く')}${cost ? tr`（🪙${cost}使用）` : ''}</button>${cost && state.trust < cost ? tr`<p class="testimony-cost-note">捜査資金が${cost}未満のときは聞けません。</p>` : ''}`;
-      return `<article class="related-entry" aria-labelledby="related-witness-${i}"><div class="related-witness">${portrait(witness.id, 'inline-portrait', portraitStateFor(i))}<h4 id="related-witness-${i}">${i + 1}. ${witness.name}</h4><span class="witness-marker" role="img" aria-label="${marker.name}" style="--marker-color:${marker.color}"></span></div><div id="related-statement-${i}" tabindex="-1">${statement}</div><button type="button" class="related-card-link" data-related-person="${i}">${tr('元のカードへ')}</button></article>`;
+        ? `<p class="statement">${withAnimalIcons(E.statementText(state.puzzle.statements[i], state.puzzle.people), selected, true)}</p>`
+        : `<button type="button" class="quiet-button" data-related-reveal="${i}" aria-controls="related-statement-${i}" ${state.trust < cost ? 'disabled' : ''}>💬 ${tr('証言を聞く')}${cost ? tr`（🪙${cost}使用）` : ''}</button>${cost && state.trust < cost ? tr`<p class="testimony-cost-note">捜査資金が${cost}未満のときは聞けません。</p>` : ''}`;
+      return `<article class="related-entry" aria-labelledby="related-witness-${i}"><div class="related-witness">${statusIcon(i)}<h4 id="related-witness-${i}">${i + 1}. ${witness.name}</h4></div><div id="related-statement-${i}" tabindex="-1">${statement}</div>${state.notes[i] ? `<div class="related-memo"><span class="memo-label">MEMO</span><p data-related-note="${i}"></p></div>` : ''}<button type="button" class="related-card-link" data-related-person="${i}">${tr('元のカードへ')}</button></article>`;
     }
     const scrollTop = $('related-dialog').scrollTop;
     $('related-content').innerHTML = `<section aria-labelledby="own-testimony-heading"><h3 id="own-testimony-heading">${tr('本人の証言')}</h3>${entry(selected)}</section><section aria-labelledby="other-testimony-heading"><h3 id="other-testimony-heading">${tr`${person.name}についての証言`}</h3>${relatedWitnesses(selected).map(entry).join('') || `<p>${tr('この動物についての証言はありません。')}</p>`}</section>`;
+    $('related-content').querySelectorAll<HTMLElement>('[data-related-note]').forEach(note => {
+      note.textContent = state.notes[Number(note.dataset.relatedNote)];
+    });
     addReadings($('related-dialog'));
     $('related-dialog').scrollTop = scrollTop;
   }
