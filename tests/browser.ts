@@ -60,7 +60,9 @@ async function checkReadings(page: Page) {
     const nativeShowModal = HTMLDialogElement.prototype.showModal;
     HTMLDialogElement.prototype.showModal = function () {
       this.dataset.openedAt = String(Date.now());
+      this.dataset.scrollBeforeOpen = String(window.scrollY);
       nativeShowModal.call(this);
+      this.dataset.scrollAfterOpen = String(window.scrollY);
     };
     // Preserve the native method and invoke it with the media element as this.
     // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -645,6 +647,12 @@ async function checkReadings(page: Page) {
   assert.ok((await baseText(page.locator(`#person-${mistaken} .truth-detail`))).includes('勘違い（間違い）'));
   assert.ok((await baseText(page.locator('#result'))).includes('事件解決'));
   await checkReadings(page);
+  await page.locator('#result-dialog').waitFor({ state: 'visible' });
+  const scrollBeforeResult = Number(await page.locator('#result-dialog').getAttribute('data-scroll-before-open'));
+  const scrollAfterResult = Number(await page.locator('#result-dialog').getAttribute('data-scroll-after-open'));
+  assert.ok(scrollBeforeResult > 0, 'mobile case ends while scrolled down');
+  assert.equal(scrollAfterResult, scrollBeforeResult, 'opening the result dialog preserves mobile page scroll');
+  assert.equal(await page.evaluate(() => window.scrollY), scrollBeforeResult, 'scroll remains stable after the result dialog opens');
   // Count mistakes across cases and reloads, including a mistake in the final case.
   const campaign = await browser.newPage({ locale: 'ja-JP', reducedMotion: 'reduce' });
   await campaign.goto(pathToFileURL(path.resolve(__dirname, '../../index.html')).href);
