@@ -220,7 +220,10 @@ async function checkReadings(page: Page) {
   await page.locator('[data-close="animals-dialog"]').click();
   await page.screenshot({ path: '/tmp/beast-detective-desktop.png', fullPage: true });
   assert.equal(await page.locator('.statement').count(), 0);
+  assert.equal(await page.locator('.testimony-targets').count(), 5);
   await page.locator('[data-reveal="0"]').click();
+  assert.equal(await page.locator('#person-0 .testimony-targets').count(), 0);
+  assert.equal(await page.locator('.testimony-targets').count(), 4);
   assert.equal(await page.locator('.statement').count(), 1);
   await page.waitForFunction(() => window.playedTones.length > 0);
   assert.deepEqual(await page.evaluate(() => window.playedTones.splice(0)), [440, 554.37], 'revealing testimony plays its own tones');
@@ -232,6 +235,7 @@ async function checkReadings(page: Page) {
   await page.reload();
   await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('.statement').count(), 2);
+  assert.equal(await page.locator('.testimony-targets').count(), 3);
   await page.locator('#memo-0').fill('<script>alert("memo")</script> メモ保存テスト');
   for (const [value, color] of ['rgb(212, 215, 202)', 'rgb(185, 109, 88)', 'rgb(116, 148, 118)', 'rgb(196, 163, 89)', 'rgb(212, 215, 202)', 'rgb(185, 109, 88)'].entries()) {
     await page.locator(`#person-0 [data-marker-value="${value % 4}"]`).click();
