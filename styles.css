@@ -285,6 +285,12 @@ html[lang="en"] .summary-label{letter-spacing:0}
 .animal-mention{display:inline-block;white-space:nowrap}
 .animal-mention .inline-portrait{display:inline-block;width:1.7em;height:1.3em;margin-right:.2em;vertical-align:-.2em}
 
+/* Slide the bars into the portrait only when a criminal is caught. */
+.portrait[data-portrait-state="liar"]{overflow:hidden}
+.jail-gate-closing{transform-box:view-box;animation:jail-gate-close .65s cubic-bezier(.45,0,.55,1) both}
+@keyframes jail-gate-close{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.jail-gate-closing{animation:none}}
+
 /* Review all testimony connected to one animal. */
 .related-button{font-size:11px;min-height:44px}
 .judge,.related-button{height:44px;min-height:44px;padding-top:6px;padding-bottom:6px}

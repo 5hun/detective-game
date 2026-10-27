@@ -61,9 +61,9 @@
       if (state === 'liar') {
         const gradientId = `jail-bar-${++portraitSequence}`;
         expression += `<defs><linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#c0c8ca"/><stop offset="50%" stop-color="#26343c"/><stop offset="100%" stop-color="#c0c8ca"/></linearGradient></defs><path d="M13 5 l-1 2 q1 2 2 0Z" fill="#75b8d1"/>`;
-        expression += [1.25, 5.25, 9.25, 13.25].map(x =>
+        expression += '<g class="jail-gate">' + [1.25, 5.25, 9.25, 13.25].map(x =>
           `<rect class="jail-bar" x="${x}" y="0" width="1.5" height="12" fill="url(#${gradientId})" shape-rendering="geometricPrecision"/>`
-        ).join('');
+        ).join('') + '</g>';
       }
     }
     const rects = rows.flatMap((row, y) => [...row].flatMap((ch, x) => palette[ch] ? [`<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[ch]}"/>`] : [])).join('');

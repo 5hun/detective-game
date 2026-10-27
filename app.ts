@@ -484,6 +484,10 @@
       if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
       render(tr`${correct ? tr('✅ 正解です。捜査資金の増減はありません。') : tr('❌ 誤判定。捜査資金 −2。')}${state.puzzle.people[i].name}は${E.identity(state.puzzle, i)}でした。`);
+      if (correct) {
+        document.querySelectorAll(`#person-${i} .jail-gate, #testimony-nav [data-person="${i}"] .jail-gate`)
+          .forEach(gate => gate.classList.add('jail-gate-closing'));
+      }
       animateJudgment(state.trust - previousTrust);
       if (state.status !== 'playing') {
         const completedState = state;
