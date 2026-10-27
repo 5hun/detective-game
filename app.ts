@@ -482,19 +482,27 @@
       const previousTrust = state.trust;
       const correct = E.judge(state, i);
       if (correct === null) return;
-      if (preferences.sound) void judgmentSound.play(correct);
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
       render(tr`${correct ? tr('✅ 正解です。捜査資金の増減はありません。') : tr('❌ 誤判定。捜査資金 −2。')}${state.puzzle.people[i].name}は${E.identity(state.puzzle, i)}でした。`);
-      if (correct) {
-        document.querySelectorAll(`#person-${i} .jail-gate, #testimony-nav [data-person="${i}"] .jail-gate`)
-          .forEach(gate => gate.classList.add('jail-gate-closing'));
-      }
+      const judgedState = state;
+      const gates = correct
+        ? [...document.querySelectorAll(`#person-${i} .jail-gate, #testimony-nav [data-person="${i}"] .jail-gate`)]
+        : [];
+      gates.forEach(gate => gate.classList.add('jail-gate-waiting'));
+      const finishJudgment = () => {
+        if (state !== judgedState || (correct && !gates.some(gate => gate.isConnected))) return;
+        gates.forEach(gate => {
+          gate.classList.remove('jail-gate-waiting');
+          gate.classList.add('jail-gate-closing');
+        });
+      };
+      if (preferences.sound) void judgmentSound.play(correct, finishJudgment, state.status !== 'won');
+      if (!preferences.sound || !correct) finishJudgment();
       animateJudgment(state.trust - previousTrust);
       if (state.status !== 'playing') {
-        const completedState = state;
         clearTimeout(resultDialogTimer);
         resultDialogTimer = setTimeout(() => {
-          if (hasGame && state === completedState && !$('game-page').hidden) showResultDialog();
+          if (hasGame && state === judgedState && !$('game-page').hidden) showResultDialog();
         }, 1250);
         return;
       }

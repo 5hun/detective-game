@@ -9,7 +9,7 @@ interface Puzzle { round: number; seed: number; level: Level; k: number; mistake
 interface Resolution { reward?: number; correct: boolean; guess: true }
 interface JudgmentState { revealed: boolean[]; puzzle: Puzzle; resolved: (Resolution | null)[]; trust: number; status: 'playing' | 'won' | 'lost' }
 interface GameState extends JudgmentState { version: number; startingTrust: number; debugMoneyAdjustment?: number; previousMistakes: number; storyHistory: number[]; notes: string[]; markers: number[] }
-interface Window { DetectiveEngine: typeof DetectiveEngine; portrait: typeof portrait; addReadings: typeof addReadings; judgmentSound: typeof judgmentSound; webkitAudioContext?: typeof AudioContext; playedTones: number[]; playedRecordings: string[] }
+interface Window { DetectiveEngine: typeof DetectiveEngine; portrait: typeof portrait; addReadings: typeof addReadings; judgmentSound: typeof judgmentSound; webkitAudioContext?: typeof AudioContext; playedTones: number[]; playedRecordings: string[]; finishedRecordings: string[] }
 declare var portrait: (id: string, extra?: string, state?: 'neutral' | 'good' | 'liar' | 'sad') => string;
 declare var addReadings: (root?: HTMLElement) => void;
-declare var judgmentSound: { play(correct: boolean): Promise<void>; testimony(): Promise<void>; stamp(celebrate?: boolean): Promise<void>; stop(): void };
+declare var judgmentSound: { play(correct: boolean, onCageStart?: () => void, withCageSound?: boolean): Promise<void>; testimony(): Promise<void>; stamp(celebrate?: boolean): Promise<void>; stop(): void };

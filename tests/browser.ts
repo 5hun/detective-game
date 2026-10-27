@@ -54,11 +54,20 @@ async function checkReadings(page: Page) {
   await page.addInitScript(() => {
     window.playedTones = [];
     window.playedRecordings = [];
+    window.finishedRecordings = [];
+    // Record actual opening time, even when later assertions take time to run.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const nativeShowModal = HTMLDialogElement.prototype.showModal;
+    HTMLDialogElement.prototype.showModal = function () {
+      this.dataset.openedAt = String(Date.now());
+      nativeShowModal.call(this);
+    };
     // Preserve the native method and invoke it with the media element as this.
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const nativePlay = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () {
       window.playedRecordings.push(this.getAttribute('src') || '');
+      this.addEventListener('ended', () => window.finishedRecordings.push(this.getAttribute('src') || ''), { once: true });
       return nativePlay.call(this);
     };
     const NativeAudioContext = window.AudioContext;
@@ -118,13 +127,15 @@ async function checkReadings(page: Page) {
   assert.equal(await page.locator('#memo-0').inputValue(), '');
 
   const durations = await page.evaluate(() => Promise.all(
-    ['assets/sounds/correct2.mp3', 'assets/sounds/incorrect2.mp3'].map(src => new Promise<number>((resolve, reject) => {
+    ['assets/sounds/correct2.mp3', 'assets/sounds/incorrect2.mp3', 'assets/sounds/cage-close.wav'].map(src => new Promise<number>((resolve, reject) => {
       const audio = new Audio(src);
       audio.onloadedmetadata = () => resolve(audio.duration);
       audio.onerror = () => reject(new Error(`Cannot load ${src}`));
     }))
   ));
   assert.ok(durations.every(duration => Number.isFinite(duration) && duration > 0), 'bundled recordings are playable audio');
+  assert.ok(durations[0] > 2.7 && durations[0] < 2.9, 'original correct chime is preserved; its full duration does not delay the cage');
+  assert.equal(durations[2], 1.2, 'the cage sound retains the approved timing');
   assert.ok(await page.locator('#game-menu').isHidden(), 'menu starts collapsed');
   await page.locator('#menu-toggle').click();
   assert.equal(await page.locator('#menu-toggle').getAttribute('aria-expanded'), 'true');
@@ -268,8 +279,26 @@ async function checkReadings(page: Page) {
   assert.equal(await baseText(page.locator('#case-description')), storyDescription);
   const neutralPortrait = await page.locator('#person-0 .portrait-box .portrait').innerHTML();
   const criminals = solution.flatMap((liar, i) => liar ? [i] : []);
+  let finalJudgmentStarted = 0;
   for (const [step, i] of criminals.entries()) {
+    await page.evaluate(() => window.finishedRecordings.splice(0));
+    const judgmentStarted = Date.now();
+    const solvesCase = step === criminals.length - 1;
+    if (solvesCase) finalJudgmentStarted = judgmentStarted;
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
+    if (step > 0) {
+      assert.equal(await page.locator(`#person-${i} .jail-gate-waiting`).count(), 1, 'gate waits for the correct chime');
+      assert.deepEqual(await page.evaluate(() => window.playedRecordings), ['assets/sounds/correct2.mp3']);
+      await page.locator(`#person-${i} .jail-gate-closing`).waitFor({ state: 'attached' });
+      const cageDelay = Date.now() - judgmentStarted;
+      assert.ok(cageDelay >= 550 && cageDelay < 950, `cage starts about 0.6 seconds after the chime (${cageDelay} ms)`);
+      assert.equal(await page.evaluate(() => window.playedRecordings.includes('assets/sounds/cage-close.wav')), !solvesCase, 'solving the case skips the cage sound');
+      assert.equal(await page.evaluate(() => window.finishedRecordings.includes('assets/sounds/correct2.mp3')), false, 'cage starts during the chime tail');
+      assert.equal(await page.locator(`#person-${i} .jail-gate-waiting`).count(), 0);
+      assert.equal(await page.locator(`#person-${i} .jail-gate-closing`).count(), 1, 'gate animation starts after the delay');
+    } else {
+      assert.equal(await page.locator(`#person-${i} .jail-gate-closing`).count(), 1, 'muted gate animates immediately');
+    }
     assert.equal(await page.locator(`#person-${i} .portrait-box .portrait`).getAttribute('data-portrait-state'), solution[i] ? 'liar' : 'good');
     assert.equal(await page.locator('#trust-value').evaluate(element => element.firstChild!.textContent), String(5 + (step === criminals.length - 1 ? 2 : 0)));
     if (step < criminals.length - 1) {
@@ -284,7 +313,9 @@ async function checkReadings(page: Page) {
       assert.deepEqual(await page.evaluate(() => window.playedRecordings), []);
       await setToggle(page.locator('#sound-toggle'), true);
     } else {
-      assert.deepEqual(await page.evaluate(() => window.playedRecordings.splice(0)), ['assets/sounds/correct2.mp3']);
+      assert.deepEqual(await page.evaluate(() => window.playedRecordings.splice(0)), solvesCase
+        ? ['assets/sounds/correct2.mp3']
+        : ['assets/sounds/correct2.mp3', 'assets/sounds/cage-close.wav']);
     }
   }
   assert.equal(await page.locator('#suspects [data-portrait-state="liar"] .jail-bar').count(), solution.filter(Boolean).length * 4);
@@ -295,6 +326,8 @@ async function checkReadings(page: Page) {
   }
   assert.equal(await page.locator('#result-dialog').isVisible(), false, 'judgment feedback appears before the result dialog');
   await page.locator('#result-dialog').waitFor({ state: 'visible' });
+  const resultDelay = Number(await page.locator('#result-dialog').getAttribute('data-opened-at')) - finalJudgmentStarted;
+  assert.ok(resultDelay >= 1200 && resultDelay < 1650, `result dialog opens about 1.25 seconds after judgment (${resultDelay} ms)`);
   assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('事件解決'));
   assert.equal(await baseText(page.locator('#result .case-ending')), `事件のその後${expectedStory.ending}`);
   assert.equal(await baseText(page.locator('#result-dialog .case-ending')), `事件のその後${expectedStory.ending}`);
@@ -495,7 +528,7 @@ async function checkReadings(page: Page) {
       await page.screenshot({ path: '/tmp/detective-campaign-table.png' });
       await page.setViewportSize({ width: 390, height: 844 });
       await page.waitForFunction(() => window.playedRecordings.includes('assets/sounds/people-performance-cheer1.mp3'), { timeout: 15000 });
-      const celebration = await page.evaluate(() => window.playedRecordings.filter(src => !src.endsWith('correct2.mp3')));
+      const celebration = await page.evaluate(() => window.playedRecordings.filter(src => !src.endsWith('correct2.mp3') && !src.endsWith('cage-close.wav')));
       assert.deepEqual(celebration, ['assets/sounds/stamp.wav', 'assets/sounds/people-performance-cheer1.mp3']);
     } else {
       assert.equal(await page.evaluate(() => window.playedRecordings.includes('assets/sounds/people-performance-cheer1.mp3')), false);

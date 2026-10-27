@@ -52,6 +52,16 @@ The game is built with HTML, CSS, and TypeScript, with no runtime library depend
 
 Original animal pixel art is drawn with SVG rectangles.
 
+The cage sound can be regenerated with Python's standard library:
+
+```sh
+python3 tools/generate-cage-sound.py
+```
+
+`assets/sounds/cage-close.wav` lasts 1.2 seconds, with its impact at 0.65 seconds to match the gate animation in `styles.css`. The gate animation and this sound start together 600 ms after the correct-identification chime begins playing. When a judgment solves the case, the cage animation runs without the cage sound, and the result dialog opens 1.25 seconds after judgment without waiting for the audio sequence.
+
+The original correct-identification MP3 is preserved. The cage delay is measured from the audio's `playing` event rather than its full duration; stopping sound cancels the timer and releases the waiting animation immediately.
+
 ### Puzzle generation
 
 The generator selects a true assignment from combinations satisfying the count constraints, then randomly selects statements consistent with each animal's role. It searches every assignment and accepts only puzzles with a unique solution. If none is accepted after 32 attempts, it uses a fixed-seed fallback puzzle whose uniqueness has been verified for that animal and culprit count, and verifies it again at runtime. Statement costs are assigned after a puzzle is accepted, so the generator does not guarantee that you can afford all necessary statements. The saved random seed reproduces the same puzzle.

@@ -59,6 +59,7 @@ Open the game menu (☰) and select **日本語** or **English** under **Languag
 - Toggle furigana (phonetic readings above kanji) with the “かん／漢” icon at the top of the screen. This preference is saved separately from case progress.
 - Kanji have furigana readings; instructions in selection and input fields use kana.
 - Correct and incorrect identifications play short sound effects. Toggle sound with the speaker icon; this preference is saved. The statement-reveal sound is generated in the browser.
+- About 0.6 seconds after the correct-identification chime starts, the cage slides shut with a metallic closing sound. The final culprit's cage closes silently, and the solved-case dialog appears 1.25 seconds after the judgment. With sound off, the animation starts immediately.
 
 ## Saving
 
@@ -69,6 +70,8 @@ The current case number, carried-over investigation funds, progress, revealed st
 ## Audio credits
 
 The identification sounds, “Quiz correct 2” and “Quiz incorrect 2,” come from Sound Effect Lab and are bundled in `assets/sounds/`.
+
+- The cage-closing sound is synthesized for this game using `tools/generate-cage-sound.py` and bundled as `assets/sounds/cage-close.wav`.
 
 - When you complete all cases, “Cheers and applause 1” plays after the stamp sound finishes. This audio is bundled in `assets/sounds/`. It does not play when sound effects are off, and stops when you close the results screen. Source: [Cheers and applause 1](https://soundeffect-lab.info/sound/search.php?s=%E6%8B%8D%E6%89%8B).
 - Audio source: [Sound Effect Lab (identification sounds)](https://soundeffect-lab.info/sound/search.php?s=%E6%AD%A3%E8%A7%A3) ([terms of use](https://soundeffect-lab.info/agreement/)). These recordings are used as game sound effects.

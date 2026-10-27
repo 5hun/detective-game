@@ -290,6 +290,7 @@ html[lang="en"] .summary-label{letter-spacing:0}
 
 /* Slide the bars into the portrait only when a criminal is caught. */
 .portrait[data-portrait-state="liar"]{overflow:hidden}
+.jail-gate-waiting{transform-box:view-box;transform:translateX(-100%)}
 .jail-gate-closing{transform-box:view-box;animation:jail-gate-close .65s cubic-bezier(.45,0,.55,1) both}
 @keyframes jail-gate-close{from{transform:translateX(-100%)}to{transform:translateX(0)}}
 @media(prefers-reduced-motion:reduce){.jail-gate-closing{animation:none}}
