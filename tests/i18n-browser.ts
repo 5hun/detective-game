@@ -119,7 +119,10 @@ export async function checkEnglish(browser: Browser) {
     });
     for (let i = 0; i < answers.length; i++) if (answers[i]) await page.locator(`#person-${i} [data-judge]`).click();
     await checkEnglishText(page);
-    if (round < 7) await page.locator('#next-case').click();
+    if (round < 7) {
+      await page.locator('#result-dialog').waitFor({ state: 'visible' });
+      await page.locator('#dialog-next-case').click();
+    }
   }
   assert.equal(await page.locator('#result h2').textContent(), 'All cases solved!');
   await page.locator('#result-dialog').waitFor({ state: 'visible' });

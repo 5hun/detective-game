@@ -183,6 +183,7 @@
     const truth = ended ? tr`<details class="truth-detail"><summary>真相と証言の照合：この証言は${liar ? tr('嘘') : state.puzzle.mistaken === i ? tr('勘違い（間違い）') : tr('本当')}</summary><p>${sortedTargets.map(t => tr`${state.puzzle.people[t].name}＝${E.identity(state.puzzle, t)}`).join(tr(' ／ '))}</p><p>この組み合わせでは、上の証言は${E.evaluate(state.puzzle.statements[i], state.puzzle.answer) ? tr('正しい') : tr('間違っています')}。${person.name}が${E.identity(state.puzzle, i)}という真相と一致します。</p></details>` : '';
     return tr`<article class="suspect" data-marker="${state.markers[i]}" id="person-${i}" aria-labelledby="name-${i}"><div class="card-main"><div class="portrait-box"><span class="person-number">${String(i + 1).padStart(2, '0')}</span>${portrait(person.id, '', portraitState)}</div><div class="person-content"><div class="person-heading"><h3 id="name-${i}">${i + 1}. ${person.name}</h3><details class="role-details"><summary>証言ルール</summary><p>${person.rule}</p></details></div>${testimonyHint}<div id="statement-${i}">${state.revealed[i] || ended ? `<p class="statement">${withAnimalIcons(E.statementText(state.puzzle.statements[i], state.puzzle.people))}</p>` : tr`<button class="reveal-button quiet-button" data-reveal="${i}" aria-controls="statement-${i}" ${state.trust < cost ? 'disabled' : ''}>💬 ${tr('証言を聞く')}${cost ? tr`（🪙${cost}使用）` : ''}</button>${cost && state.trust < cost ? tr`<p class="testimony-cost-note">捜査資金が${cost}未満のときは聞けません。</p>` : ''}`}</div><div class="actions">${actions}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="${person.name}のマーカー">${markers.map((m, j) => tr`<button class="marker-button" style="--dot:${m.color}" data-marker-value="${j}" data-index="${i}" aria-label="${person.name}：${m.name}" title="${m.name}" aria-pressed="${state.markers[i] === j}"></button>`).join('')}</div><label class="memo-label" for="memo-${i}">MEMO</label><textarea id="memo-${i}" data-note="${i}" aria-label="${person.name}の捜査メモ" maxlength="1000" rows="1" placeholder="きになることをメモ…"></textarea></div>${truth}</article>`;
   }
+  let resultPendingDialog = false;
   function render(message?: string, persist = true) {
     applyDebugMoney();
     hasGame = true;
@@ -217,9 +218,10 @@
     $('testimony-nav').innerHTML = p.people.map((person, i) => tr`<button type="button" class="testimony-link" data-person="${i}" style="--marker-color:${markers[state.markers[i]].color}" aria-label="${person.name}の証言へ移動（${markers[state.markers[i]].name}）" title="${person.name}：${markers[state.markers[i]].name}">${portrait(person.id, '', portraitStateFor(i))}</button>`).join('');
     state.notes.forEach((v, i) => { $<HTMLTextAreaElement>(`memo-${i}`).value = v; });
     $('feedback').textContent = message || tr('「証言を聞く」をタップして、証言を読み比べましょう。');
-    const result = $('result'); result.hidden = state.status === 'playing';
-    if (result.hidden) result.replaceChildren();
-    if (!result.hidden) {
+    if (state.status === 'playing') resultPendingDialog = false;
+    const result = $('result'); result.hidden = state.status === 'playing' || resultPendingDialog;
+    if (state.status === 'playing') result.replaceChildren();
+    if (state.status !== 'playing') {
       const won = state.status === 'won';
       const cleared = won && p.round === E.totalCases(p.level);
       const nextLabel = won && !cleared ? tr('次の事件へ') : tr('もう一度挑戦');
@@ -310,6 +312,8 @@
   $('result-dialog').addEventListener('close', () => {
     clearTimeout(stampSoundTimer);
     judgmentSound.stop();
+    resultPendingDialog = false;
+    $('result').hidden = state.status === 'playing';
     if (hasGame && !$('game-page').hidden && state.status !== 'playing' && !$<HTMLDialogElement>('new-dialog').open) {
       $('result').scrollIntoView({ block: 'start', behavior: 'instant' });
       $('next-case').focus({ preventScroll: true });
@@ -480,6 +484,7 @@
       const previousTrust = state.trust;
       const correct = E.judge(state, i);
       if (correct === null) return;
+      resultPendingDialog = state.status !== 'playing';
       $('feedback').className = `feedback ${correct ? '' : 'error'}`;
       render(tr`${correct ? tr('✅ 正解です。捜査資金の増減はありません。') : tr('❌ 誤判定。捜査資金 −2。')}${state.puzzle.people[i].name}は${E.identity(state.puzzle, i)}でした。`);
       const judgedState = state;

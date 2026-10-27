@@ -331,7 +331,9 @@ async function checkReadings(page: Page) {
       await page.locator(`#person-${i} .portrait-box`).evaluate(el => getComputedStyle(el).backgroundColor));
   }
   assert.equal(await page.locator('#result-dialog').isVisible(), false, 'judgment feedback appears before the result dialog');
+  assert.equal(await page.locator('#result').isVisible(), false, 'page result stays hidden while waiting for the dialog');
   await page.locator('#result-dialog').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#result').isVisible(), false, 'page result stays hidden until the dialog closes');
   const resultDelay = Number(await page.locator('#result-dialog').getAttribute('data-opened-at')) - finalJudgmentStarted;
   assert.ok(resultDelay >= 1200 && resultDelay < 1650, `result dialog opens about 1.25 seconds after judgment (${resultDelay} ms)`);
   assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('事件解決'));
@@ -380,10 +382,12 @@ async function checkReadings(page: Page) {
   }
   assert.equal(await page.locator('#result-dialog').isVisible(), false, 'judgment feedback appears before the result dialog');
   await page.locator('#result-dialog').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#result').isVisible(), false, 'failed case result stays hidden until the dialog closes');
   assert.ok((await baseText(page.locator('#result-dialog-content'))).includes('捜査資金がマイナスになりました'));
   assert.equal(await page.locator('.case-ending').count(), 0, 'unsolved cases have no ending');
   await page.keyboard.press('Escape');
   assert.equal(await page.locator('#result-dialog').isVisible(), false);
+  await page.locator('#result').waitFor({ state: 'visible' });
   assert.ok((await baseText(page.locator('#result'))).includes('捜査資金がマイナスになりました'));
   assert.equal(await page.locator('[data-judge]').count(), 0);
   await page.reload();
