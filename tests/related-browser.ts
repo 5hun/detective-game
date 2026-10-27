@@ -87,6 +87,15 @@ export async function checkRelatedTestimony(browser: Browser) {
     const box = await dialog.boundingBox();
     assert.ok(box && box.x >= 0 && box.x + box.width <= width && box.y >= 0 && box.y + box.height <= 844);
     assert.ok(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth), 'dialog has no horizontal overflow');
+    const close = dialog.locator('.close-button');
+    const beforeScroll = await close.boundingBox();
+    const scrolled = await dialog.locator('.related-dialog-body').evaluate(element => {
+      element.scrollTop = element.scrollHeight;
+      return element.scrollTop;
+    });
+    if (width === 320) assert.ok(scrolled > 0, 'mobile testimony content scrolls');
+    assert.deepEqual(await close.boundingBox(), beforeScroll, 'close button stays in place when testimony scrolls');
+    await dialog.locator('.related-dialog-body').evaluate(element => { element.scrollTop = 0; });
     if (width === 390) await page.screenshot({ path: '/tmp/detective-related-mobile.png' });
   }
   const missingReadings = await dialog.evaluate(element => {

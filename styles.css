@@ -306,7 +306,10 @@ html[lang="en"] .summary-label{letter-spacing:0}
   .suspect .actions{gap:4px}
   .suspect .actions>.judge,.suspect .actions>.related-button{padding-left:4px;padding-right:4px}
 }
-#related-dialog{max-width:620px;width:calc(100vw - 32px);max-height:85dvh;box-sizing:border-box;overflow-y:auto}
+#related-dialog{max-width:620px;width:calc(100vw - 32px);max-height:85dvh;box-sizing:border-box;overflow:hidden}
+#related-dialog[open]{display:flex;flex-direction:column}
+#related-dialog .dialog-heading{flex-shrink:0}
+.related-dialog-body{min-height:0;overflow-y:auto;overflow-wrap:anywhere}
 #related-dialog h2{font-size:22px;overflow-wrap:anywhere}
 #related-funds{color:var(--green);font-weight:700}
 #related-content section+section{margin-top:24px}
