@@ -304,7 +304,6 @@ html[lang="en"] .summary-label{letter-spacing:0}
 .related-entry{padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);margin-top:10px}
 .related-witness{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 .animal-status-icon{box-sizing:border-box;flex-shrink:0}
-.animal-mention .animal-status-icon{display:inline-grid;vertical-align:middle;margin-right:.2em}
 .related-witness h4{font-size:15px;margin:0}
 .related-memo{margin-top:12px;padding:8px 10px;background:#f5f5ec;border-top:1px dashed #dedfd3}
 .related-memo .memo-label{display:block}

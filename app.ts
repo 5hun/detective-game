@@ -126,14 +126,13 @@
   function portraitStateFor(i: number) {
     return state.resolved[i] ? (state.puzzle.answer[i] ? 'liar' : 'sad') : state.status === 'won' ? 'good' : 'neutral';
   }
-  function withAnimalIcons(text: string, highlighted?: number, statusIcons = false) {
+  function withAnimalIcons(text: string, highlighted?: number) {
     const people = state.puzzle.people;
     const names = people.map(person => person.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     return text.replace(new RegExp(`(\\d+\\.\\s*)?(${names.join('|')})`, 'g'), (_match, number: string | undefined, name: string) => {
       const person = people.find(person => person.name === name)!;
       const i = people.indexOf(person);
-      const icon = statusIcons ? statusIcon(i) : portrait(person.id, 'inline-portrait');
-      return `<span class="animal-mention${i === highlighted ? ' selected-animal' : ''}">${icon}${number ?? ''}${name}</span>`;
+      return `<span class="animal-mention${i === highlighted ? ' selected-animal' : ''}">${portrait(person.id, 'inline-portrait')}${number ?? ''}${name}</span>`;
     });
   }
   function statusIcon(i: number) {
@@ -155,7 +154,7 @@
       const heard = state.revealed[i] || state.status !== 'playing';
       const cost = state.puzzle.testimonyCosts[i];
       const statement = heard
-        ? `<p class="statement">${withAnimalIcons(E.statementText(state.puzzle.statements[i], state.puzzle.people), selected, true)}</p>`
+        ? `<p class="statement">${withAnimalIcons(E.statementText(state.puzzle.statements[i], state.puzzle.people), selected)}</p>`
         : `<button type="button" class="quiet-button" data-related-reveal="${i}" aria-controls="related-statement-${i}" ${state.trust < cost ? 'disabled' : ''}>💬 ${tr('証言を聞く')}${cost ? tr`（🪙${cost}使用）` : ''}</button>${cost && state.trust < cost ? tr`<p class="testimony-cost-note">捜査資金が${cost}未満のときは聞けません。</p>` : ''}`;
       return `<article class="related-entry" aria-labelledby="related-witness-${i}"><div class="related-witness">${statusIcon(i)}<h4 id="related-witness-${i}">${i + 1}. ${witness.name}</h4></div><div id="related-statement-${i}" tabindex="-1">${statement}</div>${state.notes[i] ? `<div class="related-memo"><span class="memo-label">MEMO</span><p data-related-note="${i}"></p></div>` : ''}<button type="button" class="related-card-link" data-related-person="${i}">${tr('元のカードへ')}</button></article>`;
     }
