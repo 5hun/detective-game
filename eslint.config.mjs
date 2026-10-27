@@ -1,9 +1,24 @@
 import js from '@eslint/js';
+import css from '@eslint/css';
 import tseslint from 'typescript-eslint';
 import { fileURLToPath } from 'node:url';
 
 export default tseslint.config(
   { ignores: ['dist/**', '_site/**', 'node_modules/**'] },
+  {
+    files: ['**/*.css'],
+    plugins: { css },
+    language: 'css/css',
+    extends: [css.configs.recommended],
+    rules: {
+      // Marker colors are assigned through inline styles in app.ts.
+      'css/no-invalid-properties': ['error', { allowUnknownVariables: true }],
+      // Hidden elements must override component display rules.
+      'css/no-important': 'off',
+      // Browser support policy is separate from CSS correctness checks.
+      'css/use-baseline': 'off',
+    },
+  },
   {
     files: ['**/*.ts'],
     extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
