@@ -61,8 +61,9 @@ html{scroll-padding-top:calc(var(--summary-height,120px) + 12px)}
 .case-ending{border-top:1px dashed #afbea1;padding-top:14px;line-height:2.3}
 .case-ending{margin:14px 0}.case-ending summary{cursor:pointer;font-weight:bold}.case-ending p{margin-bottom:0}
 
-#result-dialog .dialog-heading{gap:12px}
+#result-dialog .dialog-heading{position:absolute;top:29px;right:32px}
 #result-dialog .close-button{flex-shrink:0}
+#result-dialog-title{margin-top:0;min-height:34px;padding-right:46px}
 
 .result,#result-dialog{isolation:isolate}
 .result{position:relative;overflow:hidden}

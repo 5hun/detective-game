@@ -152,7 +152,7 @@ const DetectiveI18n = (() => {
     "誤判定 {0}回で、みんなの正体が明らかになりました。": "All roles were revealed. Incorrect accusations: {0}.",
     "捜査資金がマイナスになりました。証言と真相を照らし合わせて、次の捜査に活かしましょう。": "Your funds fell below zero. Compare the testimony with the truth and use what you learn in your next investigation.",
     "<p>次の捜査へ進みましょう。</p>": "<p>Let’s move on to the next case.</p>",
-    "{0}<span class=\"eyebrow\">{1}</span><h2>{2}</h2>{3}<p>各カードの「真相と証言の照合」で振り返れます。</p>{4}{5}<button class=\"primary-button\" id=\"next-case\">{6}</button>": "{0}<span class=\"eyebrow\">{1}</span><h2>{2}</h2>{3}<p>Review each card’s ‘Check the testimony’ section.</p>{4}{5}<button class=\"primary-button\" id=\"next-case\">{6}</button>",
+    "{0}<h2>{1}</h2>{2}<p>各カードの「真相と証言の照合」で振り返れます。</p>{3}{4}<button class=\"primary-button\" id=\"next-case\">{5}</button>": "{0}<h2>{1}</h2>{2}<p>Review each card’s ‘Check the testimony’ section.</p>{3}{4}<button class=\"primary-button\" id=\"next-case\">{5}</button>",
     "<p>{0} / {1}の事件を解決しました。最初から挑戦できます。</p>": "<p>You solved {0} / {1} cases. You can try again from the beginning.</p>",
     "最後の事件のその後": "After the final case",
     "事件のその後": "What happened next",
