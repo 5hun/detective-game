@@ -11,10 +11,10 @@
 - The case breakdown, number of culprits found, and remaining investigation funds stay visible at the top while scrolling.
 
 | Initial difficulty | Animals in case one | Culprits in case one |
-| --- | ---: | ---: |
-| Easy | 4 | 1 |
-| Normal | 5 | 2 |
-| Hard | 7 | 3 |
+| ------------------ | ------------------: | -------------------: |
+| Easy               |                   4 |                    1 |
+| Normal             |                   5 |                    2 |
+| Hard               |                   7 |                    3 |
 
 Animals are selected from ten species without duplicates. Each species uses a different logical statement format. Any animal can be either innocent or a culprit.
 

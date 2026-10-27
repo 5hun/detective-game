@@ -1,191 +1,540 @@
 <!doctype html>
 <html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#183e3b" />
+    <meta
+      name="description"
+      content="動物たちの証言から嘘つきを見つける、何度でも遊べる論理推理ゲーム。"
+      data-i18n-content
+    />
+    <title data-i18n>どうぶつ探偵</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="dist/i18n.js"></script>
+    <script defer src="dist/engine.js"></script>
+    <script defer src="dist/portraits.js"></script>
+    <script defer src="dist/ruby.js"></script>
+    <script defer src="dist/sound.js"></script>
+    <script defer src="dist/app.js"></script>
+  </head>
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#183e3b">
-  <meta name="description" content="動物たちの証言から嘘つきを見つける、何度でも遊べる論理推理ゲーム。" data-i18n-content>
-  <title data-i18n>どうぶつ探偵</title>
-  <link rel="stylesheet" href="styles.css">
-  <script defer src="dist/i18n.js"></script>
-  <script defer src="dist/engine.js"></script>
-  <script defer src="dist/portraits.js"></script>
-  <script defer src="dist/ruby.js"></script>
-  <script defer src="dist/sound.js"></script>
-  <script defer src="dist/app.js"></script>
-</head>
-
-<body>
-  <header class="masthead">
-    <a class="brand" href="index.html" aria-label="どうぶつ探偵 ホーム" data-i18n-aria-label><span class="brand-symbol" aria-hidden="true"><img
-          src="assets/title-logo.svg" alt="" width="40" height="40"></span><span
-        class="brand-text"><span><span data-i18n>どうぶつ探偵</span></span></span></a>
-    <div class="header-actions"><button id="help-button" class="help-button" type="button" aria-label="遊び方" title="遊び方" data-i18n-aria-label data-i18n-title><span
-          class="help-icon" aria-hidden="true">📖</span><span><span data-i18n>遊び方</span></span></button><div class="language-control">
-        <label class="language-label" for="language-select"><span lang="ja">日本語</span> / <span lang="en">English</span></label>
-        <select id="language-select" aria-label="Language">
-          <option value="ja" lang="ja">日本語</option>
-          <option value="en" lang="en">English</option>
-        </select>
-      </div><button id="menu-toggle"
-        class="menu-toggle" type="button" aria-label="ゲームメニュー" aria-expanded="false" aria-controls="game-menu" data-i18n-aria-label><svg
-          viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round">
-          <path d="M4 6h16M4 12h16M4 18h16" />
-        </svg></button></div>
-    <nav id="game-menu" class="header-right" aria-label="ゲームメニュー" hidden data-i18n-aria-label>
-      <button id="animals-button"
-        class="quiet-button"><svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
-          <ellipse cx="4" cy="10" rx="2.4" ry="3.2" transform="rotate(-25 4 10)" />
-          <ellipse cx="9" cy="5" rx="2.4" ry="3.2" />
-          <ellipse cx="15" cy="5" rx="2.4" ry="3.2" />
-          <ellipse cx="20" cy="10" rx="2.4" ry="3.2" transform="rotate(25 20 10)" />
-          <path d="M12 11c-3 0-4 3-6 5-3 4 0 7 4 5 1-1 3-1 4 0 4 2 7-1 4-5-2-2-3-5-6-5Z" />
-        </svg><span class="menu-label"><span data-i18n>動物一覧</span></span></button><button id="new-case" class="quiet-button" type="button"><svg class="menu-icon"
-          viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round">
-          <path d="M12 5v14M5 12h14" />
-        </svg><span class="menu-label"><span data-i18n>最初から</span></span></button><hr class="menu-separator"><button id="sound-toggle" class="preference-button"
-        type="button" aria-label="効果音" aria-pressed="true" title="効果音を切り替える" data-i18n-aria-label data-i18n-title><svg viewBox="0 0 24 24" aria-hidden="true"
-          fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9h4l5-4v14l-5-4H3Z" />
-          <path class="toggle-on" d="M16 8a6 6 0 0 1 0 8 M19 5a10 10 0 0 1 0 14" />
-          <path class="toggle-off" d="m16 9 6 6 m0-6-6 6" />
-        </svg><span class="preference-caption"><span data-i18n>おと </span><span data-toggle-status
-            aria-hidden="true">ON</span></span></button><button id="ruby-toggle" class="preference-button" type="button"
-        aria-label="ルビ" aria-pressed="true" title="ルビを切り替える" data-i18n-aria-label data-i18n-title><svg viewBox="0 0 28 28" aria-hidden="true"
-          fill="currentColor"><text x="14" y="9" text-anchor="middle" font-size="8">かん</text><text x="14" y="26"
-            text-anchor="middle" font-size="17">漢</text>
-          <path class="toggle-off" d="M3 26 25 3" stroke="currentColor" stroke-width="2" />
-        </svg><span class="preference-caption"><span data-i18n>ルビ </span><span data-toggle-status
-            aria-hidden="true">ON</span></span></button><hr class="menu-separator"><button id="delete-save" class="quiet-button danger-button"
-        type="button"><svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
-          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" />
-        </svg><span class="menu-label"><span data-i18n>データの消去</span></span></button></nav>
-  </header>
-  <div class="workspace">
-    <main>
-      <section id="home-page" class="home-page" aria-labelledby="home-title">
-        <div class="home-symbol" aria-hidden="true"><img src="assets/title-logo.svg" alt="" width="80" height="80">
+  <body>
+    <header class="masthead">
+      <a
+        class="brand"
+        href="index.html"
+        aria-label="どうぶつ探偵 ホーム"
+        data-i18n-aria-label
+        ><span class="brand-symbol" aria-hidden="true"
+          ><img
+            src="assets/title-logo.svg"
+            alt=""
+            width="40"
+            height="40" /></span
+        ><span class="brand-text"
+          ><span><span data-i18n>どうぶつ探偵</span></span></span
+        ></a
+      >
+      <div class="header-actions">
+        <button
+          id="help-button"
+          class="help-button"
+          type="button"
+          aria-label="遊び方"
+          title="遊び方"
+          data-i18n-aria-label
+          data-i18n-title
+        >
+          <span class="help-icon" aria-hidden="true">📖</span
+          ><span><span data-i18n>遊び方</span></span>
+        </button>
+        <div class="language-control">
+          <label class="language-label" for="language-select"
+            ><span lang="ja">日本語</span> /
+            <span lang="en">English</span></label
+          >
+          <select id="language-select" aria-label="Language">
+            <option value="ja" lang="ja">日本語</option>
+            <option value="en" lang="en">English</option>
+          </select>
         </div>
-        <h1 id="home-title"><span data-i18n>どうぶつ探偵</span></h1>
-        <p class="home-description"><span data-i18n>動物たちの証言を読み比べて、</span><br><span data-i18n>嘘をつく犯人を見つけましょう。</span></p>
-        <p><span data-i18n>善人は本当のことを、犯人は嘘を話します。</span><br><span data-i18n>難易度ごとの事件に挑戦しましょう。</span></p>
-        <button id="start-game" class="primary-button" type="button"><span data-i18n="home.start">最初から</span></button>
-        <button id="continue-game" class="primary-button" type="button" hidden><span data-i18n>続きから</span></button>
-      </section>
-      <div id="game-page" hidden>
-        <div class="title-row">
-          <div>
-            <div class="campaign-progress">
-              <p id="campaign-progress" class="campaign-label"></p>
-              <ol id="campaign-steps" class="campaign-steps" aria-label="捜査の進行状況" data-i18n-aria-label></ol>
-            </div>
-            <div class="case-story">
-              <img id="case-illustration" class="case-illustration" alt="" aria-hidden="true" width="240" height="200" draggable="false">
-              <h1 id="case-title"></h1>
-              <p id="case-description" class="case-description"></p>
-            </div>
-            <aside class="mistaken-notice case-description" aria-labelledby="mistaken-rule-title">
-              <h2 id="mistaken-rule-title"><svg class="mistaken-notice-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 4.9 2.8 18a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 4h.01"/></svg><span data-i18n>勘違いしている善人について</span></h2>
-              <p id="mistaken-rule" hidden></p>
-            </aside>
-          </div>
-        </div>
-        <div class="case-status">
-          <section class="case-summary" aria-label="事件の情報" data-i18n-aria-label>
-            <div class="population"><span class="summary-label"><span data-i18n>この事件の内訳</span></span>
-              <div><strong id="liar-count"></strong><span class="slash">/</span><strong id="good-count"></strong></div><small id="mistaken-count"></small>
-            </div>
-            <div class="progress-summary"><span class="summary-label"><span data-i18n>発見した犯人</span></span>
-              <div><strong id="progress-count"></strong><span><span data-i18n>匹</span></span></div>
-            </div>
-            <div class="trust-summary"><span class="summary-label"><span data-i18n>残り捜査資金</span></span>
-              <div id="trust" role="img"><span class="trust-icon" aria-hidden="true">🪙</span><strong id="trust-value"
-                  aria-hidden="true"></strong></div>
-            </div>
-          </section>
-          <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
-          <nav id="testimony-nav" class="testimony-nav" aria-label="動物の証言へ移動" data-i18n-aria-label></nav>
-        </div>
-        <section id="result" class="result" aria-live="polite" hidden></section>
-        <section id="suspects" aria-label="関係者一覧" data-i18n-aria-label></section>
-        <footer class="case-footer" id="save-status" hidden></footer>
+        <button
+          id="menu-toggle"
+          class="menu-toggle"
+          type="button"
+          aria-label="ゲームメニュー"
+          aria-expanded="false"
+          aria-controls="game-menu"
+          data-i18n-aria-label
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
       </div>
-    </main>
-  </div>
-  <dialog id="animals-dialog">
-    <div class="dialog-heading">
-      <h2><span data-i18n>すべての動物</span></h2><button class="close-button" aria-label="動物一覧を閉じる" data-close="animals-dialog" data-i18n-aria-label>×</button>
+      <nav
+        id="game-menu"
+        class="header-right"
+        aria-label="ゲームメニュー"
+        hidden
+        data-i18n-aria-label
+      >
+        <button id="animals-button" class="quiet-button">
+          <svg
+            class="menu-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="currentColor"
+          >
+            <ellipse
+              cx="4"
+              cy="10"
+              rx="2.4"
+              ry="3.2"
+              transform="rotate(-25 4 10)"
+            />
+            <ellipse cx="9" cy="5" rx="2.4" ry="3.2" />
+            <ellipse cx="15" cy="5" rx="2.4" ry="3.2" />
+            <ellipse
+              cx="20"
+              cy="10"
+              rx="2.4"
+              ry="3.2"
+              transform="rotate(25 20 10)"
+            />
+            <path
+              d="M12 11c-3 0-4 3-6 5-3 4 0 7 4 5 1-1 3-1 4 0 4 2 7-1 4-5-2-2-3-5-6-5Z"
+            /></svg
+          ><span class="menu-label"
+            ><span data-i18n>動物一覧</span></span
+          ></button
+        ><button id="new-case" class="quiet-button" type="button">
+          <svg
+            class="menu-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M12 5v14M5 12h14" /></svg
+          ><span class="menu-label"><span data-i18n>最初から</span></span>
+        </button>
+        <hr class="menu-separator" />
+        <button
+          id="sound-toggle"
+          class="preference-button"
+          type="button"
+          aria-label="効果音"
+          aria-pressed="true"
+          title="効果音を切り替える"
+          data-i18n-aria-label
+          data-i18n-title
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 9h4l5-4v14l-5-4H3Z" />
+            <path
+              class="toggle-on"
+              d="M16 8a6 6 0 0 1 0 8 M19 5a10 10 0 0 1 0 14"
+            />
+            <path class="toggle-off" d="m16 9 6 6 m0-6-6 6" /></svg
+          ><span class="preference-caption"
+            ><span data-i18n>おと </span
+            ><span data-toggle-status aria-hidden="true">ON</span></span
+          ></button
+        ><button
+          id="ruby-toggle"
+          class="preference-button"
+          type="button"
+          aria-label="ルビ"
+          aria-pressed="true"
+          title="ルビを切り替える"
+          data-i18n-aria-label
+          data-i18n-title
+        >
+          <svg viewBox="0 0 28 28" aria-hidden="true" fill="currentColor">
+            <text x="14" y="9" text-anchor="middle" font-size="8">かん</text>
+            <text x="14" y="26" text-anchor="middle" font-size="17">漢</text>
+            <path
+              class="toggle-off"
+              d="M3 26 25 3"
+              stroke="currentColor"
+              stroke-width="2"
+            /></svg
+          ><span class="preference-caption"
+            ><span data-i18n>ルビ </span
+            ><span data-toggle-status aria-hidden="true">ON</span></span
+          >
+        </button>
+        <hr class="menu-separator" />
+        <button
+          id="delete-save"
+          class="quiet-button danger-button"
+          type="button"
+        >
+          <svg
+            class="menu-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" /></svg
+          ><span class="menu-label"><span data-i18n>データの消去</span></span>
+        </button>
+      </nav>
+    </header>
+    <div class="workspace">
+      <main>
+        <section id="home-page" class="home-page" aria-labelledby="home-title">
+          <div class="home-symbol" aria-hidden="true">
+            <img src="assets/title-logo.svg" alt="" width="80" height="80" />
+          </div>
+          <h1 id="home-title"><span data-i18n>どうぶつ探偵</span></h1>
+          <p class="home-description">
+            <span data-i18n>動物たちの証言を読み比べて、</span><br /><span
+              data-i18n
+              >嘘をつく犯人を見つけましょう。</span
+            >
+          </p>
+          <p>
+            <span data-i18n>善人は本当のことを、犯人は嘘を話します。</span
+            ><br /><span data-i18n>難易度ごとの事件に挑戦しましょう。</span>
+          </p>
+          <button id="start-game" class="primary-button" type="button">
+            <span data-i18n="home.start">最初から</span>
+          </button>
+          <button
+            id="continue-game"
+            class="primary-button"
+            type="button"
+            hidden
+          >
+            <span data-i18n>続きから</span>
+          </button>
+        </section>
+        <div id="game-page" hidden>
+          <div class="title-row">
+            <div>
+              <div class="campaign-progress">
+                <p id="campaign-progress" class="campaign-label"></p>
+                <ol
+                  id="campaign-steps"
+                  class="campaign-steps"
+                  aria-label="捜査の進行状況"
+                  data-i18n-aria-label
+                ></ol>
+              </div>
+              <div class="case-story">
+                <img
+                  id="case-illustration"
+                  class="case-illustration"
+                  alt=""
+                  aria-hidden="true"
+                  width="240"
+                  height="200"
+                  draggable="false"
+                />
+                <h1 id="case-title"></h1>
+                <p id="case-description" class="case-description"></p>
+              </div>
+              <aside
+                class="mistaken-notice case-description"
+                aria-labelledby="mistaken-rule-title"
+              >
+                <h2 id="mistaken-rule-title">
+                  <svg
+                    class="mistaken-notice-icon"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M10.3 4.9 2.8 18a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.9a2 2 0 0 0-3.4 0Z"
+                    />
+                    <path d="M12 9v4m0 4h.01" /></svg
+                  ><span data-i18n>勘違いしている善人について</span>
+                </h2>
+                <p id="mistaken-rule" hidden></p>
+              </aside>
+            </div>
+          </div>
+          <div class="case-status">
+            <section
+              class="case-summary"
+              aria-label="事件の情報"
+              data-i18n-aria-label
+            >
+              <div class="population">
+                <span class="summary-label"
+                  ><span data-i18n>この事件の内訳</span></span
+                >
+                <div>
+                  <strong id="liar-count"></strong><span class="slash">/</span
+                  ><strong id="good-count"></strong>
+                </div>
+                <small id="mistaken-count"></small>
+              </div>
+              <div class="progress-summary">
+                <span class="summary-label"
+                  ><span data-i18n>発見した犯人</span></span
+                >
+                <div>
+                  <strong id="progress-count"></strong
+                  ><span><span data-i18n>匹</span></span>
+                </div>
+              </div>
+              <div class="trust-summary">
+                <span class="summary-label"
+                  ><span data-i18n>残り捜査資金</span></span
+                >
+                <div id="trust" role="img">
+                  <span class="trust-icon" aria-hidden="true">🪙</span
+                  ><strong id="trust-value" aria-hidden="true"></strong>
+                </div>
+              </div>
+            </section>
+            <div
+              id="feedback"
+              class="feedback"
+              role="status"
+              aria-live="polite"
+            ></div>
+            <nav
+              id="testimony-nav"
+              class="testimony-nav"
+              aria-label="動物の証言へ移動"
+              data-i18n-aria-label
+            ></nav>
+          </div>
+          <section
+            id="result"
+            class="result"
+            aria-live="polite"
+            hidden
+          ></section>
+          <section
+            id="suspects"
+            aria-label="関係者一覧"
+            data-i18n-aria-label
+          ></section>
+          <footer class="case-footer" id="save-status" hidden></footer>
+        </div>
+      </main>
     </div>
-    <p><span data-i18n>全10種類。どの動物も善人・犯人になり、「むずかしい」の4回目からは善人のうち1匹が勘違いします。</span></p>
-    <div id="animals-list"></div>
-  </dialog>
-  <dialog id="related-dialog" aria-labelledby="related-dialog-title">
-    <div class="dialog-heading"><h2 id="related-dialog-title"></h2><button type="button" class="close-button" aria-label="関連する証言を閉じる" data-close="related-dialog" data-i18n-aria-label autofocus>×</button></div>
-    <p id="related-funds" aria-live="polite"></p>
-    <div class="related-dialog-body">
-      <div id="related-content"></div>
-    </div>
-  </dialog>
-  <dialog id="help-dialog">
-    <div class="dialog-heading"><span class="eyebrow">DETECTIVE'S HANDBOOK</span><button class="close-button"
-        aria-label="遊び方を閉じる" data-close="help-dialog" data-i18n-aria-label>×</button></div>
-    <h2><span data-i18n>捜査を始める前に。</span></h2>
-    <p><span data-i18n>動物たちの証言を読み、</span><strong><span data-i18n>犯人</span></strong><span data-i18n>を見つけて「犯人と判定」を押しましょう。</span></p>
-    <ol>
-      <li>
-        <strong><span data-i18n>タップして証言を聞こう。</span></strong><br><span data-i18n>「証言を聞く」を押すと、その動物の発言が公開されます。聞く前に、どの動物についての証言か確認できます。「むずかしい」の5回目から、一部の証言に捜査資金1または2が必要です。捜査資金が費用以上あれば、残りが0になる場合も証言を聞けます。
-      </span></li>
-      <li><strong><span data-i18n>数が、最初の手がかり。</span></strong><br><span data-i18n>犯人と善人の数、善人のうち勘違いしている数は事件の上部に表示されます。</span></li>
-      <li>
-        <strong><span data-i18n>善人は真実を、犯人は嘘を。</span></strong><br><span data-i18n>すべての証言と数の条件から真相は一つに決まります。一部の証言だけでは候補が複数残ることもあります。捜査資金を使い、判定で正体を確かめましょう。「むずかしい」の4回目から、証言が必ず間違っている善人が1匹登場します。この勘違いしている善人も犯人ではなく、犯人と判定すると捜査資金が2減ります。「同じ立場」は両方善人、または両方犯人という意味で、勘違いしている善人も善人として扱います。犯人がこの動物を「犯人だ」と証言することもあります。初登場の4回目は証言がすべて無料です。
-      </span></li>
-      <li><strong><span data-i18n>種類ごとに、証言の形が違う。</span></strong><br><span data-i18n>同じ動物は1事件に1匹だけ。動物名の横の「証言ルール」で説明を確認できます。</span></li>
-      <li>
-        <strong><span data-i18n>判定は、その場で確定。</span></strong><br><span data-i18n>捜査資金は5から始まり、正解しても増えません。間違えると2減り、事件を解決すると、間違いなしなら2、間違いありなら1増えます。間違えた場合も正体が判明します。捜査資金がマイナスになると捜査終了。選んだ難易度の事件をすべて解決するとゲームクリアです。次の事件でも捜査資金は引き継ぎ、動物や犯人の数が増えます。捜査資金が0以上の状態で犯人をすべて見つければ解決です。残りは善人と確定し、判定の操作は不要です。
-      </span></li>
-      <li><strong><span data-i18n>メモは、あなただけの手がかり。</span></strong><br><span data-i18n>色マーカーは未設定・犯人候補・善人候補・要検討・勘違い候補から選べます。マーカーやメモは判定に影響しません。</span></li>
-    </ol>
-    <p class="small-note"><span data-i18n>進行状況はこのブラウザに保存します。保存を利用できない環境でも、そのまま遊べます。終了後には各証言の真偽と参照先の正体を確認できます。</span></p><button
-      class="primary-button" data-close="help-dialog"><span data-i18n>捜査に戻る</span></button>
-  </dialog>
-  <dialog id="result-dialog" aria-labelledby="result-dialog-title">
-    <div class="dialog-heading"><button class="close-button"
-        aria-label="結果を閉じる" data-close="result-dialog" data-i18n-aria-label>×</button>
-    </div>
-    <div id="result-dialog-content"></div>
-    <div class="dialog-actions"><button class="quiet-button" data-close="result-dialog"><span data-i18n>結果を確認</span></button><button
-        class="primary-button" id="dialog-next-case"><span data-i18n>次の事件へ →</span></button></div>
-  </dialog>
-  <dialog id="case-intro" aria-labelledby="case-intro-number case-intro-title">
-    <span class="eyebrow" id="case-intro-number"></span>
-    <h2 id="case-intro-title"></h2>
-  </dialog>
-  <dialog id="new-dialog" aria-labelledby="new-dialog-title"><span class="eyebrow">NEW CASE</span>
-    <h2 id="new-dialog-title"><span data-i18n>最初から捜査</span></h2>
-    <p><span data-i18n>難易度を選んで、捜査を始めましょう。</span></p>
-    <p id="replace-case-note"><span data-i18n>最初から始めると、捜査の進行とメモをリセットし、捜査資金は5に戻ります。</span></p><label class="field-label"
-      for="difficulty"><span data-i18n>難易度</span></label>
-    <select id="difficulty">
-      <option value="easy" data-i18n>かんたん</option>
-      <option value="normal" selected data-i18n>ふつう</option>
-      <option value="hard" data-i18n>むずかしい</option>
-    </select>
-    <div class="dialog-actions"><button class="quiet-button" data-close="new-dialog"><span data-i18n>キャンセル</span></button><button
-        class="primary-button" id="confirm-new"><span data-i18n>捜査を開始</span></button></div>
-  </dialog>
-  <dialog id="delete-save-dialog" aria-labelledby="delete-save-title" aria-describedby="delete-save-description">
-    <h2 id="delete-save-title"><span data-i18n>データを消去しますか？</span></h2>
-    <p id="delete-save-description"><span data-i18n>捜査の進行とメモをすべて消去します。消去したデータは元に戻せません。</span></p>
-    <p id="delete-save-error" role="alert" hidden><span data-i18n>消去できませんでした。ブラウザの保存設定を確認してください。</span></p>
-    <div class="dialog-actions"><button class="quiet-button" data-close="delete-save-dialog"
-        autofocus><span data-i18n>キャンセル</span></button><button id="confirm-delete-save" class="primary-button danger-button"
-        type="button"><span data-i18n>消去する</span></button></div>
-  </dialog>
-  <noscript data-i18n>このゲームにはJavaScriptがひつようです。ブラウザのせっていでゆうこうにしてください。</noscript>
-</body>
-
+    <dialog id="animals-dialog">
+      <div class="dialog-heading">
+        <h2><span data-i18n>すべての動物</span></h2>
+        <button
+          class="close-button"
+          aria-label="動物一覧を閉じる"
+          data-close="animals-dialog"
+          data-i18n-aria-label
+        >
+          ×
+        </button>
+      </div>
+      <p>
+        <span data-i18n
+          >全10種類。どの動物も善人・犯人になり、「むずかしい」の4回目からは善人のうち1匹が勘違いします。</span
+        >
+      </p>
+      <div id="animals-list"></div>
+    </dialog>
+    <dialog id="related-dialog" aria-labelledby="related-dialog-title">
+      <div class="dialog-heading">
+        <h2 id="related-dialog-title"></h2>
+        <button
+          type="button"
+          class="close-button"
+          aria-label="関連する証言を閉じる"
+          data-close="related-dialog"
+          data-i18n-aria-label
+          autofocus
+        >
+          ×
+        </button>
+      </div>
+      <p id="related-funds" aria-live="polite"></p>
+      <div class="related-dialog-body">
+        <div id="related-content"></div>
+      </div>
+    </dialog>
+    <dialog id="help-dialog">
+      <div class="dialog-heading">
+        <span class="eyebrow">DETECTIVE'S HANDBOOK</span
+        ><button
+          class="close-button"
+          aria-label="遊び方を閉じる"
+          data-close="help-dialog"
+          data-i18n-aria-label
+        >
+          ×
+        </button>
+      </div>
+      <h2><span data-i18n>捜査を始める前に。</span></h2>
+      <p>
+        <span data-i18n>動物たちの証言を読み、</span
+        ><strong><span data-i18n>犯人</span></strong
+        ><span data-i18n>を見つけて「犯人と判定」を押しましょう。</span>
+      </p>
+      <ol>
+        <li>
+          <strong><span data-i18n>タップして証言を聞こう。</span></strong
+          ><br /><span data-i18n
+            >「証言を聞く」を押すと、その動物の発言が公開されます。聞く前に、どの動物についての証言か確認できます。「むずかしい」の5回目から、一部の証言に捜査資金1または2が必要です。捜査資金が費用以上あれば、残りが0になる場合も証言を聞けます。
+          </span>
+        </li>
+        <li>
+          <strong><span data-i18n>数が、最初の手がかり。</span></strong
+          ><br /><span data-i18n
+            >犯人と善人の数、善人のうち勘違いしている数は事件の上部に表示されます。</span
+          >
+        </li>
+        <li>
+          <strong><span data-i18n>善人は真実を、犯人は嘘を。</span></strong
+          ><br /><span data-i18n
+            >すべての証言と数の条件から真相は一つに決まります。一部の証言だけでは候補が複数残ることもあります。捜査資金を使い、判定で正体を確かめましょう。「むずかしい」の4回目から、証言が必ず間違っている善人が1匹登場します。この勘違いしている善人も犯人ではなく、犯人と判定すると捜査資金が2減ります。「同じ立場」は両方善人、または両方犯人という意味で、勘違いしている善人も善人として扱います。犯人がこの動物を「犯人だ」と証言することもあります。初登場の4回目は証言がすべて無料です。
+          </span>
+        </li>
+        <li>
+          <strong><span data-i18n>種類ごとに、証言の形が違う。</span></strong
+          ><br /><span data-i18n
+            >同じ動物は1事件に1匹だけ。動物名の横の「証言ルール」で説明を確認できます。</span
+          >
+        </li>
+        <li>
+          <strong><span data-i18n>判定は、その場で確定。</span></strong
+          ><br /><span data-i18n
+            >捜査資金は5から始まり、正解しても増えません。間違えると2減り、事件を解決すると、間違いなしなら2、間違いありなら1増えます。間違えた場合も正体が判明します。捜査資金がマイナスになると捜査終了。選んだ難易度の事件をすべて解決するとゲームクリアです。次の事件でも捜査資金は引き継ぎ、動物や犯人の数が増えます。捜査資金が0以上の状態で犯人をすべて見つければ解決です。残りは善人と確定し、判定の操作は不要です。
+          </span>
+        </li>
+        <li>
+          <strong><span data-i18n>メモは、あなただけの手がかり。</span></strong
+          ><br /><span data-i18n
+            >色マーカーは未設定・犯人候補・善人候補・要検討・勘違い候補から選べます。マーカーやメモは判定に影響しません。</span
+          >
+        </li>
+      </ol>
+      <p class="small-note">
+        <span data-i18n
+          >進行状況はこのブラウザに保存します。保存を利用できない環境でも、そのまま遊べます。終了後には各証言の真偽と参照先の正体を確認できます。</span
+        >
+      </p>
+      <button class="primary-button" data-close="help-dialog">
+        <span data-i18n>捜査に戻る</span>
+      </button>
+    </dialog>
+    <dialog id="result-dialog" aria-labelledby="result-dialog-title">
+      <div class="dialog-heading">
+        <button
+          class="close-button"
+          aria-label="結果を閉じる"
+          data-close="result-dialog"
+          data-i18n-aria-label
+        >
+          ×
+        </button>
+      </div>
+      <div id="result-dialog-content"></div>
+      <div class="dialog-actions">
+        <button class="quiet-button" data-close="result-dialog">
+          <span data-i18n>結果を確認</span></button
+        ><button class="primary-button" id="dialog-next-case">
+          <span data-i18n>次の事件へ →</span>
+        </button>
+      </div>
+    </dialog>
+    <dialog
+      id="case-intro"
+      aria-labelledby="case-intro-number case-intro-title"
+    >
+      <span class="eyebrow" id="case-intro-number"></span>
+      <h2 id="case-intro-title"></h2>
+    </dialog>
+    <dialog id="new-dialog" aria-labelledby="new-dialog-title">
+      <span class="eyebrow">NEW CASE</span>
+      <h2 id="new-dialog-title"><span data-i18n>最初から捜査</span></h2>
+      <p><span data-i18n>難易度を選んで、捜査を始めましょう。</span></p>
+      <p id="replace-case-note">
+        <span data-i18n
+          >最初から始めると、捜査の進行とメモをリセットし、捜査資金は5に戻ります。</span
+        >
+      </p>
+      <label class="field-label" for="difficulty"
+        ><span data-i18n>難易度</span></label
+      >
+      <select id="difficulty">
+        <option value="easy" data-i18n>かんたん</option>
+        <option value="normal" selected data-i18n>ふつう</option>
+        <option value="hard" data-i18n>むずかしい</option>
+      </select>
+      <div class="dialog-actions">
+        <button class="quiet-button" data-close="new-dialog">
+          <span data-i18n>キャンセル</span></button
+        ><button class="primary-button" id="confirm-new">
+          <span data-i18n>捜査を開始</span>
+        </button>
+      </div>
+    </dialog>
+    <dialog
+      id="delete-save-dialog"
+      aria-labelledby="delete-save-title"
+      aria-describedby="delete-save-description"
+    >
+      <h2 id="delete-save-title">
+        <span data-i18n>データを消去しますか？</span>
+      </h2>
+      <p id="delete-save-description">
+        <span data-i18n
+          >捜査の進行とメモをすべて消去します。消去したデータは元に戻せません。</span
+        >
+      </p>
+      <p id="delete-save-error" role="alert" hidden>
+        <span data-i18n
+          >消去できませんでした。ブラウザの保存設定を確認してください。</span
+        >
+      </p>
+      <div class="dialog-actions">
+        <button class="quiet-button" data-close="delete-save-dialog" autofocus>
+          <span data-i18n>キャンセル</span></button
+        ><button
+          id="confirm-delete-save"
+          class="primary-button danger-button"
+          type="button"
+        >
+          <span data-i18n>消去する</span>
+        </button>
+      </div>
+    </dialog>
+    <noscript data-i18n
+      >このゲームにはJavaScriptがひつようです。ブラウザのせっていでゆうこうにしてください。</noscript
+    >
+  </body>
 </html>

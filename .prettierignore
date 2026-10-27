@@ -1,0 +1,7 @@
+dist/
+_site/
+assets/
+package-lock.json
+.agents/
+.aws/
+.codex/

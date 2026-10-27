@@ -30,9 +30,12 @@ Open **`index.html`** in your browser after building. No server is required. The
 ## Development
 
 ```sh
+npm run format:check
 npm run typecheck
 npm run lint
 npm test
 ```
+
+Run `npm run format` to format source and documentation. After `npm ci`, a Git pre-commit hook automatically formats staged files with Prettier.
 
 See [development and distribution](docs/development.md) for browser tests, implementation details, translations, offline distribution, and GitHub Pages deployment.

@@ -24,7 +24,11 @@
       audio.currentTime = 0;
     }
     for (const voice of active) {
-      try { voice.oscillator.stop(); } catch { /* Already stopped. */ }
+      try {
+        voice.oscillator.stop();
+      } catch {
+        /* Already stopped. */
+      }
       voice.oscillator.disconnect();
       voice.gain.disconnect();
     }
@@ -32,11 +36,15 @@
     // Muting or interrupting a chime must not leave a gate waiting forever.
     finishClose?.();
   }
-  async function playRecording(correct: boolean, onCageStart?: () => void, withCageSound = true) {
+  async function playRecording(
+    correct: boolean,
+    onCageStart?: () => void,
+    withCageSound = true,
+  ) {
     stop();
     if (correct) {
       const request = generation;
-      await new Promise<void>(resolve => {
+      await new Promise<void>((resolve) => {
         let finished = false;
         let closeTimer: ReturnType<typeof setTimeout> | undefined;
         const finish = (playCage: boolean) => {
@@ -49,7 +57,9 @@
           pendingClose = undefined;
           onCageStart?.();
           if (playCage && withCageSound && request === generation) {
-            void recordings.cage.play().catch(() => { /* Audio must never interrupt the game. */ });
+            void recordings.cage.play().catch(() => {
+              /* Audio must never interrupt the game. */
+            });
           }
           resolve();
         };
@@ -77,7 +87,9 @@
       const playNext = (audio: HTMLAudioElement) => {
         if (request !== generation) return;
         audio.currentTime = 0;
-        void audio.play().catch(() => { /* Blocked audio must never interrupt the game. */ });
+        void audio.play().catch(() => {
+          /* Blocked audio must never interrupt the game. */
+        });
       };
       recordings.stamp.onended = () => {
         recordings.stamp.onended = null;
@@ -101,7 +113,7 @@
       if (context.state !== 'running') await context.resume();
       if (request !== generation || context.state !== 'running') return;
       const notes = [440, 554.37];
-      const duration = .09;
+      const duration = 0.09;
       const start = context.currentTime;
       notes.forEach((frequency, index) => {
         const oscillator = context.createOscillator();
@@ -109,9 +121,15 @@
         const voice = { oscillator, gain };
         active.add(voice);
         oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(frequency, start + index * duration);
+        oscillator.frequency.setValueAtTime(
+          frequency,
+          start + index * duration,
+        );
         gain.gain.setValueAtTime(0, start + index * duration);
-        gain.gain.linearRampToValueAtTime(.06, start + index * duration + .015);
+        gain.gain.linearRampToValueAtTime(
+          0.06,
+          start + index * duration + 0.015,
+        );
         gain.gain.linearRampToValueAtTime(0, start + (index + 1) * duration);
         oscillator.connect(gain);
         gain.connect(context.destination);

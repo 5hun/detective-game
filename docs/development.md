@@ -28,10 +28,19 @@ This is a convenience for debugging, not an access restriction. It is available 
 Run type checks, lint, and independent exhaustive verification of 3,000 puzzles across the three difficulties, plus tests for investigation funds, win/loss conditions, and reproducibility:
 
 ```sh
+npm run format:check
 npm run typecheck
 npm run lint
 npm test
 ```
+
+### Formatting and Git hooks
+
+Prettier formats TypeScript, JavaScript, HTML, CSS, JSON, Markdown, and YAML. Run `npm run format` to apply formatting across the project, or `npm run format:check` to check it without changing files. Generated output, assets, and `package-lock.json` are excluded in `.prettierignore`. ESLint checks code quality; `eslint-config-prettier` disables rules that conflict with formatting.
+
+`npm ci` runs the `prepare` script to install Husky's Git hooks for each checkout. On `git commit`, the pre-commit hook runs lint-staged to format supported staged files and stage the formatting changes automatically. By default, lint-staged hides unstaged changes in partially staged files while running tasks. A formatting error stops the commit; fix the cause and retry without bypassing the hook. Editor format-on-save is optional because the commit hook performs formatting automatically.
+
+GitHub Actions also runs `npm run format:check`, type checks, lint, and tests for pull requests targeting `main` and pushes to `main`. Pull requests run checks without publishing the site. To require passing checks before merging, configure a GitHub branch protection rule or ruleset for `main` and require the `build` check.
 
 ESLint and typescript-eslint's `recommendedTypeChecked` configuration check the application, shared type declarations, and tests using type information. Type analysis uses `tsconfig.tests.json`, which includes all checked files. Warnings fail CI, and generated output in `dist/` and `_site/` is excluded. Limited exceptions allow browser global declarations and CommonJS imports. Promises returned by Node.js test registration are handled with `void test(...)`, since the test runner manages the results.
 
@@ -76,5 +85,5 @@ Translations for menus, testimony, all twelve stories, rules, results, and acces
 
 ## GitHub Pages deployment
 
-Updates to the `main` branch run type checks, lint, tests, and a build through GitHub Actions, then automatically deploy to GitHub Pages.
+Updates to the `main` branch run formatting checks, type checks, lint, tests, and a build through GitHub Actions, then automatically deploy to GitHub Pages. Pull requests targeting `main` run the same checks without deploying.
 The published files include HTML, CSS, the game's JavaScript, and image and audio assets. In the repository's Settings → Pages → Source, select `GitHub Actions`.

@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import css from '@eslint/css';
 import tseslint from 'typescript-eslint';
+import prettier from 'eslint-config-prettier/flat';
 import { fileURLToPath } from 'node:url';
 
 export default tseslint.config(
@@ -21,7 +22,10 @@ export default tseslint.config(
   },
   {
     files: ['**/*.ts'],
-    extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommendedTypeChecked,
+    ],
     languageOptions: {
       parserOptions: {
         project: './tsconfig.tests.json',
@@ -35,7 +39,10 @@ export default tseslint.config(
     rules: {
       // A classic script exposes this API to the browser and CommonJS tests.
       'no-var': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^Detective(Engine|I18n)$' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { varsIgnorePattern: '^Detective(Engine|I18n)$' },
+      ],
     },
   },
   {
@@ -49,7 +56,11 @@ export default tseslint.config(
     files: ['tests/**/*.ts'],
     rules: {
       // Tests use CommonJS, including an optional Playwright installation path.
-      '@typescript-eslint/no-require-imports': ['error', { allowAsImport: true, allow: ['playwright', '../engine\\.js'] }],
+      '@typescript-eslint/no-require-imports': [
+        'error',
+        { allowAsImport: true, allow: ['playwright', '../engine\\.js'] },
+      ],
     },
   },
+  prettier,
 );

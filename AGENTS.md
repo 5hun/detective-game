@@ -1,2 +1,5 @@
 - Run `git commit` after editing files.
 - Build the project after editing files.
+- Run `npm ci` when setting up a checkout so Husky installs the Git hooks.
+- Before committing, run `npm run format:check`, `npm run typecheck`, `npm run lint`, and `npm test`. Use `npm run format` to fix formatting.
+- Keep the pre-commit hook enabled. Do not bypass hooks with `--no-verify`, `HUSKY=0`, or a `core.hooksPath` override. Fix failures and retry the commit.
