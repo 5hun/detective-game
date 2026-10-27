@@ -148,7 +148,7 @@
     const selected = relatedAnimal;
     const person = state.puzzle.people[selected];
     $('related-dialog-title').textContent = tr`${person.name}に関連する証言`;
-    $('related-funds').textContent = tr`残り捜査資金 ${state.trust}`;
+    $('related-funds').textContent = tr`残り捜査資金 ${`🪙${state.trust}`}`;
     function entry(i: number) {
       const witness = state.puzzle.people[i];
       const heard = state.revealed[i] || state.status !== 'playing';
