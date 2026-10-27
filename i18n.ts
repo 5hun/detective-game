@@ -183,7 +183,7 @@ const DetectiveI18n = (() => {
     "データの消去": "Delete saved game",
     "動物たちの証言を読み比べて、": "Compare the animals’ testimony",
     "嘘をつく犯人を見つけましょう。": "and find the culprits who are lying.",
-    "善人は本当のことを、犯人は嘘を話します（高難易度では勘違いする善人も登場）。": "Innocents tell the truth; culprits lie. Hard mode also introduces mistaken innocents.",
+    "善人は本当のことを、犯人は嘘を話します。": "Innocents tell the truth; culprits lie.",
     "難易度ごとの事件に挑戦しましょう。": "Choose a difficulty and solve its cases.",
     "続きから": "Continue",
     "捜査の進行状況": "Investigation progress",
