@@ -92,9 +92,9 @@ export async function checkEnglish(browser: Browser) {
   assert.ok(await page.locator('#ruby-toggle').isHidden());
   await checkEnglishText(page);
   await page.locator('#start-game').click();
+  await page.locator('#difficulty').selectOption('hard');
   await page.locator('#confirm-new').click();
   await page.locator('#memo-0').fill('日本語 notes <b>literal</b> {0}');
-  await page.locator('[data-reveal="0"]').click();
   await page.locator('#person-0 [data-marker-value="4"]').click();
   const saved = await page.evaluate(() =>
     localStorage.getItem('beast-detective-v1'),
@@ -179,7 +179,7 @@ export async function checkEnglish(browser: Browser) {
   await page.locator('#result-dialog').waitFor({ state: 'visible' });
   await checkEnglishText(page);
   await page.locator('[data-close="result-dialog"]').first().click();
-  // Complete a campaign in English, including mistaken innocents and paid testimony.
+  // Complete a campaign in English, including mistaken innocents.
   if (await page.locator('#game-menu').isHidden())
     await page.locator('#menu-toggle').click();
   await page.locator('#new-case').click();
@@ -187,20 +187,6 @@ export async function checkEnglish(browser: Browser) {
   await page.locator('#confirm-new').click();
   for (let round = 1; round <= 7; round++) {
     await checkEnglishText(page);
-    if (round >= 5) {
-      const paid = await page.evaluate(() => {
-        const saved = JSON.parse(
-          localStorage.getItem('beast-detective-v1')!,
-        ) as GameState;
-        return saved.puzzle.testimonyCosts.findIndex((cost) => cost > 0);
-      });
-      await page.locator(`[data-reveal="${paid}"]`).click();
-      assert.match(
-        (await page.locator('#feedback').textContent()) || '',
-        /Testimony heard. Funds/,
-      );
-      await checkEnglishText(page);
-    }
     const answers = await page.evaluate(() => {
       const saved = JSON.parse(
         localStorage.getItem('beast-detective-v1')!,

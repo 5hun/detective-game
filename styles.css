@@ -840,11 +840,6 @@ dialog .small-note {
   }
 }
 
-.reveal-button {
-  margin: 12px 0;
-  min-height: 44px;
-}
-
 /* Leave enough room for portraits, testimony, and notes in each column. */
 #suspects {
   display: grid;
@@ -1684,22 +1679,6 @@ main {
   outline-offset: 3px;
 }
 
-.testimony-targets,
-.testimony-cost-note {
-  font-size: 12px;
-  overflow-wrap: anywhere;
-  margin: 8px 0;
-  color: var(--ink);
-}
-.reveal-button:disabled {
-  display: block;
-  margin-bottom: 0;
-  opacity: 0.55;
-}
-.reveal-button + .testimony-cost-note {
-  margin-top: 4px;
-}
-
 .resolved-tag.unjudged {
   background: #ecece1;
   color: #75816c;
@@ -2099,11 +2078,6 @@ html[lang='en'] .summary-label {
   overflow-wrap: anywhere;
   min-width: 0;
   margin: 0;
-}
-#related-funds {
-  color: var(--green);
-  font-weight: 700;
-  flex-shrink: 0;
 }
 #related-content section + section {
   margin-top: 24px;

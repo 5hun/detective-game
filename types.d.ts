@@ -33,7 +33,6 @@ interface Puzzle {
   mistaken: number | null;
   people: Person[];
   statements: Statement[];
-  testimonyCosts: number[];
   answer: boolean[];
 }
 interface Resolution {
@@ -42,7 +41,6 @@ interface Resolution {
   guess: true;
 }
 interface JudgmentState {
-  revealed: boolean[];
   puzzle: Puzzle;
   resolved: (Resolution | null)[];
   trust: number;
@@ -62,8 +60,6 @@ interface Window {
   portrait: typeof portrait;
   addReadings: typeof addReadings;
   judgmentSound: typeof judgmentSound;
-  webkitAudioContext?: typeof AudioContext;
-  playedTones: number[];
   playedRecordings: string[];
   finishedRecordings: string[];
 }
@@ -79,7 +75,6 @@ declare var judgmentSound: {
     onCageStart?: () => void,
     withCageSound?: boolean,
   ): Promise<void>;
-  testimony(): Promise<void>;
   stamp(celebrate?: boolean): Promise<void>;
   stop(): void;
 };

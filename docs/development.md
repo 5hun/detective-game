@@ -17,7 +17,7 @@ On a desktop, double-click `index.html` or drag it into your browser. The layout
 
 ## Setting funds for debugging
 
-Open `index.html?debugMoney=100` to set investigation funds to 100. This also works on a static host. The hidden parameter accepts integers from -1,000,000,000 to 1,000,000,000; invalid values are ignored. Zero allows testing insufficient funds, and negative values put the game into the lost state.
+Open `index.html?debugMoney=100` to set investigation funds to 100. This also works on a static host. The hidden parameter accepts integers from -1,000,000,000 to 1,000,000,000; invalid values are ignored. Zero allows testing investigation with no remaining funds, and negative values put the game into the lost state.
 
 For an existing save, the value is applied when the page loads. Without a save, it is applied when you start a game. It applies once per page load, so normal spending and rewards continue afterward. Reloading with the parameter sets the funds again; remove the parameter to resume with the saved balance. Changes use the ordinary save slot and persist without the parameter, preserving testimony, judgments, and notes. Starting over resets funds normally. Setting a nonnegative amount can resume a lost investigation; a solved case remains solved.
 

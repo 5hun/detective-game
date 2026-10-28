@@ -563,25 +563,6 @@ var DetectiveEngine = (function () {
         throw new Error('Fallback testimony must have exactly one solution');
     }
     const { people, answer, statements, mistaken } = chosen;
-    const testimonyCosts: number[] = people.map(() => 0);
-    if (level === 'hard' && round >= 5) {
-      const twoRate = (round - 4) * 0.05;
-      let paid = 0;
-      let twos = 0;
-      for (const i of shuffle(
-        people.map((_, i) => i),
-        rng,
-      )) {
-        const roll = rng();
-        let cost = roll < twoRate ? 2 : roll < twoRate + 0.2 ? 1 : 0;
-        if (cost === 2 && twos >= (round === 5 ? 1 : 2)) cost = 1;
-        if (paid >= 4) cost = 0;
-        testimonyCosts[i] = cost;
-        if (cost) paid++;
-        if (cost === 2) twos++;
-      }
-      if (!paid) testimonyCosts[Math.floor(rng() * n)] = 1;
-    }
     return {
       seed: seed >>> 0,
       level,
@@ -591,7 +572,6 @@ var DetectiveEngine = (function () {
       mistaken,
       people,
       statements,
-      testimonyCosts,
       answer,
     };
   }
@@ -643,30 +623,13 @@ var DetectiveEngine = (function () {
         return tr`${list}の3匹のうち、犯人は${s.value ? tr('2匹以上') : tr('1匹以下')}だ。`;
     }
   }
-  function reveal(state: JudgmentState, index: number) {
-    if (
-      state.status !== 'playing' ||
-      !Number.isInteger(index) ||
-      index < 0 ||
-      index >= state.puzzle.people.length ||
-      state.revealed[index]
-    )
-      return false;
-    const cost = state.puzzle.testimonyCosts[index];
-    if (state.trust < cost) return false;
-    state.trust -= cost;
-    state.revealed[index] = true;
-    return true;
-  }
-  const initialTrust = 5;
-  function caseReward(resolved: readonly (Resolution | null)[]) {
-    return resolved.some((r) => r && !r.correct) ? 1 : 2;
-  }
+  const initialTrust = 3;
+  const caseReward = 1;
   function judge(state: JudgmentState, index: number) {
     if (state.status !== 'playing' || state.resolved[index] !== null)
       return null;
     const correct = state.puzzle.answer[index] === true;
-    const reward = correct ? 0 : -2;
+    const reward = correct ? 0 : -1;
     state.resolved[index] = { correct, guess: true, reward };
     state.trust += reward;
     if (state.trust < 0) state.status = 'lost';
@@ -676,7 +639,7 @@ var DetectiveEngine = (function () {
       )
     ) {
       state.status = 'won';
-      state.trust += caseReward(state.resolved);
+      state.trust += caseReward;
     }
     return correct;
   }
@@ -696,7 +659,6 @@ var DetectiveEngine = (function () {
     statementText,
     assignments,
     judge,
-    reveal,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   return api;

@@ -115,7 +115,6 @@ function state(level: Level = 'normal'): JudgmentState {
   const puzzle = E.generate(333, level);
   return {
     puzzle,
-    revealed: puzzle.people.map(() => true),
     resolved: puzzle.people.map(() => null),
     trust: E.initialTrust,
     status: 'playing',
@@ -127,7 +126,7 @@ void test('only criminals need judgment at every difficulty', () => {
     const criminals = s.puzzle.answer.flatMap((liar, i) => (liar ? [i] : []));
     criminals.forEach((index, j) => {
       assert.equal(E.judge(s, index), true);
-      assert.equal(s.trust, j === criminals.length - 1 ? 7 : 5);
+      assert.equal(s.trust, j === criminals.length - 1 ? 4 : 3);
       assert.equal(s.status, j === criminals.length - 1 ? 'won' : 'playing');
       assert.equal(E.judge(s, index), null);
     });
@@ -135,18 +134,18 @@ void test('only criminals need judgment at every difficulty', () => {
     assert.equal(E.judge(s, s.puzzle.answer.indexOf(false)), null);
   }
 });
-void test('three incorrect accusations lose and cannot be repeated', () => {
+void test('four incorrect accusations lose and cannot be repeated', () => {
   const s = state('hard');
   const innocents = s.puzzle.answer.flatMap((liar, i) => (liar ? [] : [i]));
-  innocents.slice(0, 3).forEach((index, j) => {
+  innocents.slice(0, 4).forEach((index, j) => {
     assert.equal(E.judge(s, index), false);
-    assert.equal(s.trust, [3, 1, -1][j]);
-    assert.equal(s.status, j === 2 ? 'lost' : 'playing');
+    assert.equal(s.trust, [2, 1, 0, -1][j]);
+    assert.equal(s.status, j === 3 ? 'lost' : 'playing');
     assert.equal(E.judge(s, index), null);
   });
   assert.equal(E.judge(s, s.puzzle.answer.indexOf(true)), null);
 });
-void test('correct accusation after testimony does not recover trust', () => {
+void test('correct accusation does not recover trust before solving the case', () => {
   const s = state('hard');
   const innocents = s.puzzle.answer.flatMap((liar, i) => (liar ? [] : [i]));
   E.judge(s, innocents[0]);
@@ -154,6 +153,8 @@ void test('correct accusation after testimony does not recover trust', () => {
   E.judge(s, s.puzzle.answer.indexOf(true));
   assert.equal(s.trust, 1);
   E.judge(s, innocents[2]);
+  assert.equal(s.trust, 0);
+  E.judge(s, innocents[3]);
   assert.equal(s.status, 'lost');
   assert.equal(s.trust, -1);
 });
@@ -164,7 +165,7 @@ void test('finding all criminals wins after an incorrect accusation', () => {
     if (liar) E.judge(s, i);
   });
   assert.equal(s.status, 'won');
-  assert.equal(s.trust, 4);
+  assert.equal(s.trust, 3);
 });
 void test('all statement polarities and count boundaries are evaluated correctly', () => {
   assert.equal(
@@ -210,24 +211,6 @@ void test('all statement polarities and count boundaries are evaluated correctly
     true,
   );
   assert.throws(() => E.generate(0, 'unknown' as Level));
-});
-
-void test('correct arrest before testimony does not recover trust', () => {
-  const s = state('hard');
-  const criminals = s.puzzle.answer.flatMap((liar, i) => (liar ? [i] : []));
-  s.revealed.fill(false);
-  assert.equal(E.judge(s, criminals[0]), true);
-  assert.equal(s.trust, 5);
-  assert.equal(E.judge(s, criminals[0]), null);
-  assert.equal(s.trust, 5);
-  assert.equal(E.judge(s, criminals[1]), true);
-  assert.equal(s.trust, 5);
-});
-void test('incorrect arrest before testimony still loses two trust', () => {
-  const s = state();
-  s.revealed.fill(false);
-  assert.equal(E.judge(s, s.puzzle.answer.indexOf(false)), false);
-  assert.equal(s.trust, 3);
 });
 
 void test('testimony mentions animals in number order while preserving ordered roles', () => {
@@ -385,59 +368,9 @@ void test('difficulty-specific campaigns grow in size and preserve valid testimo
     assert.throws(() => E.generate(1, 'normal', round));
 });
 
-void test('paid testimony appears only in later hard cases with bounded costs', () => {
-  const paidRoles = new Set<string>();
-  for (const level of ['easy', 'normal', 'hard'] as Level[]) {
-    for (let round = 1; round <= E.totalCases(level); round++) {
-      for (let seed = 0; seed < 100; seed++) {
-        const p = E.generate(seed, level, round);
-        assert.equal(p.testimonyCosts.length, p.people.length);
-        if (level === 'hard' && round >= 5) {
-          assert.ok(p.testimonyCosts.filter(Boolean).length >= 1);
-          assert.ok(p.testimonyCosts.filter(Boolean).length <= 4);
-          assert.ok(
-            p.testimonyCosts.filter((c) => c === 2).length <=
-              (round === 4 ? 0 : round === 5 ? 1 : 2),
-          );
-        }
-        p.testimonyCosts.forEach((cost, i) => {
-          assert.ok(cost === 0 || cost === 1 || cost === 2);
-          if (level !== 'hard' || round < 5) assert.equal(cost, 0);
-          if (cost) paidRoles.add(p.people[i].id);
-        });
-      }
-    }
-  }
-  assert.equal(paidRoles.size, E.roles.length);
-});
-
-void test('paid testimony allows zero funds, rejects insufficient funds, and charges once', () => {
-  for (const cost of [1, 2]) {
-    const s = state('hard');
-    s.revealed.fill(false);
-    s.puzzle.testimonyCosts[0] = cost;
-    s.puzzle.testimonyCosts[1] = 0;
-    s.puzzle.testimonyCosts[2] = 1;
-    s.trust = cost - 1;
-    assert.equal(E.reveal(s, 0), false);
-    assert.equal(s.revealed[0], false);
-    s.trust = cost;
-    assert.equal(E.reveal(s, 0), true);
-    assert.equal(s.trust, 0);
-    assert.equal(s.status, 'playing');
-    assert.equal(E.reveal(s, 0), false);
-    assert.equal(E.reveal(s, 2), false);
-    assert.equal(E.reveal(s, 1), true);
-    assert.equal(s.trust, 0);
-    s.status = 'won';
-    assert.equal(E.reveal(s, 3), false);
-    assert.equal(E.reveal(s, -1), false);
-  }
-});
-
 void test('zero funds allow continued investigation and case completion', () => {
   const s = state('hard');
-  s.trust = 2;
+  s.trust = 1;
   E.judge(s, s.puzzle.answer.indexOf(false));
   assert.equal(s.trust, 0);
   assert.equal(s.status, 'playing');
@@ -452,7 +385,7 @@ void test('an incorrect accusation at zero funds ends the investigation', () => 
   const s = state();
   s.trust = 0;
   E.judge(s, s.puzzle.answer.indexOf(false));
-  assert.equal(s.trust, -2);
+  assert.equal(s.trust, -1);
   assert.equal(s.status, 'lost');
 });
 
@@ -462,7 +395,6 @@ void test('mistaken innocents have a unique identity under independent role enum
       const p = E.generate(seed, 'hard', round);
       assert.equal(p.mistakenCount, 1);
       assert.equal(p.answer[p.mistaken!], false);
-      if (round === 4) assert.ok(p.testimonyCosts.every((c) => c === 0));
       const solutions: { answer: boolean[]; mistaken: number }[] = [];
       for (let mask = 0; mask < 2 ** p.people.length; mask++) {
         const a = p.people.map((_, i) => Boolean(mask & (1 << i)));
@@ -479,24 +411,23 @@ void test('mistaken innocents have a unique identity under independent role enum
   }
 });
 
-void test('accusing a mistaken innocent costs two and criminals alone complete the case', () => {
+void test('accusing a mistaken innocent costs one and criminals alone complete the case', () => {
   const p = E.generate(0, 'hard', 4);
   const s: JudgmentState = {
     puzzle: p,
-    trust: 5,
+    trust: E.initialTrust,
     status: 'playing',
     resolved: p.people.map(() => null),
-    revealed: p.people.map(() => true),
   };
   assert.equal(E.judge(s, p.mistaken!), false);
-  assert.equal(s.trust, 3);
+  assert.equal(s.trust, 2);
   assert.equal(s.status, 'playing');
   assert.equal(E.identity(p, p.mistaken!), '勘違いしている善人');
   p.answer.forEach((criminal, i) => {
     if (criminal) E.judge(s, i);
   });
   assert.equal(s.status, 'won');
-  assert.equal(s.trust, 4);
+  assert.equal(s.trust, 3);
   assert.equal(
     E.evaluate(
       { type: 'single', targets: [p.mistaken!], value: false },

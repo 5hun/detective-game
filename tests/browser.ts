@@ -80,7 +80,6 @@ async function checkReadings(page: Page) {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.addInitScript(() => {
-    window.playedTones = [];
     window.playedRecordings = [];
     window.finishedRecordings = [];
     // Record actual opening time, even when later assertions take time to run.
@@ -103,20 +102,6 @@ async function checkReadings(page: Page) {
         { once: true },
       );
       return nativePlay.call(this);
-    };
-    const NativeAudioContext = window.AudioContext;
-    window.AudioContext = class extends NativeAudioContext {
-      createOscillator() {
-        const oscillator = super.createOscillator();
-        const setFrequency = oscillator.frequency.setValueAtTime.bind(
-          oscillator.frequency,
-        );
-        oscillator.frequency.setValueAtTime = (value, time) => {
-          window.playedTones.push(value);
-          return setFrequency(value, time);
-        };
-        return oscillator;
-      }
     };
   });
   await page.goto(
@@ -307,7 +292,7 @@ async function checkReadings(page: Page) {
   );
   const segments = await page.evaluate(() => {
     const sample = document.createElement('p');
-    sample.textContent = '消えた 3匹 持ち去られ 見抜きました 1匹 2匹 増減 使用';
+    sample.textContent = '消えた 3匹 持ち去られ 見抜きました 1匹 2匹 増減 常に';
     addReadings(sample);
     const once = sample.innerHTML;
     addReadings(sample);
@@ -346,7 +331,8 @@ async function checkReadings(page: Page) {
     ' ',
     ['増減', 'ぞうげん'],
     ' ',
-    ['使用', 'しよう'],
+    ['常', 'つね'],
+    'に',
   ]);
   assert.ok((await page.locator('ruby rt').count()) > 0);
   await setToggle(page.locator('#ruby-toggle'), false);
@@ -418,27 +404,11 @@ async function checkReadings(page: Page) {
     path: '/tmp/beast-detective-desktop.png',
     fullPage: true,
   });
-  assert.equal(await page.locator('.statement').count(), 0);
-  assert.equal(await page.locator('.testimony-targets').count(), 5);
-  await page.locator('[data-reveal="0"]').click();
-  assert.equal(await page.locator('#person-0 .testimony-targets').count(), 0);
-  assert.equal(await page.locator('.testimony-targets').count(), 4);
-  assert.equal(await page.locator('.statement').count(), 1);
-  await page.waitForFunction(() => window.playedTones.length > 0);
-  assert.deepEqual(
-    await page.evaluate(() => window.playedTones.splice(0)),
-    [440, 554.37],
-    'revealing testimony plays its own tones',
+  assert.equal(await page.locator('.statement').count(), 5);
+  assert.equal(
+    await page.locator('.testimony-targets, [data-reveal]').count(),
+    0,
   );
-  await setToggle(page.locator('#sound-toggle'), false);
-  await page.locator('[data-reveal="1"]').click();
-  assert.equal(await page.locator('.statement').count(), 2);
-  assert.deepEqual(
-    await page.evaluate(() => window.playedTones),
-    [],
-    'muted testimony is silent',
-  );
-  await setToggle(page.locator('#sound-toggle'), true);
   await page.reload();
   assert.ok(
     await page.locator('#home-page').isVisible(),
@@ -448,8 +418,7 @@ async function checkReadings(page: Page) {
   if (await page.locator('#continue-game').isVisible())
     await page.locator('#continue-game').click();
   await page.locator('#menu-toggle').click();
-  assert.equal(await page.locator('.statement').count(), 2);
-  assert.equal(await page.locator('.testimony-targets').count(), 3);
+  assert.equal(await page.locator('.statement').count(), 5);
   await page
     .locator('#memo-0')
     .fill('<script>alert("memo")</script> メモ保存テスト');
@@ -513,13 +482,13 @@ async function checkReadings(page: Page) {
   );
   assert.equal(
     await page.locator('#trust').getAttribute('aria-label'),
-    '残り捜査資金 5',
+    '残り捜査資金 3',
   );
   assert.equal(
     await page
       .locator('#trust-value')
       .evaluate((element) => element.firstChild!.textContent),
-    '5',
+    '3',
   );
   assert.equal(await page.locator('.trust-icon').textContent(), '🪙');
   const storyTitle = await baseText(page.locator('#case-title'));
@@ -544,7 +513,6 @@ async function checkReadings(page: Page) {
       (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState)
         .puzzle.answer,
   );
-  assert.deepEqual(await page.evaluate(() => window.playedTones), []);
   await setToggle(page.locator('#sound-toggle'), false);
   await page.reload();
   assert.ok(
@@ -633,7 +601,7 @@ async function checkReadings(page: Page) {
       await page
         .locator('#trust-value')
         .evaluate((element) => element.firstChild!.textContent),
-      String(5 + (step === criminals.length - 1 ? 2 : 0)),
+      String(3 + (step === criminals.length - 1 ? 1 : 0)),
     );
     if (step < criminals.length - 1) {
       const feedback = await page.locator('#feedback').boundingBox();
@@ -650,7 +618,6 @@ async function checkReadings(page: Page) {
       await checkReadings(page);
     }
     if (step === 0) {
-      assert.deepEqual(await page.evaluate(() => window.playedTones), []);
       assert.deepEqual(await page.evaluate(() => window.playedRecordings), []);
       await setToggle(page.locator('#sound-toggle'), true);
     } else {
@@ -758,12 +725,7 @@ async function checkReadings(page: Page) {
     await page
       .locator('#trust-value')
       .evaluate((element) => element.firstChild!.textContent),
-    String(7),
-  );
-  assert.deepEqual(
-    await page.evaluate(() => window.playedTones),
-    [],
-    'reload is silent',
+    String(4),
   );
   assert.deepEqual(
     await page.evaluate(() => window.playedRecordings),
@@ -787,7 +749,7 @@ async function checkReadings(page: Page) {
   await page.locator('#difficulty').selectOption('hard');
   await page.locator('#confirm-new').click();
   assert.equal(await page.locator('.suspect').count(), 7);
-  assert.equal(await page.locator('.statement').count(), 0);
+  assert.equal(await page.locator('.statement').count(), 7);
   const hard = await page.evaluate(
     () =>
       (JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState)
@@ -802,7 +764,7 @@ async function checkReadings(page: Page) {
     7 + (await page.evaluate(() => window.DetectiveEngine.roles.length)),
   );
   const innocents = hard.flatMap((liar, i) => (liar ? [] : [i]));
-  for (let step = 0; step < 3; step++) {
+  for (let step = 0; step < 4; step++) {
     const i = innocents[step];
     await page.locator(`#person-${i} [data-judge="liar"]`).click();
     assert.equal(
@@ -830,11 +792,11 @@ async function checkReadings(page: Page) {
       await page
         .locator('#trust-value')
         .evaluate((element) => element.firstChild!.textContent),
-      String(3 - 2 * step),
+      String(2 - step),
     );
     assert.equal(
       await page.locator('#trust').getAttribute('aria-label'),
-      `残り捜査資金 ${3 - 2 * step}`,
+      `残り捜査資金 ${2 - step}`,
     );
     assert.deepEqual(
       await page.evaluate(() => window.playedRecordings.splice(0)),
@@ -1184,7 +1146,10 @@ async function checkReadings(page: Page) {
     assert.ok(current.puzzle.people.length >= previous.puzzle.people.length);
     assert.ok(current.puzzle.k >= previous.puzzle.k);
     assert.ok(current.resolved.every((r) => r === null));
-    assert.ok(current.revealed.every((r) => !r));
+    assert.equal(
+      await page.locator('.statement').count(),
+      current.puzzle.people.length,
+    );
     await setToggle(page.locator('#sound-toggle'), true);
     await page.evaluate(() => window.playedRecordings.splice(0));
     for (let i = 0; i < current.puzzle.answer.length; i++) {
@@ -1254,7 +1219,7 @@ async function checkReadings(page: Page) {
     await page
       .locator('#trust-value')
       .evaluate((element) => element.firstChild!.textContent),
-    '5',
+    '3',
   );
   assert.equal(
     await page.evaluate(
@@ -1285,7 +1250,6 @@ async function checkReadings(page: Page) {
   for (const problem of [
     'old-version',
     'previous-rules',
-    'missing-revealed',
     'wrong-trust',
     'wrong-status',
   ]) {
@@ -1295,9 +1259,7 @@ async function checkReadings(page: Page) {
       ) as GameState;
       saved.notes[0] = '引き継がないメモ';
       if (problem === 'old-version') saved.version = 1;
-      if (problem === 'previous-rules') saved.version = 3;
-      if (problem === 'missing-revealed')
-        Reflect.deleteProperty(saved, 'revealed');
+      if (problem === 'previous-rules') saved.version = 13;
       if (problem === 'wrong-trust') saved.trust = 999;
       if (problem === 'wrong-status') saved.status = 'won';
       localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
@@ -1309,7 +1271,7 @@ async function checkReadings(page: Page) {
       await invalidSave
         .locator('#trust-value')
         .evaluate((element) => element.firstChild!.textContent),
-      '5',
+      '3',
     );
     assert.equal(
       await invalidSave.locator('#memo-0').inputValue(),
@@ -1365,80 +1327,37 @@ async function checkReadings(page: Page) {
   );
   await startGame(page);
   assert.equal(await page.locator('#memo-0').inputValue(), '');
-  // Spending the last fund survives reload and leaves free testimony available.
-  const paidIndices = await page.evaluate(() => {
+  // All testimony remains available with zero funds, including after reload.
+  await page.evaluate(() => {
     const saved = JSON.parse(
       localStorage.getItem('beast-detective-v1')!,
     ) as GameState;
-    let seed = 0;
-    let puzzle = window.DetectiveEngine.generate(seed, 'hard', 5);
-    while (
-      puzzle.testimonyCosts.filter(Boolean).length < 2 ||
-      !puzzle.testimonyCosts.includes(0)
-    ) {
-      puzzle = window.DetectiveEngine.generate(++seed, 'hard', 5);
-    }
+    const puzzle = window.DetectiveEngine.generate(0, 'hard', 5);
     Object.assign(saved, {
       puzzle,
-      startingTrust: 1,
-      trust: 1,
+      startingTrust: 0,
+      trust: 0,
       status: 'playing',
-      revealed: puzzle.people.map(() => false),
       resolved: puzzle.people.map(() => null),
       notes: puzzle.people.map(() => ''),
       markers: puzzle.people.map(() => 0),
     });
     localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
-    return puzzle.testimonyCosts
-      .flatMap((cost, i) => (cost ? [i] : []))
-      .sort((a, b) => puzzle.testimonyCosts[a] - puzzle.testimonyCosts[b]);
   });
-  await page.reload();
-  assert.ok(
-    await page.locator('#home-page').isVisible(),
-    'reload opens the home page',
-  );
-  assert.ok(await page.locator('#game-page').isHidden());
-  if (await page.locator('#continue-game').isVisible())
+  for (let load = 0; load < 2; load++) {
+    await page.reload();
     await page.locator('#continue-game').click();
-  assert.equal(await page.locator('.testimony-targets').count(), 10);
-  await checkReadings(page);
-  await page.locator(`[data-reveal="${paidIndices[0]}"]`).click();
-  assert.equal(
-    await page.locator('#trust').getAttribute('aria-label'),
-    '残り捜査資金 0',
-  );
-  assert.ok(
-    await page.locator(`[data-reveal="${paidIndices[1]}"]`).isDisabled(),
-  );
-  await page.reload();
-  assert.ok(
-    await page.locator('#home-page').isVisible(),
-    'reload opens the home page',
-  );
-  assert.ok(await page.locator('#game-page').isHidden());
-  if (await page.locator('#continue-game').isVisible())
-    await page.locator('#continue-game').click();
-  assert.ok(
-    await page.locator(`#statement-${paidIndices[0]} .statement`).isVisible(),
-  );
-  assert.equal(
-    await page.locator('#trust').getAttribute('aria-label'),
-    '残り捜査資金 0',
-  );
-  assert.ok(
-    await page.locator(`[data-reveal="${paidIndices[1]}"]`).isDisabled(),
-  );
-  const freeIndex = await page.evaluate(() =>
-    (
-      JSON.parse(localStorage.getItem('beast-detective-v1')!) as GameState
-    ).puzzle.testimonyCosts.indexOf(0),
-  );
-  await page.locator(`[data-reveal="${freeIndex}"]`).click();
-  assert.equal(
-    await page.locator('#trust').getAttribute('aria-label'),
-    '残り捜査資金 0',
-  );
+    assert.equal(await page.locator('.statement').count(), 10);
+    assert.equal(
+      await page.locator('[data-reveal], .testimony-targets').count(),
+      0,
+    );
+    assert.equal(
+      await page.locator('#trust').getAttribute('aria-label'),
+      '残り捜査資金 0',
+    );
+    await checkReadings(page);
+  }
   const mistaken = await page.evaluate(() => {
     const saved = JSON.parse(
       localStorage.getItem('beast-detective-v1')!,
@@ -1446,10 +1365,9 @@ async function checkReadings(page: Page) {
     const puzzle = window.DetectiveEngine.generate(0, 'hard', 4);
     Object.assign(saved, {
       puzzle,
-      startingTrust: 5,
-      trust: 5,
+      startingTrust: 3,
+      trust: 3,
       status: 'playing',
-      revealed: puzzle.people.map(() => false),
       resolved: puzzle.people.map(() => null),
       notes: puzzle.people.map(() => ''),
       markers: puzzle.people.map(() => 0),
@@ -1492,7 +1410,7 @@ async function checkReadings(page: Page) {
   );
   assert.equal(
     await page.locator('#trust').getAttribute('aria-label'),
-    '残り捜査資金 3',
+    '残り捜査資金 2',
   );
   await page.reload();
   assert.ok(
@@ -1655,11 +1573,10 @@ async function checkReadings(page: Page) {
   await startGame(debug);
   assert.equal((await debugState()).trust, 100);
   const debugPuzzle = (await debugState()).puzzle;
-  await debug.locator('[data-reveal="0"]').click();
   await debug
     .locator(`#person-${debugPuzzle.answer.indexOf(false)} [data-judge="liar"]`)
     .click();
-  const afterSpending = 98;
+  const afterSpending = 99;
   assert.equal(
     (await debugState()).trust,
     afterSpending,
@@ -1674,7 +1591,10 @@ async function checkReadings(page: Page) {
     String(afterSpending),
   );
   assert.deepEqual((await debugState()).puzzle, debugPuzzle);
-  assert.equal((await debugState()).revealed[0], true);
+  assert.equal(
+    await debug.locator('.statement').count(),
+    debugPuzzle.people.length,
+  );
   for (const invalid of [
     '',
     'abc',
@@ -1769,13 +1689,6 @@ async function checkReadings(page: Page) {
   await silent.addInitScript(() => {
     HTMLMediaElement.prototype.play = () =>
       Promise.reject(new Error('audio unavailable'));
-    Object.defineProperty(window, 'AudioContext', {
-      value: class {
-        constructor() {
-          throw new Error('audio unavailable');
-        }
-      },
-    });
   });
   await silent.goto(
     pathToFileURL(path.resolve(__dirname, '../../index.html')).href,

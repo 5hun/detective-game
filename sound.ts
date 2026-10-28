@@ -1,7 +1,6 @@
-/* Local judgment recordings and synthesized testimony tones. */
+/* Local judgment recordings. */
 (function () {
   'use strict';
-  let context: AudioContext;
   let generation = 0;
   let pendingClose: (() => void) | undefined;
   const recordings = {
@@ -11,7 +10,6 @@
     stamp: new Audio('assets/sounds/stamp.wav'),
     applause: new Audio('assets/sounds/people-performance-cheer1.mp3'),
   };
-  const active = new Set<{ oscillator: OscillatorNode; gain: GainNode }>();
   function stop() {
     generation++;
     const finishClose = pendingClose;
@@ -23,16 +21,6 @@
       audio.pause();
       audio.currentTime = 0;
     }
-    for (const voice of active) {
-      try {
-        voice.oscillator.stop();
-      } catch {
-        /* Already stopped. */
-      }
-      voice.oscillator.disconnect();
-      voice.gain.disconnect();
-    }
-    active.clear();
     // Muting or interrupting a chime must not leave a gate waiting forever.
     finishClose?.();
   }
@@ -103,52 +91,8 @@
       // Missing or blocked audio must never interrupt the game.
     }
   }
-  async function playTone() {
-    stop();
-    const request = generation;
-    try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
-      if (!context || context.state === 'closed') context = new AudioContext();
-      if (context.state !== 'running') await context.resume();
-      if (request !== generation || context.state !== 'running') return;
-      const notes = [440, 554.37];
-      const duration = 0.09;
-      const start = context.currentTime;
-      notes.forEach((frequency, index) => {
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        const voice = { oscillator, gain };
-        active.add(voice);
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(
-          frequency,
-          start + index * duration,
-        );
-        gain.gain.setValueAtTime(0, start + index * duration);
-        gain.gain.linearRampToValueAtTime(
-          0.06,
-          start + index * duration + 0.015,
-        );
-        gain.gain.linearRampToValueAtTime(0, start + (index + 1) * duration);
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-        oscillator.onended = () => {
-          oscillator.disconnect();
-          gain.disconnect();
-          active.delete(voice);
-        };
-        oscillator.start(start + index * duration);
-        oscillator.stop(start + (index + 1) * duration);
-      });
-    } catch {
-      // Missing or blocked audio must never interrupt the game.
-      stop();
-    }
-  }
   window.judgmentSound = {
     play: playRecording,
-    testimony: playTone,
     stamp: playStamp,
     stop,
   };

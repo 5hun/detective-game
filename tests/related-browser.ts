@@ -27,20 +27,12 @@ export async function checkRelatedTestimony(browser: Browser) {
     const saved = JSON.parse(
       localStorage.getItem('beast-detective-v1')!,
     ) as GameState;
-    let seed = 0;
-    let puzzle = window.DetectiveEngine.generate(seed, 'hard', 5);
-    while (
-      !puzzle.testimonyCosts.includes(1) ||
-      !puzzle.testimonyCosts.includes(2)
-    ) {
-      puzzle = window.DetectiveEngine.generate(++seed, 'hard', 5);
-    }
+    const puzzle = window.DetectiveEngine.generate(0, 'hard', 5);
     Object.assign(saved, {
       puzzle,
-      startingTrust: 1,
-      trust: 1,
+      startingTrust: 0,
+      trust: 0,
       status: 'playing',
-      revealed: puzzle.people.map(() => false),
       resolved: puzzle.people.map(() => null),
       notes: puzzle.people.map((_, i) =>
         i === 0 ? '' : `Note ${i} <b> & detail\nSecond line`,
@@ -85,8 +77,8 @@ export async function checkRelatedTestimony(browser: Browser) {
     );
     assert.equal(
       await dialog.locator('.statement').count(),
-      0,
-      'unheard testimony is hidden',
+      expected.length,
+      'all related testimony is immediately visible even with zero funds',
     );
     assert.equal(
       await dialog.locator('.unheard-label, .witness-marker').count(),
@@ -122,74 +114,34 @@ export async function checkRelatedTestimony(browser: Browser) {
       true,
     );
   }
-  const paid = fixture.puzzle.testimonyCosts.indexOf(1);
-  await page.locator(`[data-related="${paid}"]`).click();
-  await page.locator(`[data-related-reveal="${paid}"]`).click();
+  const speaker = 0;
+  await page.locator(`[data-related="${speaker}"]`).click();
+  assert.equal(await dialog.locator('#related-funds').count(), 0);
+  assert.equal(await dialog.locator('[data-related-reveal]').count(), 0);
   assert.equal(
-    await baseText(page.locator(`#related-statement-${paid} .statement`)),
-    fixture.texts[paid],
+    await baseText(page.locator(`#related-statement-${speaker} .statement`)),
+    fixture.texts[speaker],
   );
-  assert.equal(
-    await baseText(page.locator(`#statement-${paid} .statement`)),
-    fixture.texts[paid],
-  );
-  assert.equal(
-    await page.locator('#trust').getAttribute('aria-label'),
-    '残り捜査資金 0',
-  );
-  assert.equal(
-    await page
-      .locator(`#related-statement-${paid}`)
-      .evaluate((element) => element === document.activeElement),
-    true,
-  );
-  await page.keyboard.press('Escape');
-  await page.locator(`[data-related="${paid}"]`).click();
-  assert.equal(
-    await page.locator(`[data-related-reveal="${paid}"]`).count(),
-    0,
-    'heard testimony never charges again',
-  );
-  await page.locator(`[data-related-person="${paid}"]`).click();
+  await page.locator(`[data-related-person="${speaker}"]`).click();
   await dialog.waitFor({ state: 'hidden' });
   assert.equal(
     await page
-      .locator(`#person-${paid}`)
+      .locator(`#person-${speaker}`)
       .evaluate((element) => element === document.activeElement),
     true,
   );
-  await page.reload();
-  assert.ok(
-    await page.locator('#home-page').isVisible(),
-    'reload opens the home page',
-  );
-  assert.ok(await page.locator('#game-page').isHidden());
-  if (await page.locator('#continue-game').isVisible())
-    await page.locator('#continue-game').click();
-  assert.equal(
-    await page.locator('#trust').getAttribute('aria-label'),
-    '残り捜査資金 0',
-  );
-  const expensive = fixture.puzzle.testimonyCosts.indexOf(2);
-  await page.locator(`[data-related="${expensive}"]`).click();
-  assert.ok(
-    await page.locator(`[data-related-reveal="${expensive}"]`).isDisabled(),
-  );
-  await page.keyboard.press('Escape');
-  const free = fixture.puzzle.testimonyCosts.indexOf(0);
-  // Open a target of a free statement, to check highlighting in another animal's testimony.
-  const selected = fixture.puzzle.statements[free].targets.find(
-    (i) => i !== free,
+  // Highlight the selected animal in another animal's testimony.
+  const selected = fixture.puzzle.statements[speaker].targets.find(
+    (i) => i !== speaker,
   )!;
   await page.locator(`[data-related="${selected}"]`).click();
-  await page.locator(`[data-related-reveal="${free}"]`).click();
   assert.equal(
-    await baseText(page.locator(`#related-statement-${free} .statement`)),
-    fixture.texts[free],
+    await baseText(page.locator(`#related-statement-${speaker} .statement`)),
+    fixture.texts[speaker],
   );
   assert.ok(
     (await page
-      .locator(`#related-statement-${free} .selected-animal`)
+      .locator(`#related-statement-${speaker} .selected-animal`)
       .count()) > 0,
   );
   for (const width of [320, 390, 1440]) {
@@ -211,9 +163,6 @@ export async function checkRelatedTestimony(browser: Browser) {
     const close = dialog.locator('.close-button');
     const beforeScroll = await close.boundingBox();
     const titleBeforeScroll = await dialog.locator('h2').boundingBox();
-    const fundsBeforeScroll = await dialog
-      .locator('#related-funds')
-      .boundingBox();
     assert.ok(
       beforeScroll &&
         titleBeforeScroll &&
@@ -242,11 +191,6 @@ export async function checkRelatedTestimony(browser: Browser) {
       await dialog.locator('h2').boundingBox(),
       titleBeforeScroll,
       'title stays in place when testimony scrolls',
-    );
-    assert.deepEqual(
-      await dialog.locator('#related-funds').boundingBox(),
-      fundsBeforeScroll,
-      'remaining funds stay in place when testimony scrolls',
     );
     await dialog.locator('.related-dialog-body').evaluate((element) => {
       element.scrollTop = 0;
@@ -287,7 +231,7 @@ export async function checkRelatedTestimony(browser: Browser) {
     false,
   );
   await page.keyboard.press('Escape');
-  // Finished cases expose every related statement without requiring payment.
+  // Finished cases continue to show every related statement.
   for (const [i, culprit] of fixture.puzzle.answer.entries()) {
     if (culprit) await page.locator(`#person-${i} [data-judge]`).click();
   }
@@ -357,7 +301,9 @@ async function checkRelatedIcons(page: Page) {
           return {
             border: style.borderTopColor,
             background: style.backgroundColor,
-            portrait: element.querySelector('svg')!.outerHTML,
+            portrait: element
+              .querySelector('svg')!
+              .outerHTML.replace(/jail-bar-\d+/g, 'jail-bar'),
           };
         };
         return { actual: appearance(icon), expected: appearance(nav) };

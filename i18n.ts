@@ -3,8 +3,6 @@ const DetectiveI18n = (() => {
   type Language = 'ja' | 'en';
   let language: Language = 'ja';
   const english: Record<string, string> = {
-    '<p class="testimony-targets">{0}についての証言が聞けそうだ</p>':
-      '<p class="testimony-targets">Testimony about {0}</p>',
     関連する証言: 'Related testimony',
     '{0}に関連する証言': 'Testimony related to {0}',
     関連する証言を閉じる: 'Close related testimony',
@@ -12,9 +10,7 @@ const DetectiveI18n = (() => {
     '{0}についての証言': 'Testimony about {0}',
     'この動物についての証言はありません。':
       'No other testimony mentions this animal.',
-    未聴取: 'Not heard yet',
     元のカードへ: 'Go to card',
-    証言を聞く: 'Hear testimony',
     ゾウ: 'Elephant',
     'ほかの1匹が犯人か善人かを証言する。':
       'Says whether one other animal is a culprit or innocent.',
@@ -172,13 +168,8 @@ const DetectiveI18n = (() => {
     ' ／ ': ' / ',
     正しい: 'true',
     間違っています: 'false',
-    '<article class="suspect" data-marker="{0}" id="person-{1}" aria-labelledby="name-{2}"><div class="card-main"><div class="portrait-box"><span class="person-number">{3}</span>{4}</div><div class="person-content"><div class="person-heading"><h3 id="name-{5}">{6}. {7}</h3><details class="role-details"><summary>証言ルール</summary><p>{8}</p></details></div>{9}<div id="statement-{10}">{11}</div><div class="actions">{12}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="{13}のマーカー">{14}</div><label class="memo-label" for="memo-{15}">MEMO</label><textarea id="memo-{16}" data-note="{17}" aria-label="{18}の捜査メモ" maxlength="1000" rows="1" placeholder="きになることをメモ…"></textarea></div>{19}</article>':
-      '<article class="suspect" data-marker="{0}" id="person-{1}" aria-labelledby="name-{2}"><div class="card-main"><div class="portrait-box"><span class="person-number">{3}</span>{4}</div><div class="person-content"><div class="person-heading"><h3 id="name-{5}">{6}. {7}</h3><details class="role-details"><summary>Testimony rule</summary><p>{8}</p></details></div>{9}<div id="statement-{10}">{11}</div><div class="actions">{12}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="Markers for {13}">{14}</div><label class="memo-label" for="memo-{15}">MEMO</label><textarea id="memo-{16}" data-note="{17}" aria-label="Investigation notes for {18}" maxlength="1000" rows="1" placeholder="Write your clues here…"></textarea></div>{19}</article>',
-    '<button class="reveal-button quiet-button" data-reveal="{0}" aria-controls="statement-{1}" {2}>証言を聞く{3}</button>{4}':
-      '<button class="reveal-button quiet-button" data-reveal="{0}" aria-controls="statement-{1}" {2}>Hear testimony{3}</button>{4}',
-    '（🪙{0}使用）': ' (cost: 🪙{0})',
-    '<p class="testimony-cost-note">捜査資金が{0}未満のときは聞けません。</p>':
-      '<p class="testimony-cost-note">You need at least {0} funds to hear this testimony.</p>',
+    '<article class="suspect" data-marker="{0}" id="person-{1}" aria-labelledby="name-{2}"><div class="card-main"><div class="portrait-box"><span class="person-number">{3}</span>{4}</div><div class="person-content"><div class="person-heading"><h3 id="name-{5}">{6}. {7}</h3><details class="role-details"><summary>証言ルール</summary><p>{8}</p></details></div><div id="statement-{9}"><p class="statement">{10}</p></div><div class="actions">{11}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="{12}のマーカー">{13}</div><label class="memo-label" for="memo-{14}">MEMO</label><textarea id="memo-{15}" data-note="{16}" aria-label="{17}の捜査メモ" maxlength="1000" rows="1" placeholder="きになることをメモ…"></textarea></div>{18}</article>':
+      '<article class="suspect" data-marker="{0}" id="person-{1}" aria-labelledby="name-{2}"><div class="card-main"><div class="portrait-box"><span class="person-number">{3}</span>{4}</div><div class="person-content"><div class="person-heading"><h3 id="name-{5}">{6}. {7}</h3><details class="role-details"><summary>Testimony rule</summary><p>{8}</p></details></div><div id="statement-{9}"><p class="statement">{10}</p></div><div class="actions">{11}</div></div></div><div class="memo-row"><div class="marker-group" role="group" aria-label="Markers for {12}">{13}</div><label class="memo-label" for="memo-{14}">MEMO</label><textarea id="memo-{15}" data-note="{16}" aria-label="Investigation notes for {17}" maxlength="1000" rows="1" placeholder="Write your clues here…"></textarea></div>{18}</article>',
     '<button class="marker-button" style="--dot:{0}" data-marker-value="{1}" data-index="{2}" aria-label="{3}：{4}" title="{5}" aria-pressed="{6}"></button>':
       '<button class="marker-button" style="--dot:{0}" data-marker-value="{1}" data-index="{2}" aria-label="{3}: {4}" title="{5}" aria-pressed="{6}"></button>',
     '事件 {0} / {1}': 'Case {0} / {1}',
@@ -200,8 +191,8 @@ const DetectiveI18n = (() => {
     '残り捜査資金 {0}': 'Investigation funds remaining: {0}',
     '<button type="button" class="testimony-link" data-person="{0}" style="--marker-color:{1}" aria-label="{2}の証言へ移動（{3}）" title="{4}：{5}">{6}</button>':
       '<button type="button" class="testimony-link" data-person="{0}" style="--marker-color:{1}" aria-label="Go to {2}’s testimony ({3})" title="{4}: {5}">{6}</button>',
-    '「証言を聞く」をタップして、証言を読み比べましょう。':
-      'Tap ‘Hear testimony’ and compare the animals’ statements.',
+    '証言を読み比べて、犯人を見つけましょう。':
+      'Compare the animals’ statements to find the culprits.',
     次の事件へ: 'Next case',
     もう一度挑戦: 'Try again',
     'すべての事件を解決！': 'All cases solved!',
@@ -233,11 +224,10 @@ const DetectiveI18n = (() => {
     どうぶつ探偵: 'Animal Detective',
     '前回の捜査結果を開きました。新しい事件にも挑戦できます。':
       'Your previous investigation results are open. You can also start a new case.',
-    '証言を聞きました。捜査資金 −{0}。': 'Testimony heard. Funds −{0}.',
     '{0}{1}は{2}でした。': '{0} {1} was {2}.',
     '✅ 正解です。捜査資金の増減はありません。':
       '✅ Correct. Your funds stay the same.',
-    '❌ 誤判定。捜査資金 −2。': '❌ Incorrect. Funds −2.',
+    '❌ 誤判定。捜査資金 −1。': '❌ Incorrect. Funds −1.',
     '{0}の証言へ移動（{1}）': 'Go to {0}’s testimony ({1})',
     '{0}：{1}': '{0}: {1}',
     '動物たちの証言から嘘つきを見つける、何度でも遊べる論理推理ゲーム。':
@@ -278,22 +268,22 @@ const DetectiveI18n = (() => {
     '動物たちの証言を読み、': 'Read the animals’ testimony, find ',
     'を見つけて「犯人と判定」を押しましょう。':
       ' and press ‘Judge as culprit’.',
-    'タップして証言を聞こう。': 'Tap to hear testimony.',
-    '「証言を聞く」を押すと、その動物の発言が公開されます。聞く前に、どの動物についての証言か確認できます。「むずかしい」の5回目から、一部の証言に捜査資金1または2が必要です。捜査資金が費用以上あれば、残りが0になる場合も証言を聞けます。':
-      '‘Hear testimony’ reveals an animal’s statement. You can see which animals it concerns before listening. From case 5 on Hard, some testimony costs 1 or 2 funds. You can listen whenever you can afford the cost, even if it leaves you with 0 funds.',
+    '証言を読み比べよう。': 'Compare the testimony.',
+    'すべての動物の証言は最初から表示されています。証言を読み比べて、犯人を推理しましょう。':
+      'Every animal’s testimony is displayed from the start. Compare the statements to work out who the culprits are.',
     '数が、最初の手がかり。': 'The numbers are your first clue.',
     '犯人と善人の数、善人のうち勘違いしている数は事件の上部に表示されます。':
       'The counts of culprits, innocents, and mistaken innocents appear at the top of each case.',
     '善人は真実を、犯人は嘘を。': 'Innocents tell the truth; culprits lie.',
-    'すべての証言と数の条件から真相は一つに決まります。一部の証言だけでは候補が複数残ることもあります。捜査資金を使い、判定で正体を確かめましょう。「むずかしい」の4回目から、証言が必ず間違っている善人が1匹登場します。この勘違いしている善人も犯人ではなく、犯人と判定すると捜査資金が2減ります。「同じ立場」は両方善人、または両方犯人という意味で、勘違いしている善人も善人として扱います。犯人がこの動物を「犯人だ」と証言することもあります。初登場の4回目は証言がすべて無料です。':
-      'All the testimony and counts together give exactly one solution. Hearing only some statements may leave several possibilities. Use your funds and judgments to uncover the truth. From case 4 on Hard, one innocent always gives false testimony because they are mistaken. They are still innocent: accusing them costs 2 funds. ‘The same role’ means both innocent or both culprits; a mistaken innocent counts as innocent. A culprit may falsely claim this animal is a culprit. All testimony is free in case 4, when mistaken innocents first appear.',
+    'すべての証言と数の条件から真相は一つに決まります。証言を読み比べ、判定で正体を確かめましょう。「むずかしい」の4回目から、証言が必ず間違っている善人が1匹登場します。この勘違いしている善人も犯人ではなく、犯人と判定すると捜査資金が1減ります。「同じ立場」は両方善人、または両方犯人という意味で、勘違いしている善人も善人として扱います。犯人がこの動物を「犯人だ」と証言することもあります。':
+      'All the testimony and counts together give exactly one solution. Compare the statements and use judgments to uncover the truth. From case 4 on Hard, one innocent always gives false testimony because they are mistaken. They are still innocent: accusing them costs 1 fund. ‘The same role’ means both innocent or both culprits; a mistaken innocent counts as innocent. A culprit may falsely claim this animal is a culprit.',
     '種類ごとに、証言の形が違う。':
       'Each animal has its own kind of testimony.',
     '同じ動物は1事件に1匹だけ。動物名の横の「証言ルール」で説明を確認できます。':
       'Each animal type appears at most once per case. Open ‘Testimony rule’ beside an animal’s name to learn how it speaks.',
     '判定は、その場で確定。': 'Every judgment is final.',
-    '捜査資金は5から始まり、正解しても増えません。間違えると2減り、事件を解決すると、間違いなしなら2、間違いありなら1増えます。間違えた場合も正体が判明します。捜査資金がマイナスになると捜査終了。選んだ難易度の事件をすべて解決するとゲームクリアです。次の事件でも捜査資金は引き継ぎ、動物や犯人の数が増えます。捜査資金が0以上の状態で犯人をすべて見つければ解決です。残りは善人と確定し、判定の操作は不要です。':
-      'You start with 5 funds. Correct judgments cost nothing and earn nothing; incorrect judgments cost 2. Solving a case earns 2 funds with no mistakes, or 1 fund with mistakes. Even an incorrect judgment reveals the animal’s role. The investigation ends if your funds fall below 0. Solve every case at your chosen difficulty to win. Funds carry over to the next case, where the number of animals and culprits increases. Find all the culprits with at least 0 funds to solve a case. The remaining animals are confirmed innocent automatically.',
+    '捜査資金は3から始まり、正解しても増えません。間違えると1減り、事件を解決すると常に1増えます。間違えた場合も正体が判明します。捜査資金がマイナスになると捜査終了。選んだ難易度の事件をすべて解決するとゲームクリアです。次の事件でも捜査資金は引き継ぎ、動物や犯人の数が増えます。捜査資金が0以上の状態で犯人をすべて見つければ解決です。残りは善人と確定し、判定の操作は不要です。':
+      'You start with 3 funds. Correct judgments cost nothing and earn nothing; incorrect judgments cost 1. Solving a case always earns 1 fund. Even an incorrect judgment reveals the animal’s role. The investigation ends if your funds fall below 0. Solve every case at your chosen difficulty to win. Funds carry over to the next case, where the number of animals and culprits increases. Find all the culprits with at least 0 funds to solve a case. The remaining animals are confirmed innocent automatically.',
     'メモは、あなただけの手がかり。': 'Keep your own notes.',
     '色マーカーは未設定・犯人候補・善人候補・要検討・勘違い候補から選べます。マーカーやメモは判定に影響しません。':
       'Choose a marker: Unmarked, Possible culprit, Possibly innocent, Needs thought, or Possibly mistaken. Notes and markers do not affect judgments.',
@@ -305,8 +295,8 @@ const DetectiveI18n = (() => {
     '次の事件へ →': 'Next case →',
     最初から捜査: 'Start a new investigation',
     '難易度を選んで、捜査を始めましょう。': 'Choose a difficulty to begin.',
-    '最初から始めると、捜査の進行とメモをリセットし、捜査資金は5に戻ります。':
-      'Starting over resets your progress and notes and restores your funds to 5.',
+    '最初から始めると、捜査の進行とメモをリセットし、捜査資金は3に戻ります。':
+      'Starting over resets your progress and notes and restores your funds to 3.',
     難易度: 'Difficulty',
     キャンセル: 'Cancel',
     捜査を開始: 'Start investigation',
