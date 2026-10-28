@@ -261,8 +261,8 @@ const DetectiveI18n = (() => {
     関係者一覧: 'Animals involved',
     すべての動物: 'All animals',
     動物一覧を閉じる: 'Close animal guide',
-    '全10種類。どの動物も善人・犯人になり、「むずかしい」の4回目からは善人のうち1匹が勘違いします。':
-      'There are 10 animal types. Any animal can be innocent or a culprit. From case 4 on Hard, one innocent is mistaken.',
+    '全10種類。どの動物も善人・犯人になり、「ふつう」の最終事件と「むずかしい」の2回目以降は善人のうち1匹が勘違いします。':
+      'There are 10 animal types. Any animal can be innocent or a culprit. In the final case on Normal and from case 2 on Hard, one innocent is mistaken.',
     遊び方を閉じる: 'Close help',
     '捜査を始める前に。': 'Before you investigate',
     '動物たちの証言を読み、': 'Read the animals’ testimony, find ',
@@ -275,8 +275,8 @@ const DetectiveI18n = (() => {
     '犯人と善人の数、善人のうち勘違いしている数は事件の上部に表示されます。':
       'The counts of culprits, innocents, and mistaken innocents appear at the top of each case.',
     '善人は真実を、犯人は嘘を。': 'Innocents tell the truth; culprits lie.',
-    'すべての証言と数の条件から真相は一つに決まります。証言を読み比べ、判定で正体を確かめましょう。「むずかしい」の4回目から、証言が必ず間違っている善人が1匹登場します。この勘違いしている善人も犯人ではなく、犯人と判定すると捜査資金が1減ります。「同じ立場」は両方善人、または両方犯人という意味で、勘違いしている善人も善人として扱います。犯人がこの動物を「犯人だ」と証言することもあります。':
-      'All the testimony and counts together give exactly one solution. Compare the statements and use judgments to uncover the truth. From case 4 on Hard, one innocent always gives false testimony because they are mistaken. They are still innocent: accusing them costs 1 fund. ‘The same role’ means both innocent or both culprits; a mistaken innocent counts as innocent. A culprit may falsely claim this animal is a culprit.',
+    'すべての証言と数の条件から真相は一つに決まります。証言を読み比べ、判定で正体を確かめましょう。「ふつう」の最終事件と「むずかしい」の2回目以降に、証言が必ず間違っている善人が1匹登場します。この勘違いしている善人も犯人ではなく、犯人と判定すると捜査資金が1減ります。「同じ立場」は両方善人、または両方犯人という意味で、勘違いしている善人も善人として扱います。犯人がこの動物を「犯人だ」と証言することもあります。':
+      'All the testimony and counts together give exactly one solution. Compare the statements and use judgments to uncover the truth. In the final case on Normal and from case 2 on Hard, one innocent always gives false testimony because they are mistaken. They are still innocent: accusing them costs 1 fund. ‘The same role’ means both innocent or both culprits; a mistaken innocent counts as innocent. A culprit may falsely claim this animal is a culprit.',
     '種類ごとに、証言の形が違う。':
       'Each animal has its own kind of testimony.',
     '同じ動物は1事件に1匹だけ。動物名の横の「証言ルール」で説明を確認できます。':

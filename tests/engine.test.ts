@@ -340,17 +340,57 @@ void test('a one-attempt budget retries ambiguous draws using the unique fallbac
   }
 });
 
+void test('campaign counts match the progression and never repeat within a difficulty', () => {
+  const expected: Record<Level, number[][]> = {
+    easy: [
+      [4, 1, 0],
+      [5, 1, 0],
+      [6, 2, 0],
+    ],
+    normal: [
+      [5, 2, 0],
+      [6, 2, 0],
+      [7, 3, 0],
+      [8, 3, 0],
+      [9, 4, 1],
+    ],
+    hard: [
+      [7, 3, 0],
+      [8, 3, 1],
+      [9, 4, 1],
+      [10, 4, 1],
+      [10, 5, 1],
+    ],
+  };
+  for (const level of Object.keys(expected) as Level[]) {
+    assert.equal(E.totalCases(level), expected[level].length);
+    const configurations = expected[level].map((counts, i) => {
+      const { n, k, mistakenCount } = E.caseConfig(level, i + 1);
+      assert.deepEqual([n, k, mistakenCount], counts);
+      return JSON.stringify([n, k, mistakenCount]);
+    });
+    assert.equal(new Set(configurations).size, configurations.length);
+    assert.throws(() => E.caseConfig(level, expected[level].length + 1));
+  }
+});
+
 void test('difficulty-specific campaigns grow in size and preserve valid testimony at every starting level', () => {
   for (const level of Object.keys(E.levels) as Level[]) {
     let previous = E.caseConfig(level, 1);
     for (let round = 1; round <= E.totalCases(level); round++) {
       const config = E.caseConfig(level, round);
-      assert.ok(config.n >= previous.n && config.k >= previous.k);
+      assert.ok(
+        config.n >= previous.n &&
+          config.k >= previous.k &&
+          config.mistakenCount >= previous.mistakenCount,
+      );
       assert.ok(config.k < config.n);
       for (let seed = 0; seed < 100; seed++) {
         const p = E.generate(seed, level, round);
         assert.equal(p.round, round);
         assert.equal(p.people.length, config.n);
+        assert.equal(p.mistakenCount, config.mistakenCount);
+        assert.equal(p.mistaken === null, config.mistakenCount === 0);
         assert.equal(p.answer.filter(Boolean).length, config.k);
         assert.ok(
           p.statements.every(
@@ -390,9 +430,15 @@ void test('an incorrect accusation at zero funds ends the investigation', () => 
 });
 
 void test('mistaken innocents have a unique identity under independent role enumeration', () => {
-  for (const round of [4, 5, 6, 7]) {
+  for (const [level, round] of [
+    ['normal', 5],
+    ['hard', 2],
+    ['hard', 3],
+    ['hard', 4],
+    ['hard', 5],
+  ] as const) {
     for (let seed = 0; seed < 150; seed++) {
-      const p = E.generate(seed, 'hard', round);
+      const p = E.generate(seed, level, round);
       assert.equal(p.mistakenCount, 1);
       assert.equal(p.answer[p.mistaken!], false);
       const solutions: { answer: boolean[]; mistaken: number }[] = [];
@@ -406,7 +452,7 @@ void test('mistaken innocents have a unique identity under independent role enum
         }
       }
       assert.deepEqual(solutions, [{ answer: p.answer, mistaken: p.mistaken }]);
-      assert.deepEqual(E.generate(seed, 'hard', round), p);
+      assert.deepEqual(E.generate(seed, level, round), p);
     }
   }
 });

@@ -4,17 +4,29 @@
 
 ## Cases and difficulty
 
-- Solve a series of cases to complete the game: three on Easy, five on Normal, or seven on Hard. Select “Next case” to continue with your remaining investigation funds. Statements, notes, and markers reset for each case.
+- Solve a series of cases to complete the game: three on Easy, five on Normal, or five on Hard. Select “Next case” to continue with your remaining investigation funds. Statements, notes, and markers reset for each case.
 - Select “Start over” to choose the initial difficulty again and restart at case one with three investigation funds. Cancel to continue the current case.
 - Later cases feature more animals and culprits, up to ten animals and five culprits.
 - Each case begins with a title selected from twelve possibilities and a short introduction. Resuming the same case preserves its introduction. When you solve a case, the results screen and dialog show a short, case-specific epilogue, “After the case.” You can reread it when resuming a solved case.
 - The case breakdown, number of culprits found, and remaining investigation funds stay visible at the top while scrolling.
 
-| Initial difficulty | Animals in case one | Culprits in case one |
-| ------------------ | ------------------: | -------------------: |
-| Easy               |                   4 |                    1 |
-| Normal             |                   5 |                    2 |
-| Hard               |                   7 |                    3 |
+| Difficulty | Case | Animals | Culprits | Mistaken innocents |
+| ---------- | ---: | ------: | -------: | -----------------: |
+| Easy       |    1 |       4 |        1 |                  0 |
+| Easy       |    2 |       5 |        1 |                  0 |
+| Easy       |    3 |       6 |        2 |                  0 |
+| Normal     |    1 |       5 |        2 |                  0 |
+| Normal     |    2 |       6 |        2 |                  0 |
+| Normal     |    3 |       7 |        3 |                  0 |
+| Normal     |    4 |       8 |        3 |                  0 |
+| Normal     |    5 |       9 |        4 |                  1 |
+| Hard       |    1 |       7 |        3 |                  0 |
+| Hard       |    2 |       8 |        3 |                  1 |
+| Hard       |    3 |       9 |        4 |                  1 |
+| Hard       |    4 |      10 |        4 |                  1 |
+| Hard       |    5 |      10 |        5 |                  1 |
+
+Mistaken innocents are included in the innocent count. Within each difficulty, the three-count combination never repeats, no count decreases, and at least one count increases with each case. Combinations may repeat across difficulties.
 
 Animals are selected from ten species without duplicates. Each species uses a different logical statement format. Any animal can be either innocent or a culprit.
 
@@ -34,9 +46,9 @@ Animals are selected from ten species without duplicates. Each species uses a di
 - You start with three investigation funds. Correct identifications do not increase them; incorrect identifications cost one, and solving a case always earns one. The investigation ends if your funds fall below zero. Find every culprit with zero or more funds to solve the case. Automatically confirmed innocents do not earn funds.
 - An animal accused by mistake is still marked as identified.
 
-## Mistaken innocents (Hard)
+## Mistaken innocents
 
-Starting with case four on Hard, one innocent always makes a false statement.
+The final case on Normal and cases two through five on Hard each include one innocent who always makes a false statement. The first case on Hard has no mistaken innocent.
 This animal still counts as innocent for culprit counts and statements such as “same role,” and accusing it costs one investigation fund.
 A culprit may also claim that this animal is a culprit. From the start, the count is shown as “N innocents (including one mistaken innocent).”
 You can use the suspected mistaken innocent marker. Finding every culprit solves the case; identifying the mistaken innocent is unnecessary.

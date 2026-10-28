@@ -458,25 +458,23 @@ var DetectiveEngine = (function () {
   }
   const campaigns = {
     easy: [
-      [4, 1],
-      [5, 1],
-      [6, 2],
+      [4, 1, 0],
+      [5, 1, 0],
+      [6, 2, 0],
     ],
     normal: [
-      [5, 2],
-      [6, 2],
-      [7, 3],
-      [8, 3],
-      [9, 4],
+      [5, 2, 0],
+      [6, 2, 0],
+      [7, 3, 0],
+      [8, 3, 0],
+      [9, 4, 1],
     ],
     hard: [
-      [7, 3],
-      [8, 3],
-      [9, 4],
-      [9, 4],
-      [10, 4],
-      [10, 4],
-      [10, 5],
+      [7, 3, 0],
+      [8, 3, 1],
+      [9, 4, 1],
+      [10, 4, 1],
+      [10, 5, 1],
     ],
   };
   function totalCases(level: Level) {
@@ -485,12 +483,13 @@ var DetectiveEngine = (function () {
   function caseConfig(level: Level, round: number) {
     if (!Number.isInteger(round) || round < 1 || round > totalCases(level))
       throw new Error('Invalid round');
-    const [n, k] = campaigns[level][round - 1];
-    return { n, k, mistakenCount: level === 'hard' && round >= 4 ? 1 : 0 };
+    const [n, k, mistakenCount] = campaigns[level][round - 1];
+    return { n, k, mistakenCount };
   }
-  // These seeds produce a unique first draw for every supported (n, k).
+  // These seeds produce a unique first draw for every supported (n, k, mistakenCount).
   // Tests exhaustively verify them; changing draw order requires rechecking this table.
   const fallbackSeeds: Record<string, number> = {
+    '8,3,1': 1,
     '9,4,1': 0,
     '10,4,1': 2,
     '10,5,1': 2,

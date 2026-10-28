@@ -8,7 +8,7 @@
     return element as T;
   }
   const key = 'beast-detective-v1';
-  const saveVersion = 14;
+  const saveVersion = 15;
   const markers = [
     {
       get name() {

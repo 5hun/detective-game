@@ -1259,7 +1259,7 @@ async function checkReadings(page: Page) {
       ) as GameState;
       saved.notes[0] = '引き継がないメモ';
       if (problem === 'old-version') saved.version = 1;
-      if (problem === 'previous-rules') saved.version = 13;
+      if (problem === 'previous-rules') saved.version = 14;
       if (problem === 'wrong-trust') saved.trust = 999;
       if (problem === 'wrong-status') saved.status = 'won';
       localStorage.setItem('beast-detective-v1', JSON.stringify(saved));
@@ -1362,7 +1362,7 @@ async function checkReadings(page: Page) {
     const saved = JSON.parse(
       localStorage.getItem('beast-detective-v1')!,
     ) as GameState;
-    const puzzle = window.DetectiveEngine.generate(0, 'hard', 4);
+    const puzzle = window.DetectiveEngine.generate(0, 'normal', 5);
     Object.assign(saved, {
       puzzle,
       startingTrust: 3,
@@ -1446,7 +1446,10 @@ async function checkReadings(page: Page) {
       await baseText(page.locator(`#person-${mistaken} .truth-detail`))
     ).includes('勘違い（間違い）'),
   );
-  assert.ok((await baseText(page.locator('#result'))).includes('事件解決'));
+  assert.equal(
+    await baseText(page.locator('#result h2')),
+    'すべての事件を解決！',
+  );
   await checkReadings(page);
   await page.locator('#result-dialog').waitFor({ state: 'visible' });
   const scrollBeforeResult = Number(

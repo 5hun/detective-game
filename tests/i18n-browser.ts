@@ -185,8 +185,14 @@ export async function checkEnglish(browser: Browser) {
   await page.locator('#new-case').click();
   await page.locator('#difficulty').selectOption('hard');
   await page.locator('#confirm-new').click();
-  for (let round = 1; round <= 7; round++) {
+  for (let round = 1; round <= 5; round++) {
     await checkEnglishText(page);
+    assert.equal(
+      await page.locator('.suspect').count(),
+      [7, 8, 9, 10, 10][round - 1],
+    );
+    assert.equal(await page.locator('#mistaken-count').isVisible(), round >= 2);
+    assert.equal(await page.locator('#mistaken-rule').isVisible(), round >= 2);
     const answers = await page.evaluate(() => {
       const saved = JSON.parse(
         localStorage.getItem('beast-detective-v1')!,
@@ -196,7 +202,7 @@ export async function checkEnglish(browser: Browser) {
     for (let i = 0; i < answers.length; i++)
       if (answers[i]) await page.locator(`#person-${i} [data-judge]`).click();
     await checkEnglishText(page);
-    if (round < 7) {
+    if (round < 5) {
       await page.locator('#result-dialog').waitFor({ state: 'visible' });
       await page.locator('#dialog-next-case').click();
     }
