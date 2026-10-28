@@ -48,7 +48,7 @@ Use notes and markers freely: unset, suspected culprit, suspected innocent, need
 ## Results
 
 - A results dialog appears in the center when a case ends. After you close it, the results and “Next case” remain on the page.
-- After a case ends, you can compare each statement with the truth. Completing all cases shows the number of cases solved, the total number of innocents incorrectly accused across all cases, and your remaining investigation funds. A special message celebrates a run with no incorrect accusations. “After the final case” appears at the end of the results text.
+- After a case ends, you can compare each statement with the truth. Completing all cases shows the number of cases solved and the total number of innocents incorrectly accused across all cases. A special message celebrates a run with no incorrect accusations. “After the final case” appears at the end of the results text.
 
 ## Language, reading guides, and sound
 

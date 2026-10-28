@@ -198,8 +198,8 @@ const DetectiveI18n = (() => {
     'すべての事件を解決！': 'All cases solved!',
     '事件解決！ ({0} / {1})': 'Case solved! ({0} / {1})',
     '今回の捜査は、ここまで': 'Investigation ended',
-    '<p>おめでとうございます！<br>あなたの推理で、全{0}件の事件が解決しました。<br>森の名探偵、おつかれさまでした！</p><table class="campaign-results" aria-label="全事件の結果"><tbody><tr><th scope="row">解決した事件</th><td>{1}件</td></tr><tr><th scope="row">全事件で間違えて犯人と判定した回数</th><td>{2}回</td></tr><tr><th scope="row">残った捜査資金</th><td>{3}</td></tr></tbody></table>{4}':
-      '<p>Congratulations!<br>Your deductions solved all {0} cases.<br>Well done, detective of the forest!</p><table class="campaign-results" aria-label="Campaign results"><tbody><tr><th scope="row">Cases solved</th><td>{1}</td></tr><tr><th scope="row">Incorrect accusations across all cases</th><td>{2}</td></tr><tr><th scope="row">Funds remaining</th><td>{3}</td></tr></tbody></table>{4}',
+    '<p>おめでとうございます！<br>あなたの推理で、全{0}件の事件が解決しました。<br>森の名探偵、おつかれさまでした！</p><table class="campaign-results" aria-label="全事件の結果"><tbody><tr><th scope="row">解決した事件</th><td>{1}件</td></tr><tr><th scope="row">全事件で間違えて犯人と判定した回数</th><td>{2}回</td></tr></tbody></table>{3}':
+      '<p>Congratulations!<br>Your deductions solved all {0} cases.<br>Well done, detective of the forest!</p><table class="campaign-results" aria-label="Campaign results"><tbody><tr><th scope="row">Cases solved</th><td>{1}</td></tr><tr><th scope="row">Incorrect accusations across all cases</th><td>{2}</td></tr></tbody></table>{3}',
     '<p><strong>一度も間違えずに、すべての事件を解決しました！🎉</strong></p>':
       '<p><strong>You solved every case without a single mistake! 🎉</strong></p>',
     '事件解決。捜査資金 ＋{0}。{1}': 'Case solved. Funds +{0}. {1}',
